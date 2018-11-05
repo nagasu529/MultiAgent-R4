@@ -121,21 +121,29 @@ public class Bidder extends Agent {
                 myGUI.displayUI("water volume from seller:" + farmerInfo.waterVolumn + "\n");
 
                 //English Auction Process.
-
-                if(farmerInfo.currentPricePerMM >= previousPrice ){
-                    farmerInfo.bidedPrice = auctRules.changedPriceRate("inc", increasingBidRate, farmerInfo.currentPricePerMM);
-                    if(farmerInfo.bidedPrice < farmerInfo.maxPricePerMM){
-                        reply.setPerformative(ACLMessage.PROPOSE);
-                        String currentBidOffer= farmerInfo.waterVolumn + "-" + farmerInfo.bidedPrice;
-                        reply.setContent(currentBidOffer);
-                        myAgent.send(reply);
-                        myGUI.displayUI("Current Offer: " + reply.getContent() + "\n");
-                    }else {
-                        reply.setPerformative(ACLMessage.REFUSE);
-                        //reply.setContent(getAID().getName() + " is surrender");
-                        myAgent.send(reply);
-                        myGUI.displayUI(getAID().getName() + " is surrender");
+                if(farmerInfo.currentPricePerMM >= previousPrice){
+                    if(farmerInfo.currentPricePerMM < farmerInfo.maxPricePerMM){
+                        farmerInfo.bidedPrice = auctRules.changedPriceRate("inc", increasingBidRate, farmerInfo.pricePerMM);
+                        if(farmerInfo.bidedPrice < farmerInfo.maxPricePerMM){
+                            reply.setPerformative(ACLMessage.PROPOSE);
+                            String currentBidOffer= farmerInfo.waterVolumn + "-" + farmerInfo.bidedPrice;
+                            reply.setContent(currentBidOffer);
+                            myAgent.send(reply);
+                            myGUI.displayUI("Current Offer: " + reply.getContent() + "\n");
+                        }else{
+                            reply.setPerformative(ACLMessage.REFUSE);
+                            //reply.setContent(getAID().getName() + " is surrender");
+                            myAgent.send(reply);
+                            myGUI.displayUI(getAID().getName() + " is surrender");
+                        }
                     }
+
+                }else {
+                    reply.setPerformative(ACLMessage.PROPOSE);
+                    String currentBidOffer = farmerInfo.waterVolumn + "-" + previousPrice;
+                    reply.setContent(currentBidOffer);
+                    myAgent.send(reply);
+                    myGUI.displayUI("Do not change auction because the price is same");
                 }
             }else {
                 block();
