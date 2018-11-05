@@ -108,6 +108,7 @@ public class Seller extends Agent{
                         for (int i = 0; i < result.length; ++i) {
                             bidderAgent[i] = result[i].getName();
                             System.out.println(bidderAgent[i].getName());
+                            System.out.println("tick time:" + countTick);
                         }
                     }
                     catch (FIPAException fe) {
@@ -276,7 +277,7 @@ public class Seller extends Agent{
                     }
                     break;
                 case 2:
-                    if(refuseCnt >= 1 && proposeCnt==1||countTick > 3 && refuseCnt == 0){
+                    if(refuseCnt >=1 && proposeCnt==1){
                         step = 3;
                         System.out.println(step);
                     }else {

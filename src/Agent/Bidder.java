@@ -109,8 +109,8 @@ public class Bidder extends Agent {
             if(msg != null){
                 ACLMessage reply = msg.createReply();
 
-
                 //Current price Per MM. and the number of volumn to sell.
+                double previousPrice = farmerInfo.currentPricePerMM;
                 String currentOffer = msg.getContent();
                 String[] arrOfstr = currentOffer.split("-");
                 myGUI.displayUI("current Offer from Seller: " + currentOffer + "\n");
@@ -121,21 +121,21 @@ public class Bidder extends Agent {
                 myGUI.displayUI("water volume from seller:" + farmerInfo.waterVolumn + "\n");
 
                 //English Auction Process.
-                if (farmerInfo.currentPricePerMM < farmerInfo.maxPricePerMM) {
-                    farmerInfo.bidedPrice = auctRules.changedPriceRate("inc", increasingBidRate,farmerInfo.currentPricePerMM);
-                    if (farmerInfo.bidedPrice < farmerInfo.maxPricePerMM){
+
+                if(farmerInfo.currentPricePerMM >= previousPrice ){
+                    farmerInfo.bidedPrice = auctRules.changedPriceRate("inc", increasingBidRate, farmerInfo.currentPricePerMM);
+                    if(farmerInfo.bidedPrice < farmerInfo.maxPricePerMM){
                         reply.setPerformative(ACLMessage.PROPOSE);
-                        String currentBidOffer = farmerInfo.waterVolumn + "-" + farmerInfo.bidedPrice;
+                        String currentBidOffer= farmerInfo.waterVolumn + "-" + farmerInfo.bidedPrice;
                         reply.setContent(currentBidOffer);
                         myAgent.send(reply);
                         myGUI.displayUI("Current Offer: " + reply.getContent() + "\n");
-                        myGUI.displayUI(log + "\n");
+                    }else {
+                        reply.setPerformative(ACLMessage.REFUSE);
+                        //reply.setContent(getAID().getName() + " is surrender");
+                        myAgent.send(reply);
+                        myGUI.displayUI(getAID().getName() + " is surrender");
                     }
-                }else {
-                    reply.setPerformative(ACLMessage.REFUSE);
-                    //reply.setContent(getAID().getName() + " is surrender");
-                    myAgent.send(reply);
-                    myGUI.displayUI(getAID().getName() + " is surrender");
                 }
             }else {
                 block();
