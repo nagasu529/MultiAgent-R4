@@ -22,7 +22,8 @@ public class Bidder extends Agent {
     DecimalFormat df = new DecimalFormat("#.##");
 
     //Farmer information on each agent.
-    agentInfo farmerInfo = new agentInfo("", "", 0.0, 0.0, "Bidded", 0.0, 0.0, 0.0, 0.0);
+    agentInfo farmerInfo = new agentInfo("", "", 0.0, 0.0, "Bidded", 0.0,
+            0.0, 0.0, 0.0, 0.0);
 
     //Global bidding parameter
     Double increasingBidRate;
@@ -33,6 +34,7 @@ public class Bidder extends Agent {
 
     protected void setup() {
         System.out.println(getAID().getName()+"  is ready" );
+
         // Create and show the GUI
         myGUI = new BidderGUI(this);
         myGUI.show();
@@ -100,8 +102,8 @@ public class Bidder extends Agent {
 
     private class OfferRequestsServer extends CyclicBehaviour {
         Auction auctRules = new Auction();
+        private int step = 0;
         public void action() {
-
             MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
             ACLMessage msg = myAgent.receive(mt);
             String log = new String();
@@ -110,7 +112,6 @@ public class Bidder extends Agent {
                 ACLMessage reply = msg.createReply();
 
                 //Current price Per MM. and the number of volumn to sell.
-                double previousPrice = farmerInfo.currentPricePerMM;
                 String currentOffer = msg.getContent();
                 String[] arrOfstr = currentOffer.split("-");
                 myGUI.displayUI("current Offer from Seller: " + currentOffer + "\n");
@@ -119,31 +120,33 @@ public class Bidder extends Agent {
 
                 myGUI.displayUI("current price bidded: " + farmerInfo.currentPricePerMM + "\n");
                 myGUI.displayUI("water volume from seller:" + farmerInfo.waterVolumn + "\n");
+                myGUI.displayUI("Previous price: "+ farmerInfo.previousPrice + "\n");
 
-                //English Auction Process.
-                if(farmerInfo.currentPricePerMM >= previousPrice){
-                    if(farmerInfo.currentPricePerMM < farmerInfo.maxPricePerMM){
-                        farmerInfo.bidedPrice = auctRules.changedPriceRate("inc", increasingBidRate, farmerInfo.pricePerMM);
-                        if(farmerInfo.bidedPrice < farmerInfo.maxPricePerMM){
-                            reply.setPerformative(ACLMessage.PROPOSE);
-                            String currentBidOffer= farmerInfo.waterVolumn + "-" + farmerInfo.bidedPrice;
+                //English Auction Process
+                if (farmerInfo.currentPricePerMM < farmerInfo.maxPricePerMM) {
+                    farmerInfo.bidedPrice = auctRules.changedPriceRate("inc", increasingBidRate,farmerInfo.currentPricePerMM);
+                    if (farmerInfo.bidedPrice < farmerInfo.maxPricePerMM){
+                        reply.setPerformative(ACLMessage.PROPOSE);
+                        if(farmerInfo.currentPricePerMM > farmerInfo.previousPrice){
+                            farmerInfo.previousPrice = farmerInfo.bidedPrice;
+                            String currentBidOffer = farmerInfo.waterVolumn + "-" + farmerInfo.bidedPrice;
                             reply.setContent(currentBidOffer);
                             myAgent.send(reply);
-                            myGUI.displayUI("Current Offer: " + reply.getContent() + "\n");
-                        }else{
-                            reply.setPerformative(ACLMessage.REFUSE);
-                            //reply.setContent(getAID().getName() + " is surrender");
+                            myGUI.displayUI("Current Offer : " + reply.getContent() + "\n");
+                            myGUI.displayUI(log + "\n");
+                        }else {
+                            String currentBidOffer = farmerInfo.waterVolumn + "-" + farmerInfo.previousPrice;
+                            reply.setContent(currentBidOffer);
                             myAgent.send(reply);
-                            myGUI.displayUI(getAID().getName() + " is surrender");
+                            myGUI.displayUI("Current Offer : " + reply.getContent() + "\n");
+                            myGUI.displayUI(log + "\n");
                         }
                     }
-
                 }else {
-                    reply.setPerformative(ACLMessage.PROPOSE);
-                    String currentBidOffer = farmerInfo.waterVolumn + "-" + previousPrice;
-                    reply.setContent(currentBidOffer);
+                    reply.setPerformative(ACLMessage.REFUSE);
+                    //reply.setContent(getAID().getName() + " is surrender");
                     myAgent.send(reply);
-                    myGUI.displayUI("Do not change auction because the price is same");
+                    myGUI.displayUI(getAID().getName() + " is surrender");
                 }
             }else {
                 block();
@@ -207,8 +210,10 @@ public class Bidder extends Agent {
         double maxPricePerMM;
         double currentPricePerMM;
         double bidedPrice;
+        double previousPrice;
 
-        agentInfo(String farmerName, String agentType, double waterVolumn, double pricePerMM, String sellingStatus, double minPricePerMM, double maxPricePerMM, double currentPricePerMM, double biddedPrice){
+        agentInfo(String farmerName, String agentType, double waterVolumn, double pricePerMM, String sellingStatus, double minPricePerMM, double maxPricePerMM,
+                  double currentPricePerMM, double biddedPrice, double previousPrice){
             this.farmerName = farmerName;
             this.agentType = agentType;
             this.waterVolumn = waterVolumn;
@@ -218,6 +223,7 @@ public class Bidder extends Agent {
             this.maxPricePerMM = maxPricePerMM;
             this.currentPricePerMM = currentPricePerMM;
             this.bidedPrice = biddedPrice;
+            this.previousPrice = previousPrice;
         }
     }
 }
