@@ -23,7 +23,7 @@ public class Bidder extends Agent {
 
     //Farmer information on each agent.
     agentInfo farmerInfo = new agentInfo("", "", 0.0, 0.0, "Bidded", 0.0,
-            0.0, 0.0, 0.0, 0.0);
+            0.0, 0.0, 0.0, 0.0,0);
 
     //Global bidding parameter
     Double increasingBidRate;
@@ -67,6 +67,7 @@ public class Bidder extends Agent {
                     myGUI.displayUI("Bidding price: " + df.format(farmerInfo.pricePerMM) + "\n");
                     myGUI.displayUI("Bidding status: " + farmerInfo.sellingStatus + "\n");
                     myGUI.displayUI("MaxPrice:" + farmerInfo.maxPricePerMM + "\n");
+                    myGUI.displayUI("Number of bidder :" + farmerInfo.numBidder + "\n");
                     myGUI.displayUI("\n");
 
                     /*
@@ -117,30 +118,29 @@ public class Bidder extends Agent {
                 myGUI.displayUI("current Offer from Seller: " + currentOffer + "\n");
                 farmerInfo.waterVolumn = Double.parseDouble(arrOfstr[0]);
                 farmerInfo.currentPricePerMM = Double.parseDouble(arrOfstr[1]);
+                farmerInfo.numBidder = Integer.parseInt(arrOfstr[2]);
 
                 myGUI.displayUI("current price bidded: " + farmerInfo.currentPricePerMM + "\n");
                 myGUI.displayUI("water volume from seller:" + farmerInfo.waterVolumn + "\n");
                 myGUI.displayUI("Previous price: "+ farmerInfo.previousPrice + "\n");
+                myGUI.displayUI("Number of bidder :" + farmerInfo.numBidder + "\n");
 
                 //English Auction Process
                 if (farmerInfo.currentPricePerMM < farmerInfo.maxPricePerMM) {
                     farmerInfo.bidedPrice = auctRules.changedPriceRate("inc", increasingBidRate,farmerInfo.currentPricePerMM);
+                    String currentBidOffer;
                     if (farmerInfo.bidedPrice < farmerInfo.maxPricePerMM){
                         reply.setPerformative(ACLMessage.PROPOSE);
-                        if(farmerInfo.currentPricePerMM > farmerInfo.previousPrice){
-                            farmerInfo.previousPrice = farmerInfo.bidedPrice;
-                            String currentBidOffer = farmerInfo.waterVolumn + "-" + farmerInfo.bidedPrice;
-                            reply.setContent(currentBidOffer);
-                            myAgent.send(reply);
-                            myGUI.displayUI("Current Offer : " + reply.getContent() + "\n");
-                            myGUI.displayUI(log + "\n");
+                        if(farmerInfo.currentPricePerMM <= farmerInfo.previousPrice && farmerInfo.numBidder ==1){
+                            currentBidOffer = farmerInfo.waterVolumn + "-" + farmerInfo.previousPrice;
                         }else {
-                            String currentBidOffer = farmerInfo.waterVolumn + "-" + farmerInfo.previousPrice;
-                            reply.setContent(currentBidOffer);
-                            myAgent.send(reply);
-                            myGUI.displayUI("Current Offer : " + reply.getContent() + "\n");
-                            myGUI.displayUI(log + "\n");
+                            farmerInfo.previousPrice = farmerInfo.bidedPrice;
+                            currentBidOffer = farmerInfo.waterVolumn + "-" + farmerInfo.bidedPrice;
                         }
+                        reply.setContent(currentBidOffer);
+                        myAgent.send(reply);
+                        myGUI.displayUI("Current Offer : " + reply.getContent() + "\n");
+                        myGUI.displayUI(log + "\n");
                     }
                 }else {
                     reply.setPerformative(ACLMessage.REFUSE);
@@ -211,9 +211,10 @@ public class Bidder extends Agent {
         double currentPricePerMM;
         double bidedPrice;
         double previousPrice;
+        int numBidder;
 
         agentInfo(String farmerName, String agentType, double waterVolumn, double pricePerMM, String sellingStatus, double minPricePerMM, double maxPricePerMM,
-                  double currentPricePerMM, double biddedPrice, double previousPrice){
+                  double currentPricePerMM, double biddedPrice, double previousPrice, int numBidder){
             this.farmerName = farmerName;
             this.agentType = agentType;
             this.waterVolumn = waterVolumn;
@@ -224,6 +225,7 @@ public class Bidder extends Agent {
             this.currentPricePerMM = currentPricePerMM;
             this.bidedPrice = biddedPrice;
             this.previousPrice = previousPrice;
+            this.numBidder = numBidder;
         }
     }
 }

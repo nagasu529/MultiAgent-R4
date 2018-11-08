@@ -14,18 +14,18 @@ import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
-import java.lang.reflect.Array;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  *
  * @author chiewchk
  */
-public class Seller extends Agent{
+public class SellerTMP extends Agent{
 
     //The list of farmer who are seller (maps the water volumn to its based price)
-    private SellerGUI myGui;
+    private SellerGUITMP myGui;
     Crop calCrops = new Crop();
 
     DecimalFormat df = new DecimalFormat("#.##");
@@ -46,7 +46,7 @@ public class Seller extends Agent{
         System.out.println(getAID()+" is ready");
 
         //Creating catalogue and running GUI
-        myGui = new SellerGUI(this);
+        myGui = new SellerGUITMP(this);
         myGui.show();
         //Start agent
 
@@ -93,6 +93,27 @@ public class Seller extends Agent{
                     /*
                      ** Selling water process
                      */
+
+                    //update bidder list
+                    DFAgentDescription template = new DFAgentDescription();
+                    ServiceDescription sd = new ServiceDescription();
+                    template.addServices(sd);
+                    try {
+                        DFAgentDescription[] result = DFService.search(myAgent, template);
+                        if(result.length > 1){
+                            countTick = countTick+1;
+                        }
+                        System.out.println("Found acutioneer agents:");
+                        bidderAgent = new AID[result.length];
+                        for (int i = 0; i < result.length; ++i) {
+                            bidderAgent[i] = result[i].getName();
+                            System.out.println(bidderAgent[i].getName());
+                            System.out.println("tick time:" + countTick);
+                        }
+                    }
+                    catch (FIPAException fe) {
+                        fe.printStackTrace();
+                    }
                     addBehaviour(new RequestPerformer());
                     // Add the behaviour serving purchase orders from buyer agents
                     //addBehaviour(new PurchaseOrdersServer());
@@ -191,28 +212,6 @@ public class Seller extends Agent{
         public void action() {
             switch (step) {
                 case 0:
-
-                    //update bidder list
-                    DFAgentDescription template = new DFAgentDescription();
-                    ServiceDescription sd = new ServiceDescription();
-                    template.addServices(sd);
-                    try {
-                        DFAgentDescription[] result = DFService.search(myAgent, template);
-                        if(result.length > 1){
-                            countTick = countTick+1;
-                        }
-                        System.out.println("Found acutioneer agents:");
-                        bidderAgent = new AID[result.length];
-                        for (int i = 0; i < result.length; ++i) {
-                            bidderAgent[i] = result[i].getName();
-                            System.out.println(bidderAgent[i].getName());
-                            System.out.println("tick time:" + countTick);
-                        }
-                    }
-                    catch (FIPAException fe) {
-                        fe.printStackTrace();
-                    }
-
                     // Send the cfp to all sellers (Sending water volumn required to all bidding agent)
                     ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
                     for (int i = 0; i < bidderAgent.length; ++i) {
