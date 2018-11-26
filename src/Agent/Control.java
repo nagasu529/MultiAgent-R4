@@ -13,7 +13,8 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
 import java.text.DecimalFormat;
-import java.util.HashMap;
+import java.util.*;
+import java.util.function.DoubleBinaryOperator;
 
 /**
  *
@@ -22,7 +23,9 @@ import java.util.HashMap;
 public class Control extends Agent{
 
     //Calcualting parameter.
-    double consentPrice, maxPrice, minPrice;
+    String agentType ="";
+    public Map <String, agentInfo> bidderList = new HashMap<String, agentInfo>();
+    public Map<String, agentInfo> sellerList = new HashMap<String, agentInfo>();
 
     //The list of farmer who are seller (maps the water volumn to its based price)
     private ControlGUI myGui;
@@ -32,6 +35,7 @@ public class Control extends Agent{
 
     //The list of known water selling agent
     private AID[] agentList;
+
 
     //Counting list (single negotiation process)
     int countTick;
@@ -82,7 +86,7 @@ public class Control extends Agent{
      */
     private class priceEquilibrium extends Behaviour {
         int numOfagent = 0;
-        private int step =0;
+        private int step = 0;
 
         public void action(){
             switch (step){
@@ -104,6 +108,7 @@ public class Control extends Agent{
                     }catch (FIPAException fe){
                         fe.printStackTrace();
                     }
+                    step = 1;
                     break;
 
                 case 1:
@@ -112,10 +117,37 @@ public class Control extends Agent{
                     ACLMessage msg = myAgent.receive(mt);
 
                     //CFP message received and process
-                    String consentInfo = msg.getContent();
-                    String[] arrOfstr = consentInfo.split("-");
-                    myGui.displayUI("consent info from : " + reply.get);
+                    if(msg != null){
+                        ACLMessage reply = msg.createReply();
+                        String agentInfo = msg.getContent();
+                        String[] arrOfstr = agentInfo.split("-");
+                        agentType = arrOfstr[1];
 
+                        if(agentType == "bidder"){
+                            agentInfo bidderInfo = new agentInfo(arrOfstr[0], arrOfstr[1], Double.parseDouble(arrOfstr[2]), Double.parseDouble(arrOfstr[3]));
+                            bidderList.put(arrOfstr[1], bidderInfo);
+                        }else {
+                            agentInfo sellerInfo = new agentInfo(arrOfstr[0], arrOfstr[1], Double.parseDouble(arrOfstr[2]), Double.parseDouble(arrOfstr[3]));
+                            sellerList.put(arrOfstr[1],sellerInfo);
+                        }
+                    }else{
+                        block();
+                    }
+                    int biderListSize = bidderList.size();
+                    int sellerListSize = sellerList.size();
+                    if(biderListSize >= (sellerListSize*3) ||sellerListSize >= (biderListSize*3) ){
+                        step = 2;
+                    }else{
+                        step = 3;
+                    }
+                    break;
+
+                case 2:
+                    //Trying to balance between bidder and seller here!!
+                    step = 3;
+                    break;
+
+                case 3:
 
             }
         }
@@ -129,7 +161,6 @@ public class Control extends Agent{
         }
     }
 
-
     protected void takeDown() {
         try {
             DFService.deregister(this);
@@ -139,5 +170,21 @@ public class Control extends Agent{
         }
         // Printout a dismissal message
         System.out.println("Control Price agent "+getAID().getName()+" terminating.");
+    }
+
+    //list for data collection
+
+    public class agentInfo{
+        String agentName;
+        String agentType;
+        double waterVolumn;
+        double pricePerMM;
+
+        agentInfo(String farmerName, String agentType, double waterVolumn, double pricePerMM){
+            this.agentName = farmerName;
+            this.agentType = agentType;
+            this.waterVolumn = waterVolumn;
+            this.pricePerMM = pricePerMM;
+        }
     }
 }
