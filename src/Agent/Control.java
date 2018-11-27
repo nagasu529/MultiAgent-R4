@@ -29,7 +29,6 @@ public class Control extends Agent{
 
     //The list of farmer who are seller (maps the water volumn to its based price)
     private ControlGUI myGui;
-    Crop calCrops = new Crop();
 
     DecimalFormat df = new DecimalFormat("#.##");
 
@@ -85,7 +84,7 @@ public class Control extends Agent{
      * 	This behaviour is used by buyer mechanism to request seller agents for water pricing ana selling capacity.
      */
     private class priceEquilibrium extends Behaviour {
-        int numOfagent = 0;
+
         private int step = 0;
 
         public void action(){
@@ -97,18 +96,19 @@ public class Control extends Agent{
                     template.addServices(sd);
                     try {
                         DFAgentDescription[] result = DFService.search(myAgent, template);
-                        myGui.displayUI("The number of agents is " + result.length + "\n");
-                        numOfagent = result.length;
+                        myGui.displayUI("The number of agents is " + (result.length -1) + "\n");
                         agentList = new AID[result.length];
                         for (int i = 0; i < result.length; i++){
-                            if(agentList[i].getName().equals(myAgent.getName())==false){
-                                agentList[i] = result[i].getName();
+                            agentList[i] = result[i].getName();
+                            if(agentList[i].getName().equals(myAgent.getName())==true){
+                                myGui.displayUI("xxxxx");
                             }
                         }
                     }catch (FIPAException fe){
                         fe.printStackTrace();
                     }
                     step = 1;
+                    myGui.displayUI("step is " + step);
                     break;
 
                 case 1:
@@ -135,29 +135,28 @@ public class Control extends Agent{
                     }
                     int biderListSize = bidderList.size();
                     int sellerListSize = sellerList.size();
-                    if(biderListSize >= (sellerListSize*3) ||sellerListSize >= (biderListSize*3) ){
+                    if((biderListSize > 0 && sellerListSize > 0) &&(biderListSize >= (sellerListSize*3)||sellerListSize >= (biderListSize*3))){
                         step = 2;
+                        myGui.displayUI("step is (if)" + step);
                     }else{
-                        step = 3;
+                        myGui.displayUI("Water price in global market is balance" + "\n");
+                        step =3;
                     }
                     break;
 
                 case 2:
                     //Trying to balance between bidder and seller here!!
-                    step = 3;
+                    int x = 3+2;
+                    myGui.displayUI("The X value is " + x + "\n");
                     break;
-
-                case 3:
-
             }
         }
 
         public boolean done() {
-            if (step == 2 && bestBidder == null) {
-                //System.out.println("Attempt failed: "+volumeToBuy+" not available for sale");
-                myGui.displayUI("Attempt failed: do not have seller now".toString());
+            if (step == 3) {
+                myGui.displayUI("Do not have any agent active");
             }
-            return ((step == 2 && bestBidder == null) || step == 5);
+            return ((step == 0 && bidderList == null && sellerList == null) || step == 3);
         }
     }
 
