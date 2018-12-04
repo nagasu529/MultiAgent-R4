@@ -97,8 +97,6 @@ public class DirectAgentUI extends JFrame{
                     File f = chooser.getSelectedFile();
                     String filename = f.getAbsolutePath();
                     displayUI("Farming scheduale uploaded\n");
-                    //System.out.println("Farming scheduale uploaded");
-                    //System.out.println(filename);
                     setFileDir(filename);
                 }
             }
@@ -110,7 +108,7 @@ public class DirectAgentUI extends JFrame{
             public void actionPerformed(ActionEvent ae) {
                 if (stageList.getSelectedIndex()==0) {
                     setAgentStatus("seller");
-                    myAgent.agentInfo.agentType = "seller";
+                    myAgent.farmerInfo.agentType = "seller";
                     displayUI("Agent status updated to seller\n");
 
                 } else {
@@ -157,7 +155,8 @@ public class DirectAgentUI extends JFrame{
 
                 }
                 catch (Exception e) {
-                    JOptionPane.showMessageDialog(FarmerGUI.this, "Invalid values. "+e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(DirectAgentUI.this, "Invalid values. "+e.getMessage(),
+                            "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         } );
