@@ -1,6 +1,8 @@
 package Agent;
 
-public class Auction {
+public class Decision {
+
+    //Changing price rate calculation
     public double changedPriceRate(String incORdec, double changePerct, double pricePerMM){
         double tempPriceRate;
         if(incORdec=="inc"){
@@ -13,4 +15,7 @@ public class Auction {
         }
         return tempPriceRate;
     }
+
+    //GDP and margin benefit function.
+
 }

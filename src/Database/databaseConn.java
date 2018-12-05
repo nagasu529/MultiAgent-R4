@@ -20,13 +20,16 @@ public class databaseConn {
     public double KcBased = 0.0;
     public double irrigationRate = 0.0;
     public double grossMaginValue = 0.0;
+    public double totalIncome = 0.0;
+    public double expanditureValue = 0.0;
+    public double tonePerHec = 0.0;
 
     //Database connect for calculationg ET0
     private Connection connect(){
         //SQlite connietion string
 
-        String url = "jdbc:sqlite:/Users/kitti.ch/Dropbox/PhD-Lincoln/javaProgram/DBandText/db/FarmDB.sqlite"; //Macbook
-        //String url = "jdbc:sqlite:C:/Users/chiewchk/Dropbox/PhD-Lincoln/javaProgram/DBandText/db/FarmDB.sqlite";  //Office
+        //String url = "jdbc:sqlite:/Users/kitti.ch/Dropbox/PhD-Lincoln/javaProgram/DBandText/db/FarmDB.sqlite"; //Macbook
+        String url = "jdbc:sqlite:C:/Users/chiewchk/Dropbox/PhD-Lincoln/javaProgram/DBandText/db/FarmDB.sqlite";  //Office
         //String url = "jdbc:sqlite:G:/Dropbox/PhD-Lincoln/javaProgram/DBandText/db/FarmDB.sqlite"; //Home PC
         Connection conn = null;
         try {
@@ -199,6 +202,63 @@ public class databaseConn {
 
             tmp = rs.getDouble("GrossMarginHa");
             grossMaginValue = tmp;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void getTotalIncome(String cropName){
+        totalIncome = 0.0;
+        String sql = "select TotalIncome FROM Duration where cropName=?";
+        double tmp = 0.0;
+        try (Connection conn = this.connect();
+             PreparedStatement pstmt  = conn.prepareStatement(sql)){
+
+            // set the value
+            pstmt.setString(1,cropName);
+            //
+            ResultSet rs  = pstmt.executeQuery();
+
+            tmp = rs.getDouble("GrossMarginHa");
+            totalIncome = tmp;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void getexpanditureValue(String cropName){
+        expanditureValue = 0.0;
+        String sql = "select Expanditure FROM Duration where cropName=?";
+        double tmp = 0.0;
+        try (Connection conn = this.connect();
+             PreparedStatement pstmt  = conn.prepareStatement(sql)){
+
+            // set the value
+            pstmt.setString(1,cropName);
+            //
+            ResultSet rs  = pstmt.executeQuery();
+
+            tmp = rs.getDouble("GrossMarginHa");
+            expanditureValue = tmp;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void getTonPerHa(String cropName){
+        tonePerHec = 0.0;
+        String sql = "select TonePerHectre FROM Duration where cropName=?";
+        double tmp = 0.0;
+        try (Connection conn = this.connect();
+             PreparedStatement pstmt  = conn.prepareStatement(sql)){
+
+            // set the value
+            pstmt.setString(1,cropName);
+            //
+            ResultSet rs  = pstmt.executeQuery();
+
+            tmp = rs.getDouble("GrossMarginHa");
+            tonePerHec = tmp;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
