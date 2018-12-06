@@ -50,6 +50,7 @@ public class Crop extends databaseConn
     public double waterReduction;
     public double totalWaterReq;
     public double productValueLost;
+    public double resultReductionPct;
     public List<String> list = new ArrayList<String>();
     public String[] calculationArray;
 
@@ -156,7 +157,10 @@ public class Crop extends databaseConn
             calcSoilMoistureValue(15, 30);
             calcWaterReqWithSoil();
             totalWaterReq();
-            productValueLost = 10;
+            //
+            // productValueLost = 10;
+
+
             cropType xx = new cropType(cropEU, cropName, cropStage, droughtSensitivity, dsValue, stValue,
                     cvValue, literPerSecHec, waterReq, soilWaterContainValue, waterReqWithSoil, cropKCoefficient, waterReduction, productValueLost);
             //adding multi value list
@@ -303,8 +307,12 @@ public class Crop extends databaseConn
         outputVariable = farmProductionValue - waterConsentCost;
     }
 
-    public void calcProductValueLost(double waterReductionMM, double cropProductValue, double cropWaterReq, double outputVariable){
-        outputVariable = (waterReductionMM * cropProductValue)/cropWaterReq;
+    public void calcProductValueLost(double waterReductionMM, double cropProductValue, double cropWaterReq, double outputVariable) {
+        if (waterReductionMM == 0) {
+            outputVariable = 0;
+        } else{
+            outputVariable = (waterReductionMM * cropProductValue) / cropWaterReq;
+        }
     }
 
     public void calcCropEU(){
@@ -395,7 +403,6 @@ public class Crop extends databaseConn
     //From Farmer file
     public double calcWaterReduction(double wr){
         double totalWaterReduction = totalWaterReq * wr;
-        System.out.println("totalWater reduction:" + totalWaterReduction);
         double totalReduction = 0.0;
         Iterator itrR=resultList.iterator();
         while (itrR.hasNext() && totalReduction <= totalWaterReduction){
@@ -445,7 +452,12 @@ public class Crop extends databaseConn
 
 
         }
-
+        resultReductionPct = (totalReduction*100)/totalWaterReq;
+        System.out.println("\n" + "Total water requirement from " + farmName + "is " + totalWaterReq);
+        System.out.println("total Water reduction required:" + totalWaterReduction);
+        System.out.println("The percentage of required reduction is " + wr*100);
+        System.out.println("Total water reduction from a farm is: " + totalReduction);
+        System.out.println("Total water reduction (%): " + resultReductionPct + "\n");
 
         return totalReduction;
     }
