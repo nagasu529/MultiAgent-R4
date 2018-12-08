@@ -32,6 +32,11 @@ public class Crop extends databaseConn
     public double totalCropProducValue;
     public double profitBeforeReduction;
     public double profitAfterReduction;
+    
+    //Adding total water reduction requirement and total water reduction on farm.
+    double totalWaterReductionReq;
+    double totalReduction;
+    double waterVolToMarket;
 
     // We can use ET calculated function which are provided by FAO database.
     public double ET;
@@ -401,11 +406,10 @@ public class Crop extends databaseConn
     }
 
     //From Farmer file
-    public double calcWaterReduction(double wr){
-        double totalWaterReduction = totalWaterReq * wr;
-        double totalReduction = 0.0;
+    public void calcWaterReduction(double wr){
+        totalWaterReductionReq = totalWaterReq * wr;
         Iterator itrR=resultList.iterator();
-        while (itrR.hasNext() && totalReduction <= totalWaterReduction){
+        while (itrR.hasNext() && totalReduction <= totalWaterReductionReq){
             cropType ct = (cropType)itrR.next();
             if (ct.cropName.equals("Pasture")&& ct.cropStage==1) {
                 ct.waterReduction = ct.waterReqWithSoil * 0.5;
@@ -453,13 +457,14 @@ public class Crop extends databaseConn
 
         }
         resultReductionPct = (totalReduction*100)/totalWaterReq;
+        waterVolToMarket = Math.abs(totalWaterReductionReq - totalReduction);
         System.out.println("\n" + "Total water requirement from " + farmName + "is " + totalWaterReq);
-        System.out.println("total Water reduction required:" + totalWaterReduction);
+        System.out.println("total Water reduction required:" + totalWaterReductionReq);
         System.out.println("The percentage of required reduction is " + wr*100);
         System.out.println("Total water reduction from a farm is: " + totalReduction);
         System.out.println("Total water reduction (%): " + resultReductionPct + "\n");
 
-        return totalReduction;
+        //return totalWaterReductionReq, totalReduction;
     }
 
     class cropType{

@@ -58,10 +58,11 @@ public class FarmerGUI extends JFrame {
         super(a.getLocalName());
         myAgent = a;
 
-        //Combobox ET0 preference and action listerner.
+        //Combobox ET0 preference and action listener.
+        
         String[] etListStrings = { "ET0-Spring", "ET0-Summer", "ET0-Autumn", "ET0-Winter"};
 
-        //Open file button and action listerner
+        //Open file button and action listener
         textDirButton = new JButton("Open file");
         textDirButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
@@ -71,7 +72,7 @@ public class FarmerGUI extends JFrame {
                     File f = chooser.getSelectedFile();
                     String filename = f.getAbsolutePath();
                     displayUI("Farming scheduale uploaded\n");
-                    //System.out.println("Farming scheduale uploaded");
+                    //System.out.println("Farming schedule uploaded");
                     //System.out.println(filename);
                     setFileDir(filename);
                 }
