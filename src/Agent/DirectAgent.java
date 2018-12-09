@@ -34,8 +34,7 @@ public class DirectAgent extends Agent {
     private AID[] sellerAgent;
 
     //Farmer information on each agent.
-    agentInfo farmerInfo = new agentInfo("", "", 0.0, 0.0, "avalable",0.0,0.0,
-            0.0,0.0,0.0,0);
+    agentInfo farmerInfo = new agentInfo("", "", 0.0, 0.0, "avalable", 0.0, 0.0, 0.0, 0.0, 0.0, 0);
 
     //The list of information (buying or selling) from agent which include price and mm^3
     private HashMap catalogue = new HashMap();
@@ -164,12 +163,10 @@ public class DirectAgent extends Agent {
                 }
                 calCrops.ET = calCrops.avgET0;
                 calCrops.farmFactorValues();
-                double actualReduction = calCrops.calcWaterReduction(totalWaterReductionPctg);
+                calCrops.calcWaterReduction(totalWaterReductionPctg);
                 resultCal.append("\n");
-                resultCal.append("Water reduction result:\n");
+                resultCal.append("Result:\n");
                 resultCal.append("\n");
-                resultCal.append("Actual reducion is:" + actualReduction + "\n");
-                //myGui.displayUI(xx.toString());
 
                 //Result calculation
                 Iterator itrR=calCrops.resultList.iterator();
@@ -183,23 +180,33 @@ public class DirectAgent extends Agent {
                             " " + df.format(st.literPerSecHec) + " " + df.format(st.waterReq) + " " + df.format(st.soilWaterContainValue) + " " + df.format(st.waterReqWithSoil) +
                             " " + df.format(st.cropCoefficient) + " " + df.format(st.waterReduction) + " " + df.format(st.productValueLost) + "\n");
                 }
-                //System.out.println("Actual reduction is: " + actualReduction);
-                resultCal.append("Actual reduction is: " + actualReduction + "\n");
-                resultCal.append("\n");
 
-                if (actualReduction >= (calCrops.totalWaterReq*totalWaterReductionPctg)) {
-                    farmerInfo.agentType = "seller";
-                    farmerInfo.waterVolumn = actualReduction;
-                    myGui.displayUI(resultCal.toString());
-                    //Clean parameter
-                    calCrops.resultList.clear();
-                    calCrops.calList.clear();
-                    calCrops.cropT.clear();
-                    calCrops.cv.clear();
-                    calCrops.ds.clear();
-                    calCrops.order.clear();
-                    calCrops.st.clear();
+                resultCal.append("Total water requirement on farm: " + calCrops.totalWaterReq + "\n");
+                resultCal.append("The water reduction requirement (%): " + actualRate + "\n");
+                resultCal.append("Water volume to reduction: " + calCrops.totalWaterReductionReq + "\n");
+                resultCal.append("Actual reduction on farm:" + calCrops.totalReduction + "\n");
+                resultCal.append("Actual reducion (%):" + calCrops.resultReductionPct + "\n");
+                
+
+                if (calCrops.resultReductionPct >= actualRate) {
+                    farmerInfo.agentType = "owner";
+                    resultCal.append("Selling water volumn: " + calCrops.waterVolToMarket);
+                    farmerInfo.waterVolumn = calCrops.waterVolToMarket;
+                }else {
+                	farmerInfo.agentType = "owner";
+                    resultCal.append("Buying water volumn: " + calCrops.waterVolToMarket);
+                    farmerInfo.waterVolumn = calCrops.waterVolToMarket;
                 }
+                myGui.displayUI(resultCal.toString());
+                
+              //Clean parameter
+                calCrops.resultList.clear();
+                calCrops.calList.clear();
+                calCrops.cropT.clear();
+                calCrops.cv.clear();
+                calCrops.ds.clear();
+                calCrops.order.clear();
+                calCrops.st.clear();
             }
         } );
     }

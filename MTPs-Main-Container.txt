@@ -1,1 +1,1 @@
-http://lincoln232.u.apnk.nz:7778/acc
+http://192.168.1.74:7778/acc

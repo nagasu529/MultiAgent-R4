@@ -499,15 +499,8 @@ public class Crop extends databaseConn
             this.waterReduction = waterReduction;
             this.productValueLost = productValueLost;
         }
-
-        public double getCropEU(){
-            return cropEU;
-        }
-        public void setCropEU(double cropEU){
-            this.cropEU = cropEU;
-        }
     }
-
+    
     //Profit Function and making decision about selling and buying water from others.
 
     public void profitFunction(double revenueValue, double waterReq, double waterReduction){
