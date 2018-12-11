@@ -29,8 +29,8 @@ public class databaseConn {
         //SQlite connietion string
 
         //String url = "jdbc:sqlite:/Users/kitti.ch/Dropbox/PhD-Lincoln/javaProgram/DBandText/db/FarmDB.sqlite"; //Macbook
-        String url = "jdbc:sqlite:C:/Users/chiewchk/Dropbox/PhD-Lincoln/javaProgram/DBandText/db/FarmDB.sqlite";  //Office
-        //String url = "jdbc:sqlite:G:/Dropbox/PhD-Lincoln/javaProgram/DBandText/db/FarmDB.sqlite"; //Home PC
+        //String url = "jdbc:sqlite:C:/Users/chiewchk/Dropbox/PhD-Lincoln/javaProgram/DBandText/db/FarmDB.sqlite";  //Office
+        String url = "jdbc:sqlite:G:/Dropbox/PhD-Lincoln/javaProgram/DBandText/db/FarmDB.sqlite"; //Home PC
         Connection conn = null;
         try {
             conn = DriverManager.getConnection(url);

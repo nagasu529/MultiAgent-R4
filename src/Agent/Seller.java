@@ -420,9 +420,9 @@ public class Seller extends Agent{
     public class agentInfo{
         String farmerName;
         String agentType;
-        double waterReqOnfarm;
-        double waterReducutionOnfarm;
         double waterVolumn;
+        double currentLookingVolumn;
+        double currentBidVolumn;
         double pricePerMM;
         String sellingStatus;
         double minPricePerMM;
@@ -432,13 +432,13 @@ public class Seller extends Agent{
         double previousPrice;
         int numBidder;
 
-        agentInfo(String farmerName, String agentType,double waterReqOnfarm, double waterReductionOnfarm, double waterVolumn, double pricePerMM, String sellingStatus, double minPricePerMM, double maxPricePerMM,
+        agentInfo(String farmerName, String agentType, double waterVolumn, double currentLookingVolumn, double currentBidVolumn, double pricePerMM, String sellingStatus, double minPricePerMM, double maxPricePerMM,
                   double currentPricePerMM, double biddedPrice, double previousPrice, int numBidder){
             this.farmerName = farmerName;
             this.agentType = agentType;
-            this.waterReqOnfarm = waterReqOnfarm;
-            this.waterReducutionOnfarm = waterReductionOnfarm;
             this.waterVolumn = waterVolumn;
+            this.currentLookingVolumn = currentLookingVolumn;
+            this.currentBidVolumn = currentBidVolumn;
             this.pricePerMM = pricePerMM;
             this.sellingStatus = sellingStatus;
             this.minPricePerMM = minPricePerMM;
