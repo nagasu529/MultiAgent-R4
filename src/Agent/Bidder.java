@@ -45,6 +45,7 @@ public class Bidder extends Agent {
         dfd.setName(getAID());
         ServiceDescription sd = new ServiceDescription();
         farmerInfo.agentType = "Farmer-auctioneer";
+        //sd.setType("bidder");
         sd.setType(farmerInfo.agentType);
         sd.setName(getAID().getName());
         farmerInfo.farmerName = getAID().getName();
@@ -174,7 +175,11 @@ public class Bidder extends Agent {
                 if (farmerInfo.currentLookingVolumn <=0) {
                 	farmerInfo.sellingStatus = "Finished bidding";
                 	myAgent.send(reply);
-                    doSuspend();
+
+                	//Delete service and deregister service from the system.
+                	myAgent.doDelete();
+                	myGUI.dispose();
+                	System.out.println(getAID().getName() + " terminating.");
 				}
                 
                 myAgent.send(reply);

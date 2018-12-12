@@ -96,7 +96,6 @@ public class Seller extends Agent{
                     addBehaviour(new RequestPerformer());
                     // Add the behaviour serving purchase orders from buyer agents
                     //addBehaviour(new PurchaseOrdersServer());
-
                 }
             }
         } );
@@ -203,6 +202,7 @@ public class Seller extends Agent{
                     //update bidder list
                     DFAgentDescription template = new DFAgentDescription();
                     ServiceDescription sd = new ServiceDescription();
+                    //sd.setType("bidder");
                     template.addServices(sd);
                     try {
                         DFAgentDescription[] result = DFService.search(myAgent, template);
@@ -328,8 +328,9 @@ public class Seller extends Agent{
                             System.out.println("Price = "+farmerInfo.currentPricePerMM);
                             myGui.displayUI(farmerInfo.farmerName +" successfully purchased from agent "+reply.getSender().getName().toString());
                             myGui.displayUI("Price = " + farmerInfo.currentPricePerMM);
-                            //doSuspend();
-                            //myAgent.doDelete();
+                            myAgent.doDelete();
+                            myGui.dispose();
+
                         }
                         else {
                             System.out.println("Attempt failed: requested water volumn already sold.");
@@ -338,7 +339,8 @@ public class Seller extends Agent{
 
                         step = 5;
                         System.out.println(step);
-                        doSuspend();
+                        //doSuspend();
+
                     }
                     else {
                         block();
@@ -350,7 +352,7 @@ public class Seller extends Agent{
         public boolean done() {
             if (step == 2 && bestBidder == null) {
                 //System.out.println("Attempt failed: "+volumeToBuy+" not available for sale");
-                myGui.displayUI("Attempt failed: do not have seller now".toString());
+                myGui.displayUI("Attempt failed: do not have bidder now".toString());
             }
             return ((step == 2 && bestBidder == null) || step == 5);
         }
