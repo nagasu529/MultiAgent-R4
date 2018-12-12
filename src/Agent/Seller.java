@@ -202,7 +202,7 @@ public class Seller extends Agent{
                     //update bidder list
                     DFAgentDescription template = new DFAgentDescription();
                     ServiceDescription sd = new ServiceDescription();
-                    //sd.setType("bidder");
+                    sd.setType("bidder");
                     template.addServices(sd);
                     try {
                         DFAgentDescription[] result = DFService.search(myAgent, template);
@@ -280,7 +280,7 @@ public class Seller extends Agent{
                         System.out.println("Best price is from " + bestBidder +"\n");
                         System.out.println("Price : " + bestPrice + "\n");
 
-                        if (repliesCnt >= bidderAgent.length-1) {
+                        if (repliesCnt >= bidderAgent.length) {
                             // We received all replies
                             step = 2;
                             System.out.println(step);

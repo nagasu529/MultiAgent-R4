@@ -45,8 +45,8 @@ public class Bidder extends Agent {
         dfd.setName(getAID());
         ServiceDescription sd = new ServiceDescription();
         farmerInfo.agentType = "Farmer-auctioneer";
-        //sd.setType("bidder");
-        sd.setType(farmerInfo.agentType);
+        sd.setType("bidder");
+        //sd.setType(farmerInfo.agentType);
         sd.setName(getAID().getName());
         farmerInfo.farmerName = getAID().getName();
         dfd.addServices(sd);
