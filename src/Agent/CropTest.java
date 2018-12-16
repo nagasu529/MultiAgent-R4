@@ -5,10 +5,7 @@ import Database.databaseConn;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -157,7 +154,6 @@ public class CropTest extends databaseConn
             calcSTValue();
             calcDSValue();
             calcCVValue();
-            //calcCropEU();
             calcWaterRequirement();
             calcSoilMoistureValue(15, 30);
             calcWaterReqWithSoil();
@@ -173,6 +169,8 @@ public class CropTest extends databaseConn
 
             listSize --;
         }
+
+        //Making Decision rules for crops based on water usage situation.
 
         calcCropEU();
         //Adding groosMargin fuction to calculate profit and margin on farm for making decision
@@ -245,7 +243,11 @@ public class CropTest extends databaseConn
         }
     }
 
-    public void farmFacValueRandom(String FarmName, Double waterCost){
+    public void farmFacValueRandom(){
+        Random rand = new Random();
+        List<String> farmerName = Arrays.asList("John", "Mark", "Dave", "Morgan", "Steve", "Anna", "Heather", "Nick", "Toby", "Rob");
+        List<Integer> cropStage = Arrays.asList(1, 2, 3, 4);
+        List
 
     }
 
@@ -396,17 +398,6 @@ public class CropTest extends databaseConn
             }
         }
 
-/*
-            //Result calculation
-            System.out.println("Water reduction result:");
-            System.out.println("");
-            Iterator itrR=resultList.iterator();
-            while (itrR.hasNext()) {
-                cropType st = (cropType)itrR.next();
-                System.out.println(st.cropEU + " " + st.cropName + " " + st.cropStage +
-                        " " + st.droubhtSensitivity + " " + st.dsValue + " " + st.stValue + " " + st.cvValue +
-                        " " + literPerSecHec + " " + st.waterReq + " " + st.cropCoefficient + " " + st.waterReduction);
-            }*/
     }
 
     //From Farmer file
@@ -508,6 +499,7 @@ public class CropTest extends databaseConn
     //Profit Function and making decision about selling and buying water from others.
 
     public void profitFunction(double revenueValue, double waterReq, double waterReduction){
+
 
     }
 }

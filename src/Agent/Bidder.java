@@ -5,7 +5,7 @@ import jade.core.AID;
 import jade.core.behaviours.*;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import Agent.Crop.cropType;
+import Agent.CropTest.cropType;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -17,7 +17,7 @@ import java.util.*;
 public class Bidder extends Agent {
 
     //The list of farmer who are seller (maps the water volumn to its based price)
-    Crop calCrops = new Crop();
+    CropTest calCrops = new CropTest();
 
     DecimalFormat df = new DecimalFormat("#.##");
 

@@ -348,6 +348,13 @@ public class databaseConn {
         //System.out.println("Kc Stage value is " + KcValue);
     }
 
+
+    //Input generater data from database.
+    public void randFarmInputData(String farmerName){
+
+    }
+
+
 //Method session
 
     //Bouble sort

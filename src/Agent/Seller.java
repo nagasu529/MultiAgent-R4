@@ -1,6 +1,6 @@
 package Agent;
 
-import Agent.Crop.cropType;
+import Agent.CropTest.cropType;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -26,7 +26,7 @@ public class Seller extends Agent{
 
     //The list of farmer who are seller (maps the water volumn to its based price)
     private SellerGUI myGui;
-    Crop calCrops = new Crop();
+    CropTest calCrops = new CropTest();
 
     DecimalFormat df = new DecimalFormat("#.##");
 
