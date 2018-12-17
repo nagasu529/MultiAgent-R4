@@ -23,6 +23,8 @@ public class databaseConn {
     public double totalIncome = 0.0;
     public double expanditureValue = 0.0;
     public double tonePerHec = 0.0;
+    public double pricePerKG = 0.0;
+    public double yieldAmount;
 
     //Database connect for calculationg ET0
     private Connection connect(){
@@ -30,7 +32,8 @@ public class databaseConn {
 
         //String url = "jdbc:sqlite:/Users/kitti.ch/Dropbox/PhD-Lincoln/javaProgram/DBandText/db/FarmDB.sqlite"; //Macbook
         //String url = "jdbc:sqlite:C:/Users/chiewchk/Dropbox/PhD-Lincoln/javaProgram/DBandText/db/FarmDB.sqlite";  //Office
-        String url = "jdbc:sqlite:G:/Dropbox/PhD-Lincoln/javaProgram/DBandText/db/FarmDB.sqlite"; //Home PC
+        //String url = "jdbc:sqlite:G:/Dropbox/PhD-Lincoln/javaProgram/DBandText/db/FarmDB.sqlite"; //Home PC
+        String url = "jdbc:sqlite:C:/Users/chiewchk/Dropbox/PhD-Lincoln/javaProgram/DBandText/db/FarmDB-temp.sqlite";  //Office
         Connection conn = null;
         try {
             conn = DriverManager.getConnection(url);
@@ -262,6 +265,46 @@ public class databaseConn {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
+    }
+
+    public double getPricePerKG(String cropName){
+        pricePerKG = 0.0;
+        String sql = "select PricePerKG FROM tempInput where cropName=?";
+        double tmp = 0.0;
+        try (Connection conn = this.connect();
+             PreparedStatement pstmt  = conn.prepareStatement(sql)){
+
+            // set the value
+            pstmt.setString(1,cropName);
+            //
+            ResultSet rs  = pstmt.executeQuery();
+
+            tmp = rs.getDouble("PricePerKG");
+            pricePerKG = tmp;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return pricePerKG;
+    }
+
+    public double getYieldAmount(String cropName){
+        yieldAmount = 0.0;
+        String sql = "select YieldAmount FROM tempInput where cropName=?";
+        double tmp = 0.0;
+        try (Connection conn = this.connect();
+             PreparedStatement pstmt  = conn.prepareStatement(sql)){
+
+            // set the value
+            pstmt.setString(1,cropName);
+            //
+            ResultSet rs  = pstmt.executeQuery();
+
+            tmp = rs.getDouble("YieldAmount");
+            yieldAmount = tmp;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return yieldAmount;
     }
 
     //Original KC calculation (without Ke soil water wetting data).

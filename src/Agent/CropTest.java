@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -244,11 +245,56 @@ public class CropTest extends databaseConn
     }
 
     public void farmFacValueRandom(){
-        Random rand = new Random();
-        List<String> farmerName = Arrays.asList("John", "Mark", "Dave", "Morgan", "Steve", "Anna", "Heather", "Nick", "Toby", "Rob");
-        List<Integer> cropStage = Arrays.asList(1, 2, 3, 4);
-        List
 
+        //Prepairing random data
+
+        Random rand = new Random();
+        List<String> farmerNameGen = Arrays.asList("John", "Mark", "Dave", "Morgan", "Steve", "Anna", "Heather", "Nick", "Toby", "Rob");
+        List<String> cropNameGen = Arrays.asList("Wheat", "Barley", "Pea(fresh)", "Maize(sweet)", "Tomato", "Bean(green)");
+        List<String> irrigationTypeGen = Arrays.asList("Sprinkler", "Basin", "Border", "Furrow", "Trickle");
+        List<String> cropStageGenText = Arrays.asList("Flowering", "Germination", "Development", "Ripening");
+        int cropStageGen = ThreadLocalRandom.current().nextInt(1, 4);
+        int droughtSensitivityGen = ThreadLocalRandom.current().nextInt(1,3);
+        double plotSizeGen = ThreadLocalRandom.current().nextDouble(300,1000);
+        int soilTypeGen = ThreadLocalRandom.current().nextInt(1, 3);
+        double consentCostGen = ThreadLocalRandom.current().nextDouble(10000, 20000);
+
+        //Generate 5 of crops are planted on single farm.
+        int numberOfElements = 5;
+        int farmNameGenIndex = rand.nextInt(farmerNameGen.size());
+        farmName = farmerNameGen.get(farmNameGenIndex);
+        waterConsentCost = rand.nextDouble();
+        for (int i = 0;i < numberOfElements; i++){
+            int cropNameGenIndex = rand.nextInt(cropNameGen.size());
+            cropName = cropNameGen.get(cropNameGenIndex);
+            cropNameGen.remove(cropNameGenIndex);
+            cropStage = cropStageGen;
+            droughtSensitivity = droughtSensitivityGen;
+            plotSize = plotSizeGen;
+            yieldAmount = getYieldAmount(cropName);
+            pricePerKg = getPricePerKG(cropName);
+            soilType = soilTypeGen;
+            int irrigationTypeIndex = rand.nextInt(irrigationTypeGen.size());
+            getIrrigationTypeValue(irrigationTypeGen.get(irrigationTypeIndex));
+            KcStageValue(cropName, cropStageGenText.get(cropStage), irrigationTypeGen.get(irrigationTypeIndex) );
+            cropKCoefficient = KcValue;
+
+            calcSTValue();
+            calcDSValue();
+            calcCVValue();
+            //calcCropEU();
+            calcWaterRequirement();
+            calcSoilMoistureValue(15, 30);
+            calcWaterReqWithSoil();
+            totalWaterReq();
+
+            cropType xx = new cropType(cropEU, cropName, cropStage, droughtSensitivity, dsValue, stValue,
+                    cvValue, literPerSecHec, waterReq, soilWaterContainValue, waterReqWithSoil, cropKCoefficient, waterReduction, productValueLost);
+            //adding multi value list
+            cropT.add(xx);
+
+            i ++;
+        }
     }
 
     public void calTotalProfit(){
