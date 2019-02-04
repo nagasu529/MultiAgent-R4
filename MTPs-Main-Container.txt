@@ -1,1 +1,1 @@
-http://192.168.1.74:7778/acc
+http://MB1634.lincoln.ac.nz:7778/acc
