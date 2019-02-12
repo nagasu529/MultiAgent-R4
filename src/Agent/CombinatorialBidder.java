@@ -20,8 +20,7 @@ public class CombinatorialBidder extends Agent {
     DecimalFormat df = new DecimalFormat("#.##");
 
     //Farmer information on each agent.
-    agentInfo farmerInfo = new agentInfo("", "", 0.0, 0.0, 0.0, 0.0, "Bidded", 0.0,
-            0.0, 0.0, 0.0, 0.0, 0);
+    agentInfo farmerInfo = new agentInfo("", "", 0.0, 0.0, 0.0, "");
 
     //Global bidding parameter
 
