@@ -20,7 +20,7 @@ public class CombinatorialBidder extends Agent {
     DecimalFormat df = new DecimalFormat("#.##");
 
     //Farmer information on each agent.
-    agentInfo farmerInfo = new agentInfo("", "", 0.0, 0.0, 0.0, "");
+    agentInfo farmerInfo = new agentInfo("", "", 0.0,0.0, 0.0, "", 0.0, 0.0, 0);
 
     //Global bidding parameter
 
@@ -60,12 +60,10 @@ public class CombinatorialBidder extends Agent {
                     myGUI.displayUI("\n");
                     myGUI.displayUI("Name: " + farmerInfo.farmerName + "\n");
                     myGUI.displayUI("Status: " + farmerInfo.agentType + "\n");
-                    myGUI.displayUI("Total buying water needed: " + df.format(farmerInfo.currentLookingVolumn));
-                    myGUI.displayUI("The target volume for buying : " + df.format(farmerInfo.currentLookingVolumn - farmerInfo.currentBidVolumn) + "\n");
-                    myGUI.displayUI("Bidding price: " + df.format(farmerInfo.pricePerMM) + "\n");
-                    myGUI.displayUI("Bidding status: " + farmerInfo.sellingStatus + "\n");
-                    myGUI.displayUI("MaxPrice:" + farmerInfo.maxPricePerMM + "\n");
-                    myGUI.displayUI("Number of bidder :" + farmerInfo.numBidder + "\n");
+                    myGUI.displayUI("Total buying water needed: " + df.format(farmerInfo.buyingVolumn));
+                    myGUI.displayUI("Water need currently " + df.format(farmerInfo.currentLookingVolumn));
+                    myGUI.displayUI("Maximum buying price (per MM.) " + df.format(farmerInfo.buyingPricePerMM));
+                    myGUI.displayUI("Selling / Buying stages " + farmerInfo.sellingStatus);
                     myGUI.displayUI("\n");
 
                     /*
@@ -100,7 +98,6 @@ public class CombinatorialBidder extends Agent {
     }
 
     private class OfferRequestsServer extends CyclicBehaviour {
-        Decision auctRules = new Decision();
         private int step = 0;
 
         public void action() {
@@ -111,25 +108,24 @@ public class CombinatorialBidder extends Agent {
             if (msg != null) {
                 ACLMessage reply = msg.createReply();
 
-                //Current price Per MM. and the number of volumn to sell.
+                //Price Per MM. and the number of volumn to sell from Seller.
                 String currentOffer = msg.getContent();
                 String[] arrOfstr = currentOffer.split("-");
-                myGUI.displayUI("current Offer from Seller: " + currentOffer + "\n");
-                farmerInfo.waterVolumn = Double.parseDouble(arrOfstr[0]);
-                farmerInfo.currentPricePerMM = Double.parseDouble(arrOfstr[1]);
+                myGUI.displayUI("Offer from Seller: " + currentOffer + "\n");
+                farmerInfo.waterVolumnFromSeller = Double.parseDouble(arrOfstr[0]);
+                farmerInfo.waterPriceFromSeller = Double.parseDouble(arrOfstr[1]);
                 farmerInfo.numBidder = Integer.parseInt(arrOfstr[2]);
 
-                myGUI.displayUI("current price bidded: " + farmerInfo.currentPricePerMM + "\n");
-                myGUI.displayUI("water volume from seller:" + farmerInfo.waterVolumn + "\n");
-                myGUI.displayUI("Previous price: " + farmerInfo.previousPrice + "\n");
+                myGUI.displayUI("Price setting up from Seller: " + farmerInfo.waterPriceFromSeller + " per MM" + "\n");
+                myGUI.displayUI("Selling volume from seller:" + farmerInfo.waterVolumnFromSeller + "\n");
                 myGUI.displayUI("Number of bidder :" + farmerInfo.numBidder + "\n");
 
                 //English Auction Process
-                if (farmerInfo.currentPricePerMM < farmerInfo.maxPricePerMM) {
-                    String currentBidOffer = farmerInfo.waterVolumn + "-" + farmerInfo.previousPrice;
-                    reply.setContent(currentBidOffer);
+                if (farmerInfo.waterPriceFromSeller < farmerInfo.buyingPricePerMM) {
+                    String sendingOffer = farmerInfo.buyingVolumn + "-" + farmerInfo.buyingPricePerMM;
+                    reply.setContent(sendingOffer);
                     myAgent.send(reply);
-                    myGUI.displayUI("Current Offer : " + reply.getContent() + "\n");
+                    myGUI.displayUI("Sending Offer : " + reply.getContent() + "\n");
                     myGUI.displayUI(log + "\n");
                 } else {
                     reply.setPerformative(ACLMessage.REFUSE);
@@ -156,8 +152,8 @@ public class CombinatorialBidder extends Agent {
 
                 //water requirement for next round bidding.
                 myGUI.displayUI(msg.getSender().getLocalName()+" sell water to agent "+ getAID().getLocalName());
-                farmerInfo.currentBidVolumn = farmerInfo.waterVolumn;
-                farmerInfo.currentLookingVolumn = farmerInfo.currentLookingVolumn - farmerInfo.currentBidVolumn;
+                farmerInfo.currentLookingVolumn = farmerInfo.buyingVolumn;
+                farmerInfo.currentLookingVolumn = farmerInfo.buyingVolumn - farmerInfo.currentLookingVolumn;
 
                 if (farmerInfo.currentLookingVolumn <=0) {
                     farmerInfo.sellingStatus = "Finished bidding";
@@ -182,8 +178,8 @@ public class CombinatorialBidder extends Agent {
             public void action() {
                 //input bidding information parameter
                 farmerInfo.sellingStatus = "looking";
-                farmerInfo.pricePerMM = buyingPrice;
-                farmerInfo.currentLookingVolumn = volumnToBuy;
+                farmerInfo.buyingPricePerMM = buyingPrice;
+                farmerInfo.buyingVolumn = volumnToBuy;
             }
         });
     }
@@ -193,17 +189,23 @@ public class CombinatorialBidder extends Agent {
         String agentType;
         double buyingVolumn;
         double currentLookingVolumn;
-        double pricePerMM;
+        double buyingPricePerMM;
         String sellingStatus;
+        double waterVolumnFromSeller;
+        double waterPriceFromSeller;
+        double numBidder;
 
         agentInfo(String farmerName, String agentType, double buyingVolumn, double currentLookingVolumn,
-                  double pricePerMM, String sellingStatus){
+                  double buyingPricePerMM, String sellingStatus, double waterVolumnFromSeller, double waterPriceFromSeller, double numBidder){
             this.farmerName = farmerName;
             this.agentType = agentType;
             this.buyingVolumn = buyingVolumn;
             this.currentLookingVolumn = currentLookingVolumn;
-            this.pricePerMM = pricePerMM;
+            this.buyingPricePerMM = buyingPricePerMM;
             this.sellingStatus = sellingStatus;
+            this.waterVolumnFromSeller = waterVolumnFromSeller;
+            this.waterPriceFromSeller = waterPriceFromSeller;
+            this.numBidder = numBidder;
         }
     }
 }

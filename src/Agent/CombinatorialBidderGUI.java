@@ -23,7 +23,7 @@ public class CombinatorialBidderGUI extends JFrame {
         return sVolumnToBuy;
     }
 
-    private JTextField buyingPriceField, volumeToBuy;
+    private JTextField buyingPriceField, volumeToBuyField;
     private JTextArea log;
 
     CombinatorialBidderGUI(CombinatorialBidder a){
@@ -37,8 +37,8 @@ public class CombinatorialBidderGUI extends JFrame {
         p.add(buyingPriceField);
 
         p.add(new JLabel("Volume to buy:"));
-        volumeToBuy = new JTextField(5);
-        p.add(volumeToBuy);
+        volumeToBuyField = new JTextField(5);
+        p.add(volumeToBuyField);
 
 
         getContentPane().add(p, BorderLayout.CENTER);
@@ -57,11 +57,11 @@ public class CombinatorialBidderGUI extends JFrame {
                 try {
                     String buyingPirce = buyingPriceField.getText().trim();
                     setPrice(Double.parseDouble(buyingPirce));
-                    String volume = volumeToBuy.getText().trim();
+                    String volume = volumeToBuyField.getText().trim();
                     setVolumeToBuy(Double.parseDouble(volume));
-                    bidderAgent.bidderInput(getMinPrice(), getMaxPrice(), getVolumnToBuy());
-                    minPriceField.setText("");
-                    maxPriceField.setText("");
+                    bidderAgent.bidderInput(getPrice(), getVolumnToBuy());
+                    buyingPriceField.setText("");
+                    volumeToBuyField.setText("");
 
                 }
                 catch (Exception e) {

@@ -37,7 +37,7 @@ public class CombinatorialSeller extends Agent {
     int countTick;
 
     //Farmer information on each agent.
-    agentInfo farmerInfo = new agentInfo("", "", 0.0, 10, 0, 0, "avalable", 0.0, 0.0, 10, 10, 0.0, 0);
+    agentInfo farmerInfo = new agentInfo("", "", 0.0,0.0, 0.0, "", 0.0, 0.0, 0);
 
     //The list of information (buying or selling) from agent which include price and mm^3
     private HashMap catalogue = new HashMap();
@@ -422,32 +422,24 @@ public class CombinatorialSeller extends Agent {
     public class agentInfo{
         String farmerName;
         String agentType;
-        double waterVolumn;
+        double buyingVolumn;
         double currentLookingVolumn;
-        double currentBidVolumn;
-        double pricePerMM;
+        double buyingPricePerMM;
         String sellingStatus;
-        double minPricePerMM;
-        double maxPricePerMM;
-        double currentPricePerMM;
-        double bidedPrice;
-        double previousPrice;
-        int numBidder;
+        double waterVolumnFromSeller;
+        double waterPriceFromSeller;
+        double numBidder;
 
-        agentInfo(String farmerName, String agentType, double waterVolumn, double currentLookingVolumn, double currentBidVolumn, double pricePerMM, String sellingStatus, double minPricePerMM, double maxPricePerMM,
-                  double currentPricePerMM, double biddedPrice, double previousPrice, int numBidder){
+        agentInfo(String farmerName, String agentType, double buyingVolumn, double currentLookingVolumn,
+                  double buyingPricePerMM, String sellingStatus, double waterVolumnFromSeller, double waterPriceFromSeller, double numBidder){
             this.farmerName = farmerName;
             this.agentType = agentType;
-            this.waterVolumn = waterVolumn;
+            this.buyingVolumn = buyingVolumn;
             this.currentLookingVolumn = currentLookingVolumn;
-            this.currentBidVolumn = currentBidVolumn;
-            this.pricePerMM = pricePerMM;
+            this.buyingPricePerMM = buyingPricePerMM;
             this.sellingStatus = sellingStatus;
-            this.minPricePerMM = minPricePerMM;
-            this.maxPricePerMM = maxPricePerMM;
-            this.currentPricePerMM = currentPricePerMM;
-            this.bidedPrice = biddedPrice;
-            this.previousPrice = previousPrice;
+            this.waterVolumnFromSeller = waterVolumnFromSeller;
+            this.waterPriceFromSeller = waterPriceFromSeller;
             this.numBidder = numBidder;
         }
     }

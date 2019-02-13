@@ -504,6 +504,7 @@ public class Crop extends databaseConn
     //Profit Function and making decision about selling and buying water from others.
 
     public void profitFunction(double revenueValue, double waterReq, double waterReduction){
-
     }
+
+
 }
