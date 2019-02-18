@@ -122,7 +122,7 @@ public class CombinatorialBidder extends Agent {
 
                 //English Auction Process
                 if (farmerInfo.waterPriceFromSeller < farmerInfo.buyingPricePerMM) {
-                    String sendingOffer = farmerInfo.buyingVolumn + "-" + farmerInfo.buyingPricePerMM;
+                    String sendingOffer = farmerInfo.farmerName + "-" + farmerInfo.buyingVolumn + "-" + farmerInfo.buyingPricePerMM;
                     reply.setContent(sendingOffer);
                     myAgent.send(reply);
                     myGUI.displayUI("Sending Offer : " + reply.getContent() + "\n");
