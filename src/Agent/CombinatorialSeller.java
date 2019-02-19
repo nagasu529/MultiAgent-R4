@@ -82,12 +82,11 @@ public class CombinatorialSeller extends Agent {
                     myGui.displayUI("\n");
                     myGui.displayUI("Name: " + farmerInfo.farmerName + "\n");
                     myGui.displayUI("Status: " + farmerInfo.agentType + "\n");
-                    myGui.displayUI("Volumn to sell: " + farmerInfo.sellingVolume+ "\n");
+                    myGui.displayUI("Volumn to sell: " + farmerInfo.sellingVolume + "\n");
                     myGui.displayUI("Selling price: " + farmerInfo.sellingPrice + "\n");
                     myGui.displayUI("Selling status: " + farmerInfo.sellingStatus + "\n");
                     myGui.displayUI("Providing price" + "\n");
                     myGui.displayUI("\n");
-
                     /*
                      ** Selling water process
                      */
@@ -182,8 +181,7 @@ public class CombinatorialSeller extends Agent {
      * 	This behaviour is used by buyer mechanism to request seller agents for water pricing ana selling capacity.
      */
     private class RequestPerformer extends Behaviour {
-        private AID bestBidder; // The agent who provides the best offer
-        private double bestPrice;  // The best offered price
+        private AID[] acceptedDealBidder; // The agent who provides the best offer
         private int repliesCnt; // The counter of replies from seller agents
         private MessageTemplate mt; // The template to receive replies
         ArrayList<Double> order = new ArrayList<Double>();  //sorted list follows maximumprice factor.
@@ -229,6 +227,8 @@ public class CombinatorialSeller extends Agent {
                             cfp.addReceiver(bidderAgent[i]);
                         }
                     }
+                    cfp.setContent(String.valueOf(Double.toString(farmerInfo.waterVolumnFromSeller) + "-"
+                            + Double.toString((farmerInfo.waterPriceFromSeller))));
                     cfp.setConversationId("bidding");
                     cfp.setReplyWith("cfp"+System.currentTimeMillis()); // Unique value
                     myAgent.send(cfp);
@@ -241,7 +241,6 @@ public class CombinatorialSeller extends Agent {
                     break;
 
                 case 1:
-
                     // Receive all proposals/refusals from bidder agents
                     //Sorted all offers based on pricePermm.
                     ACLMessage reply = myAgent.receive(mt);
@@ -266,6 +265,7 @@ public class CombinatorialSeller extends Agent {
                             combinatorialList xx = new combinatorialList(agentName, waterVolFromBidder, biddedPriceFromBidder, 0);
                             buyerList.add(x,xx);
                         }
+
                         if (repliesCnt >= bidderAgent.length) {
                             // We received all replies
                             step = 2;
@@ -281,24 +281,30 @@ public class CombinatorialSeller extends Agent {
 
                     Iterator itr = buyerList.iterator();
                     while (itr.hasNext()){
-
+                        combinatorialList bl = (combinatorialList) itr.next();
+                        bl.receivedWaterFromSeller = farmerInfo.sellingVolume - farmerInfo.buyingVolumn;
+                        if(bl.receivedWaterFromSeller < 0){
+                            Math.abs(bl.receivedWaterFromSeller);
+                            farmerInfo.sellingVolume = 0;
+                        }
+                        myGui.displayUI(bl.agentName + " " + bl.pricePerMM + " " + bl.receivedWaterFromSeller);
                     }
 
-
-
-                    if(refuseCnt >=1 && proposeCnt==1|| farmerInfo.numBidder ==1 && countTick > 5){
-                        step = 3;
-                        System.out.println(step);
-                    }else {
-                        step = 0;
-                        System.out.println(step);
-                        refuseCnt = 0;
-                        proposeCnt = 0;
-                        repliesCnt = 0;
-                    }
+                    step = 3;
                     break;
+
                 case 3:
                     // Send the purchase order to the seller that provided the best offer
+                    for(i =0; i < buyerList.size();++i){
+
+                    }
+
+
+
+
+
+
+
                     ACLMessage order = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
                     order.addReceiver(bestBidder);
                     order.setContent(String.valueOf(farmerInfo.currentPricePerMM));
