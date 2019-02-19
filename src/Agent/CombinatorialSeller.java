@@ -181,7 +181,6 @@ public class CombinatorialSeller extends Agent {
      * 	This behaviour is used by buyer mechanism to request seller agents for water pricing ana selling capacity.
      */
     private class RequestPerformer extends Behaviour {
-        private AID[] acceptedDealBidder; // The agent who provides the best offer
         private int repliesCnt; // The counter of replies from seller agents
         private MessageTemplate mt; // The template to receive replies
         ArrayList<Double> order = new ArrayList<Double>();  //sorted list follows maximumprice factor.
@@ -279,73 +278,43 @@ public class CombinatorialSeller extends Agent {
                     //compare the price and cheking with water valumn to sell
                     //Prepairing the selling list (top list for sell water) and preparing accept proposal message
 
+                    // Send the purchase order to the seller that provided the best offer
+                    ACLMessage acceptedRequest = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
+
+                    //Refuse message prepairing
+                    ACLMessage rejectedRequest = new ACLMessage(ACLMessage.REFUSE);
+
                     Iterator itr = buyerList.iterator();
                     while (itr.hasNext()){
                         combinatorialList bl = (combinatorialList) itr.next();
                         bl.receivedWaterFromSeller = farmerInfo.sellingVolume - farmerInfo.buyingVolumn;
                         if(bl.receivedWaterFromSeller < 0){
-                            Math.abs(bl.receivedWaterFromSeller);
+                            bl.receivedWaterFromSeller = bl.waterVolume + bl.receivedWaterFromSeller;
                             farmerInfo.sellingVolume = 0;
                         }
+                        for(int i=0; i < bidderAgent.length; ++i){
+                            if(bl.receivedWaterFromSeller > 0 && bidderAgent[i].getName().equals(bl.agentName)){
+                                acceptedRequest.addReceiver(bidderAgent[i]);
+                                acceptedRequest.setContent(String.valueOf(bl.receivedWaterFromSeller));
+                                acceptedRequest.setConversationId("bidding");
+                                acceptedRequest.setReplyWith("acceptedRequest" + System.currentTimeMillis());
+                                myAgent.send(acceptedRequest);
+                            }else {
+                                rejectedRequest.addReceiver(bidderAgent[i]);
+                            }
+                        }
                         myGui.displayUI(bl.agentName + " " + bl.pricePerMM + " " + bl.receivedWaterFromSeller);
+
                     }
 
                     step = 3;
                     break;
 
                 case 3:
-                    // Send the purchase order to the seller that provided the best offer
-                    for(i =0; i < buyerList.size();++i){
 
-                    }
-
-
-
-
-
-
-
-                    ACLMessage order = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
-                    order.addReceiver(bestBidder);
-                    order.setContent(String.valueOf(farmerInfo.currentPricePerMM));
-                    order.setConversationId("bidding");
-                    order.setReplyWith("order"+System.currentTimeMillis());
-                    myAgent.send(order);
-                    // Prepare the template to get the purchase order reply
-                    mt = MessageTemplate.and(MessageTemplate.MatchConversationId("bidding"),
-                            MessageTemplate.MatchInReplyTo(order.getReplyWith()));
-
-                    step = 4;
-                    System.out.println(step);
                     break;
                 case 4:
-                    // Receive the purchase order reply
-                    reply = myAgent.receive(mt);
-                    if (reply != null) {
-                        // Purchase order reply received
-                        if (reply.getPerformative() == ACLMessage.INFORM) {
-                            // Purchase successful. We can terminate
-                            System.out.println(farmerInfo.farmerName +" successfully purchased from agent "+reply.getSender().getName());
-                            System.out.println("Price = "+farmerInfo.currentPricePerMM);
-                            myGui.displayUI(farmerInfo.farmerName +" successfully purchased from agent "+reply.getSender().getName().toString());
-                            myGui.displayUI("Price = " + farmerInfo.currentPricePerMM);
-                            myAgent.doDelete();
-                            myGui.dispose();
 
-                        }
-                        else {
-                            System.out.println("Attempt failed: requested water volumn already sold.");
-                            myGui.displayUI("Attempt failed: requested water volumn already sold.");
-                        }
-
-                        step = 5;
-                        System.out.println(step);
-                        //doSuspend();
-
-                    }
-                    else {
-                        block();
-                    }
                     break;
             }
         }
