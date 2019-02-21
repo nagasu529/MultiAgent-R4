@@ -60,10 +60,10 @@ public class CombinatorialBidder extends Agent {
                     myGUI.displayUI("\n");
                     myGUI.displayUI("Name: " + farmerInfo.farmerName + "\n");
                     myGUI.displayUI("Status: " + farmerInfo.agentType + "\n");
-                    myGUI.displayUI("Total buying water needed: " + df.format(farmerInfo.buyingVolumn));
-                    myGUI.displayUI("Water need currently " + df.format(farmerInfo.currentLookingVolumn));
-                    myGUI.displayUI("Maximum buying price (per MM.) " + df.format(farmerInfo.buyingPricePerMM));
-                    myGUI.displayUI("Selling / Buying stages " + farmerInfo.sellingStatus);
+                    myGUI.displayUI("Total buying water needed: " + df.format(farmerInfo.buyingVolumn) + "\n");
+                    myGUI.displayUI("Water need currently " + df.format(farmerInfo.currentLookingVolumn) + "\n");
+                    myGUI.displayUI("Maximum buying price (per MM.) " + df.format(farmerInfo.buyingPricePerMM) + "\n");
+                    myGUI.displayUI("Selling / Buying stages " + farmerInfo.sellingStatus + "\n");
                     myGUI.displayUI("\n");
 
                     /*
@@ -98,8 +98,6 @@ public class CombinatorialBidder extends Agent {
     }
 
     private class OfferRequestsServer extends CyclicBehaviour {
-        private int step = 0;
-
         public void action() {
             MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
             ACLMessage msg = myAgent.receive(mt);
@@ -114,15 +112,17 @@ public class CombinatorialBidder extends Agent {
                 myGUI.displayUI("Offer from Seller: " + currentOffer + "\n");
                 farmerInfo.waterVolumnFromSeller = Double.parseDouble(arrOfstr[0]);
                 farmerInfo.waterPriceFromSeller = Double.parseDouble(arrOfstr[1]);
-                farmerInfo.numBidder = Integer.parseInt(arrOfstr[2]);
+                //farmerInfo.numBidder = Integer.parseInt(arrOfstr[2]);
 
                 myGUI.displayUI("Price setting up from Seller: " + farmerInfo.waterPriceFromSeller + " per MM" + "\n");
                 myGUI.displayUI("Selling volume from seller:" + farmerInfo.waterVolumnFromSeller + "\n");
                 myGUI.displayUI("Number of bidder :" + farmerInfo.numBidder + "\n");
 
-                //English Auction Process
-                if (farmerInfo.waterPriceFromSeller < farmerInfo.buyingPricePerMM) {
-                    String sendingOffer = farmerInfo.farmerName + "-" + farmerInfo.buyingVolumn + "-" + farmerInfo.buyingPricePerMM;
+                //Auction Process
+                if (farmerInfo.waterPriceFromSeller <= farmerInfo.buyingPricePerMM) {
+                    reply.setPerformative(ACLMessage.PROPOSE);
+                    //String sendingOffer = farmerInfo.farmerName + "-" + farmerInfo.buyingVolumn + "-" + farmerInfo.buyingPricePerMM;
+                    String sendingOffer = farmerInfo.buyingVolumn + "-" + farmerInfo.buyingPricePerMM;
                     reply.setContent(sendingOffer);
                     myAgent.send(reply);
                     myGUI.displayUI("Sending Offer : " + reply.getContent() + "\n");
