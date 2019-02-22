@@ -37,7 +37,7 @@ public class CombinatorialSeller extends Agent {
     int countTick;
 
     //Farmer information on each agent.
-    agentInfo farmerInfo = new agentInfo("", "", 0.0,10.0, 0.0, 0.0, 0.0,"", 0);
+    agentInfo farmerInfo = new agentInfo("", "", 0.0,0.0, 10.0, 0.0, 0.0,"", 0);
 
     //The list of information (buying or selling) from agent which include price and mm^3
     private HashMap catalogue = new HashMap();
@@ -74,10 +74,10 @@ public class CombinatorialSeller extends Agent {
                 if (farmerInfo.agentType=="owner"||farmerInfo.agentType=="Farmer-owner") {
                     //Register the seller description service on yellow pages.
                     farmerInfo.agentType = "Farmer-owner";
-                    //farmerInfo.pricePerMM = 10;
+                    farmerInfo.sellingPrice = 10;
                     sd.setType(farmerInfo.agentType);
                     sd.setName(getAID().getName());
-                    farmerInfo.farmerName = getAID().getName();
+                    farmerInfo.farmerName = getAID().getLocalName();
 
                     myGui.displayUI("\n");
                     myGui.displayUI("Name: " + farmerInfo.farmerName + "\n");
@@ -251,9 +251,9 @@ public class CombinatorialSeller extends Agent {
                             // This is an offer
                             String biddedFromAcutioneer = reply.getContent();
                             String[] arrOfStr = biddedFromAcutioneer.split("-");
-                            //agentName = arrOfStr[0];
-                            waterVolFromBidder = Double.parseDouble(arrOfStr[0]);
-                            biddedPriceFromBidder = Double.parseDouble(arrOfStr[1]);
+                            agentName = arrOfStr[0];
+                            waterVolFromBidder = Double.parseDouble(arrOfStr[1]);
+                            biddedPriceFromBidder = Double.parseDouble(arrOfStr[2]);
 
                             //created buyerList based on higthest price
                             order.add(biddedPriceFromBidder);
@@ -261,7 +261,6 @@ public class CombinatorialSeller extends Agent {
                             int x = order.indexOf(biddedPriceFromBidder);
                             combinatorialList xx = new combinatorialList(agentName, waterVolFromBidder, biddedPriceFromBidder, 0);
                             buyerList.add(x,xx);
-                            System.out.println(buyerList);
                         }
 
                         if (repliesCnt >= bidderAgent.length) {
@@ -286,26 +285,33 @@ public class CombinatorialSeller extends Agent {
                     //Refuse message prepairing
                     ACLMessage rejectedRequest = new ACLMessage(ACLMessage.REFUSE);
 
+
                     Iterator itr = buyerList.iterator();
-                    while (itr.hasNext()) {
+                    while (itr.hasNext()){
                         combinatorialList bl = (combinatorialList) itr.next();
-                        bl.receivedWaterFromSeller = farmerInfo.sellingVolume - farmerInfo.buyingVolumn;
-                        if (bl.receivedWaterFromSeller < 0) {
-                            bl.receivedWaterFromSeller = bl.waterVolume + bl.receivedWaterFromSeller;
+                        if(farmerInfo.sellingVolume > bl.waterVolume) {
+                            bl.receivedWaterFromSeller = bl.waterVolume;
+                            farmerInfo.sellingVolume = farmerInfo.sellingVolume - bl.waterVolume;
+                        }else {
+                            bl.receivedWaterFromSeller = farmerInfo.sellingVolume;
                             farmerInfo.sellingVolume = 0;
                         }
-                        for(int i=0; i < bidderAgent.length; ++i){
-                            if(bl.receivedWaterFromSeller > 0 && bidderAgent[i].getName().equals(bl.agentName)){
+                        for(int i=0; i < bidderAgent.length;i++){
+                            if(bl.receivedWaterFromSeller > 0 && bidderAgent[i].getLocalName().equals(bl.agentName)){
                                 acceptedRequest.addReceiver(bidderAgent[i]);
                                 acceptedRequest.setContent(String.valueOf(bl.receivedWaterFromSeller));
                                 acceptedRequest.setConversationId("bidding");
                                 acceptedRequest.setReplyWith("acceptedRequest" + System.currentTimeMillis());
+                                myGui.displayUI(acceptedRequest.toString());
                                 myAgent.send(acceptedRequest);
-                            }else {
+                            }else{
                                 rejectedRequest.addReceiver(bidderAgent[i]);
+                                myGui.displayUI(rejectedRequest.toString());
                                 myAgent.send(rejectedRequest);
                             }
                         }
+                        System.out.println("Price: " + bl.pricePerMM + " " + "Volumn request: " + bl.waterVolume + " " +"Received volumn from seller: " +  bl.receivedWaterFromSeller);
+
                     }
 
                     mt = MessageTemplate.and(MessageTemplate.MatchConversationId("bidding"),MessageTemplate.MatchInReplyTo
@@ -407,23 +413,23 @@ public class CombinatorialSeller extends Agent {
     public class agentInfo{
         String farmerName;
         String agentType;
+        double buyingPricePerMM;
         double buyingVolumn;
         double sellingPrice;
         double sellingVolume;
         double currentLookingVolumn;
-        double buyingPricePerMM;
         String sellingStatus;
         double numBidder;
 
-        agentInfo(String farmerName, String agentType, double buyingVolumn, double sellingPrice, double sellingVolume, double currentLookingVolumn,
-                  double buyingPricePerMM, String sellingStatus, double numBidder){
+        agentInfo(String farmerName, String agentType,double buyingPricePerMM, double buyingVolumn, double sellingPrice, double sellingVolume, double currentLookingVolumn,
+                  String sellingStatus, double numBidder){
             this.farmerName = farmerName;
             this.agentType = agentType;
+            this.buyingPricePerMM = buyingPricePerMM;
             this.buyingVolumn = buyingVolumn;
             this.sellingPrice = sellingPrice;
             this.sellingVolume = sellingVolume;
             this.currentLookingVolumn = currentLookingVolumn;
-            this.buyingPricePerMM = buyingPricePerMM;
             this.sellingStatus = sellingStatus;
             this.numBidder = numBidder;
         }

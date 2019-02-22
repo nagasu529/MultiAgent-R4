@@ -44,7 +44,7 @@ public class CombinatorialBidder extends Agent {
         sd.setType("bidder");
         //sd.setType(farmerInfo.agentType);
         sd.setName(getAID().getName());
-        farmerInfo.farmerName = getAID().getName();
+        farmerInfo.farmerName = getAID().getLocalName();
         dfd.addServices(sd);
         try {
             DFService.register(this, dfd);
@@ -116,13 +116,12 @@ public class CombinatorialBidder extends Agent {
 
                 myGUI.displayUI("Price setting up from Seller: " + farmerInfo.waterPriceFromSeller + " per MM" + "\n");
                 myGUI.displayUI("Selling volume from seller:" + farmerInfo.waterVolumnFromSeller + "\n");
-                myGUI.displayUI("Number of bidder :" + farmerInfo.numBidder + "\n");
 
                 //Auction Process
                 if (farmerInfo.waterPriceFromSeller <= farmerInfo.buyingPricePerMM) {
                     reply.setPerformative(ACLMessage.PROPOSE);
-                    //String sendingOffer = farmerInfo.farmerName + "-" + farmerInfo.buyingVolumn + "-" + farmerInfo.buyingPricePerMM;
-                    String sendingOffer = farmerInfo.buyingVolumn + "-" + farmerInfo.buyingPricePerMM;
+                    String sendingOffer = farmerInfo.farmerName + "-" + farmerInfo.buyingVolumn + "-" + farmerInfo.buyingPricePerMM;
+                    //String sendingOffer = farmerInfo.buyingVolumn + "-" + farmerInfo.buyingPricePerMM;
                     reply.setContent(sendingOffer);
                     myAgent.send(reply);
                     myGUI.displayUI("Sending Offer : " + reply.getContent() + "\n");
