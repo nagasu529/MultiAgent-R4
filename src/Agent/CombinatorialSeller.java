@@ -30,9 +30,6 @@ public class CombinatorialSeller extends Agent {
 
     DecimalFormat df = new DecimalFormat("#.##");
 
-    //The list of known water selling agent
-    private AID[] bidderAgent;
-
     //Counting list (single negotiation process)
     int countTick;
 
@@ -181,6 +178,8 @@ public class CombinatorialSeller extends Agent {
      * 	This behaviour is used by buyer mechanism to request seller agents for water pricing ana selling capacity.
      */
     private class RequestPerformer extends Behaviour {
+        //The list of known water selling agent
+        private AID[] bidderAgent;
         private int repliesCnt; // The counter of replies from seller agents
         private MessageTemplate mt; // The template to receive replies
         ArrayList<Double> order = new ArrayList<Double>();  //sorted list follows maximumprice factor.
@@ -188,6 +187,7 @@ public class CombinatorialSeller extends Agent {
         private String agentName;
         private double waterVolFromBidder;
         private double biddedPriceFromBidder;
+        private int negotiateCnt;
 
 
         private int step = 0;
@@ -195,7 +195,6 @@ public class CombinatorialSeller extends Agent {
         public void action() {
             switch (step) {
                 case 0:
-
                     //update bidder list
                     DFAgentDescription template = new DFAgentDescription();
                     ServiceDescription sd = new ServiceDescription();
@@ -278,14 +277,6 @@ public class CombinatorialSeller extends Agent {
                      * Sendding message to bidders wiht two types (Accept proposal or Refuse) based on
                      * accepted water volumn to sell.
                      */
-
-                    // Send the purchase order to the seller that provided the best offer
-                    ACLMessage acceptedRequest = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
-
-                    //Refuse message prepairing
-                    ACLMessage rejectedRequest = new ACLMessage(ACLMessage.REFUSE);
-
-
                     Iterator itr = buyerList.iterator();
                     while (itr.hasNext()){
                         combinatorialList bl = (combinatorialList) itr.next();
@@ -298,25 +289,29 @@ public class CombinatorialSeller extends Agent {
                         }
                         for(int i=0; i < bidderAgent.length;i++){
                             if(bl.receivedWaterFromSeller > 0 && bidderAgent[i].getLocalName().equals(bl.agentName)){
+                                negotiateCnt++;
+                                // Send the purchase order to the seller that provided the best offer
+                                ACLMessage acceptedRequest = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
                                 acceptedRequest.addReceiver(bidderAgent[i]);
                                 acceptedRequest.setContent(String.valueOf(bl.receivedWaterFromSeller));
                                 acceptedRequest.setConversationId("bidding");
                                 acceptedRequest.setReplyWith("acceptedRequest" + System.currentTimeMillis());
                                 myGui.displayUI(acceptedRequest.toString());
                                 myAgent.send(acceptedRequest);
+                                mt = MessageTemplate.and(MessageTemplate.MatchConversationId("bidding"),MessageTemplate.MatchInReplyTo
+                                        (acceptedRequest.getReplyWith()));
                             }else{
+                                //Refuse message prepairing
+                                ACLMessage rejectedRequest = new ACLMessage(ACLMessage.REFUSE);
                                 rejectedRequest.addReceiver(bidderAgent[i]);
                                 myGui.displayUI(rejectedRequest.toString());
                                 myAgent.send(rejectedRequest);
+                                //mt = MessageTemplate.and(MessageTemplate.MatchConversationId("bidding"),MessageTemplate.MatchInReplyTo(rejectedRequest.getReplyWith()));
                             }
                         }
                         System.out.println("Price: " + bl.pricePerMM + " " + "Volumn request: " + bl.waterVolume + " " +"Received volumn from seller: " +  bl.receivedWaterFromSeller);
 
                     }
-
-                    mt = MessageTemplate.and(MessageTemplate.MatchConversationId("bidding"),MessageTemplate.MatchInReplyTo
-                            (acceptedRequest.getReplyWith()));
-
                     step = 3;
                     System.out.println(step + "YYYYY");
                     break;
@@ -325,38 +320,44 @@ public class CombinatorialSeller extends Agent {
                     // Receive the purchase order reply
                     reply = myAgent.receive(mt);
                     if (reply != null) {
+                        double soldVolumn = 0;
+                        negotiateCnt--;
+                        System.out.println("\n" + "Reply message:" + reply.toString());
+                        myGui.displayUI("\n" + "Reply message:" + reply.toString());
                         // Purchase order reply received
                         if (reply.getPerformative() == ACLMessage.INFORM) {
+                            System.out.println("accepted volumn from seller" + reply.getContent());
+                            farmerInfo.sellingVolume = farmerInfo.sellingVolume - soldVolumn;
                             // Purchase successful. We can terminate
                             System.out.println(farmerInfo.farmerName +" successfully purchased from agent "+reply.getSender().getName());
                             //System.out.println("Price = "+farmerInfo.currentPricePerMM);
                             myGui.displayUI(farmerInfo.farmerName +" successfully purchased from agent "+reply.getSender().getName().toString());
                             //myGui.displayUI("Price = " + farmerInfo.currentPricePerMM);
-                            myAgent.doDelete();
-                            myGui.dispose();
+                            //myAgent.doDelete();
+                            //myGui.dispose();
                         }
                         else {
                             System.out.println("Attempt failed: requested water volumn already sold." + "\n");
                             myGui.displayUI("Attempt failed: requested water volumn already sold." + "\n");
                         }
-
-                        step = 4;
-                        System.out.println(step + "ZZZZ");
-                        //doSuspend();
-
+                        if (negotiateCnt == 0) {
+                            // We received all replies
+                            step = 4;
+                            System.out.println(step + "ZZZZ");
+                        }
                     }
                     else {
                         block();
                     }
                     break;
-
             }
         }
-
         public boolean done() {
-            if (step == 1 && buyerList.size() == 0) {
-                //System.out.println("Attempt failed: "+volumeToBuy+" not available for sale");
-                myGui.displayUI("Attempt failed: do not have bidder now" + "\n");
+            if (step == 4 && farmerInfo.sellingVolume == 0) {
+                System.out.println(getAID().getLocalName() + "is Terminated");
+                myAgent.doDelete();
+                myGui.dispose();
+                //myGui.displayUI("Attempt failed: do not have bidder now" + "\n");
             }
             return step == 0 ;
         }

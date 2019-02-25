@@ -105,7 +105,6 @@ public class CombinatorialBidder extends Agent {
             //CFP Message received. Process it.
             if (msg != null) {
                 ACLMessage reply = msg.createReply();
-
                 //Price Per MM. and the number of volumn to sell from Seller.
                 String currentOffer = msg.getContent();
                 String[] arrOfstr = currentOffer.split("-");
@@ -143,27 +142,23 @@ public class CombinatorialBidder extends Agent {
             MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
             ACLMessage msg = myAgent.receive(mt);
             if (msg != null) {
+                myGUI.displayUI("Accept Proposal Message: " + msg.toString() +"\n");
                 // ACCEPT_PROPOSAL Message received. Process it
+                Double volumnTemp = Double.parseDouble(msg.getContent());
+                farmerInfo.buyingVolumn = farmerInfo.buyingVolumn - volumnTemp;
                 ACLMessage reply = msg.createReply();
-                myGUI.displayUI(msg.toString());
+                reply.setContent(String.valueOf(volumnTemp));
                 System.out.println(farmerInfo.sellingStatus);
                 reply.setPerformative(ACLMessage.INFORM);
-
+                myAgent.send(reply);
                 //water requirement for next round bidding.
-                myGUI.displayUI(msg.getSender().getLocalName()+" sell water to agent "+ getAID().getLocalName());
-                farmerInfo.currentLookingVolumn = farmerInfo.buyingVolumn;
-                farmerInfo.currentLookingVolumn = farmerInfo.buyingVolumn - farmerInfo.currentLookingVolumn;
-
-                if (farmerInfo.currentLookingVolumn <=0) {
+                myGUI.displayUI(msg.getSender().getLocalName()+" sell water to "+ getAID().getLocalName() +"\n" + "The selling volumn is " + msg.getContent() + "\n");
+                if (farmerInfo.buyingVolumn <=0) {
                     farmerInfo.sellingStatus = "Finished bidding";
-                    myAgent.send(reply);
-
-                    //Delete service and deregister service from the system.
                     myAgent.doDelete();
                     myGUI.dispose();
                     System.out.println(getAID().getName() + " terminating.");
                 }
-                myAgent.send(reply);
             }else {
                 block();
             }
