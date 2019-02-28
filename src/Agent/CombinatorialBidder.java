@@ -94,7 +94,7 @@ public class CombinatorialBidder extends Agent {
         // Close the GUI
         myGUI.dispose();
         // Printout a dismissal message
-        System.out.println("Seller-agent "+getAID().getName()+" terminating.");
+        System.out.println(getAID().getName()+" terminating.");
     }
 
     private class OfferRequestsServer extends CyclicBehaviour {
@@ -148,15 +148,15 @@ public class CombinatorialBidder extends Agent {
                 farmerInfo.buyingVolumn = farmerInfo.buyingVolumn - volumnTemp;
                 ACLMessage reply = msg.createReply();
                 reply.setContent(String.valueOf(volumnTemp));
-                System.out.println(farmerInfo.sellingStatus);
+                //System.out.println(farmerInfo.sellingStatus);
                 reply.setPerformative(ACLMessage.INFORM);
                 myAgent.send(reply);
                 //water requirement for next round bidding.
                 myGUI.displayUI(msg.getSender().getLocalName()+" sell water to "+ getAID().getLocalName() +"\n" + "The selling volumn is " + msg.getContent() + "\n");
                 if (farmerInfo.buyingVolumn <=0) {
                     farmerInfo.sellingStatus = "Finished bidding";
-                    myAgent.doDelete();
-                    myGUI.dispose();
+                    myAgent.doSuspend();
+                    //myGUI.dispose();
                     System.out.println(getAID().getName() + " terminating.");
                 }
             }else {

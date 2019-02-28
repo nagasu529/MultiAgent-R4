@@ -45,8 +45,8 @@ public class CombinatorialSeller extends Agent {
         //Creating catalogue and running GUI
         myGui = new CombinatorialSellerGUI(this);
         myGui.show();
-        //Start agent
 
+        //Start agent
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
         farmerInfo.agentType = "Farmer";
@@ -68,7 +68,7 @@ public class CombinatorialSeller extends Agent {
             protected void onTick() {
 
                 myGui.displayUI("Agent status is " + farmerInfo.agentType + "\n");
-                if (farmerInfo.agentType=="owner"||farmerInfo.agentType=="Farmer-owner") {
+                if (farmerInfo.agentType == "owner"||farmerInfo.agentType=="Farmer-owner") {
                     //Register the seller description service on yellow pages.
                     farmerInfo.agentType = "Farmer-owner";
                     farmerInfo.sellingPrice = 10;
@@ -134,9 +134,6 @@ public class CombinatorialSeller extends Agent {
                 Iterator itrR=calCrops.resultList.iterator();
                 while (itrR.hasNext()) {
                     cropType st = (cropType)itrR.next();
-                    /*System.out.println(st.cropName + " " + st.cropStage +
-                        " " + st.droubhtSensitivity + " " + st.dsValue + " " + st.stValue + " " + st.cvValue +
-                        " " + st.literPerSecHec + " " + st.waterReq + " " + st.cropCoefficient + " " + st.waterReduction);*/
                     resultCal.append(st.cropName + " " + st.cropStage +
                             " " + st.droubhtSensitivity + " " + df.format(st.dsValue) + " " + df.format(st.stValue) + " " + df.format(st.cvValue) +
                             " " + df.format(st.literPerSecHec) + " " + df.format(st.waterReq) + " " + df.format(st.soilWaterContainValue) + " " + df.format(st.waterReqWithSoil) +
@@ -147,7 +144,6 @@ public class CombinatorialSeller extends Agent {
                 resultCal.append("Water volume to reduction: " + calCrops.totalWaterReductionReq + "\n");
                 resultCal.append("Actual reduction on farm:" + calCrops.totalReduction + "\n");
                 resultCal.append("Actual reducion (%):" + calCrops.resultReductionPct + "\n");
-
 
                 if (calCrops.resultReductionPct >= actualRate) {
                     farmerInfo.agentType = "owner";
@@ -188,7 +184,6 @@ public class CombinatorialSeller extends Agent {
         private double waterVolFromBidder;
         private double biddedPriceFromBidder;
         private int negotiateCnt;
-
 
         private int step = 0;
 
@@ -234,12 +229,11 @@ public class CombinatorialSeller extends Agent {
                     mt = MessageTemplate.and(MessageTemplate.MatchConversationId("bidding"),
                             MessageTemplate.MatchInReplyTo(cfp.getReplyWith()));
                     step = 1;
-                    System.out.println(step);
                     break;
 
                 case 1:
                     // Receive all proposals/refusals from bidder agents
-                    //Sorted all offers based on pricePermm.
+                    //Sorted all offers based on price Per mm.
                     ACLMessage reply = myAgent.receive(mt);
                     if (reply != null) {
                         repliesCnt++;
@@ -265,7 +259,6 @@ public class CombinatorialSeller extends Agent {
                         if (repliesCnt >= bidderAgent.length) {
                             // We received all replies
                             step = 2;
-                            System.out.println(step + "XXX");
                         }
                     }else {
                         block();
@@ -277,8 +270,10 @@ public class CombinatorialSeller extends Agent {
                      * Sendding message to bidders wiht two types (Accept proposal or Refuse) based on
                      * accepted water volumn to sell.
                      */
+                    myGui.displayUI("List of bidder for selling water based on offering price" + "\n");
                     Iterator itr = buyerList.iterator();
                     while (itr.hasNext()){
+                        String stepLog;
                         combinatorialList bl = (combinatorialList) itr.next();
                         if(farmerInfo.sellingVolume > bl.waterVolume) {
                             bl.receivedWaterFromSeller = bl.waterVolume;
@@ -296,7 +291,7 @@ public class CombinatorialSeller extends Agent {
                                 acceptedRequest.setContent(String.valueOf(bl.receivedWaterFromSeller));
                                 acceptedRequest.setConversationId("bidding");
                                 acceptedRequest.setReplyWith("acceptedRequest" + System.currentTimeMillis());
-                                myGui.displayUI(acceptedRequest.toString());
+                                //myGui.displayUI(acceptedRequest.toString());
                                 myAgent.send(acceptedRequest);
                                 mt = MessageTemplate.and(MessageTemplate.MatchConversationId("bidding"),MessageTemplate.MatchInReplyTo
                                         (acceptedRequest.getReplyWith()));
@@ -304,16 +299,15 @@ public class CombinatorialSeller extends Agent {
                                 //Refuse message prepairing
                                 ACLMessage rejectedRequest = new ACLMessage(ACLMessage.REFUSE);
                                 rejectedRequest.addReceiver(bidderAgent[i]);
-                                myGui.displayUI(rejectedRequest.toString());
+                                //myGui.displayUI(rejectedRequest.toString());
                                 myAgent.send(rejectedRequest);
-                                //mt = MessageTemplate.and(MessageTemplate.MatchConversationId("bidding"),MessageTemplate.MatchInReplyTo(rejectedRequest.getReplyWith()));
+
                             }
                         }
-                        System.out.println("Price: " + bl.pricePerMM + " " + "Volumn request: " + bl.waterVolume + " " +"Received volumn from seller: " +  bl.receivedWaterFromSeller);
+                        myGui.displayUI(bl.agentName + " : " + "Offer price: " + bl.pricePerMM + " " + "Volumn request: " + bl.waterVolume + " " +"Selling volumn to this agent: " +  bl.receivedWaterFromSeller +"\n");
 
                     }
                     step = 3;
-                    System.out.println(step + "YYYYY");
                     break;
 
                 case 3:
@@ -322,18 +316,19 @@ public class CombinatorialSeller extends Agent {
                     if (reply != null) {
                         double soldVolumn = 0;
                         negotiateCnt--;
-                        System.out.println("\n" + "Reply message:" + reply.toString());
-                        myGui.displayUI("\n" + "Reply message:" + reply.toString());
+                        //System.out.println("\n" + "Reply message:" + reply.toString());
+                        //myGui.displayUI("\n" + "Reply message:" + reply.toString());
                         // Purchase order reply received
                         if (reply.getPerformative() == ACLMessage.INFORM) {
                             System.out.println("accepted volumn from seller" + reply.getContent());
                             farmerInfo.sellingVolume = farmerInfo.sellingVolume - soldVolumn;
+                            System.out.println("Water volumn left :  " + farmerInfo.sellingVolume);
                             // Purchase successful. We can terminate
-                            System.out.println(farmerInfo.farmerName +" successfully purchased from agent "+reply.getSender().getName());
+                            //System.out.println(farmerInfo.farmerName +" successfully purchased from agent "+reply.getSender().getName() + "\n");
                             //System.out.println("Price = "+farmerInfo.currentPricePerMM);
-                            myGui.displayUI(farmerInfo.farmerName +" successfully purchased from agent "+reply.getSender().getName().toString());
+                            myGui.displayUI("\n" + farmerInfo.farmerName +" successfully purchased from agent "+reply.getSender().getName() +"\n");
                             //myGui.displayUI("Price = " + farmerInfo.currentPricePerMM);
-                            //myAgent.doDelete();
+                            //myAgent.doSuspend();
                             //myGui.dispose();
                         }
                         else {
@@ -343,7 +338,6 @@ public class CombinatorialSeller extends Agent {
                         if (negotiateCnt == 0) {
                             // We received all replies
                             step = 4;
-                            System.out.println(step + "ZZZZ");
                         }
                     }
                     else {
@@ -353,10 +347,11 @@ public class CombinatorialSeller extends Agent {
             }
         }
         public boolean done() {
-            if (step == 4 && farmerInfo.sellingVolume == 0) {
-                System.out.println(getAID().getLocalName() + "is Terminated");
-                myAgent.doDelete();
-                myGui.dispose();
+            if (step == 4 || farmerInfo.sellingVolume == 0) {
+                myGui.displayUI("\n" + getAID().getLocalName() + "sold all water" + "\n");
+                myGui.displayUI(getAID().getLocalName() + "is Terminated");
+                myAgent.doSuspend();
+                //myGui.dispose();
                 //myGui.displayUI("Attempt failed: do not have bidder now" + "\n");
             }
             return step == 0 ;
@@ -388,7 +383,7 @@ public class CombinatorialSeller extends Agent {
                     //System.out.println(farmerInfo.sellingStatus);
                     doSuspend();
                 } else {
-                    // The requested book has been sold to another buyer in the meanwhile .
+                    // The requested book has been sold to another buyer in the meanwhile.
                     reply.setPerformative(ACLMessage.FAILURE);
                     reply.setContent("not-available for sale");
                     myGui.displayUI("not avalable to sell");
@@ -408,7 +403,7 @@ public class CombinatorialSeller extends Agent {
             fe.printStackTrace();
         }
         // Printout a dismissal message
-        System.out.println("Seller-agent "+getAID().getName()+" terminating.");
+        System.out.println(getAID().getName()+" terminating.");
     }
 
     public class agentInfo{
