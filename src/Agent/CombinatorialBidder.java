@@ -152,9 +152,11 @@ public class CombinatorialBidder extends Agent {
                 reply.setPerformative(ACLMessage.INFORM);
                 myAgent.send(reply);
                 //water requirement for next round bidding.
-                myGUI.displayUI(msg.getSender().getLocalName()+" sell water to "+ getAID().getLocalName() +"\n" + "The selling volumn is " + msg.getContent() + "\n");
+                myGUI.displayUI(msg.getSender().getLocalName()+" sell water to "+ getAID().getLocalName() +"\n" + "The number of volumn is " + msg.getContent() + "\n");
                 if (farmerInfo.buyingVolumn <=0) {
                     farmerInfo.sellingStatus = "Finished bidding";
+                    myGUI.displayUI(getAID().getLocalName() +  "is complete in buying process" + "\n" + getAID().getLocalName() + "terminating");
+
                     myAgent.doSuspend();
                     //myGUI.dispose();
                     System.out.println(getAID().getName() + " terminating.");
