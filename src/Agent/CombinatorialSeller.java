@@ -14,7 +14,7 @@ import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
-import java.lang.reflect.Array;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -84,6 +84,7 @@ public class CombinatorialSeller extends Agent {
                     myGui.displayUI("Selling status: " + farmerInfo.sellingStatus + "\n");
                     myGui.displayUI("Providing price" + "\n");
                     myGui.displayUI("\n");
+
                     /*
                      ** Selling water process
                      */
@@ -443,5 +444,41 @@ public class CombinatorialSeller extends Agent {
             this.pricePerMM = pricePerMM;
             this.receivedWaterFromSeller = receivedWaterFromSeller;
         }
+    }
+
+    public void powerSet(double set[]){
+        int n = set.length;
+
+        // Run a loop for printing all 2^n
+        // subsets one by obe
+        for (int i = 0; i < (1<<n); i++)
+        {
+            System.out.print("{ ");
+
+            // Print current subset
+            for (int j = 0; j < n; j++)
+
+                // (1<<j) is a number with j th bit 1
+                // so when we 'and' them with the
+                // subset number we get which numbers
+                // are present in the subset and which
+                // are not
+                if ((i & (1 << j)) > 0)
+                    System.out.print(set[j] + " ");
+
+            System.out.println("}");
+        }
+    }
+
+    public void xorSum(int arr[], int n)
+    {
+
+        int bits = 0;
+
+        // Finding bitwise OR of all elements
+        for (int i = 0; i < n; ++i)
+            bits |= arr[i];
+
+        int ans = bits * (int)Math.pow(2, n-1);
     }
 }
