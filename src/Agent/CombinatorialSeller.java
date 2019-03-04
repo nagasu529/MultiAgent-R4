@@ -88,6 +88,7 @@ public class CombinatorialSeller extends Agent {
                     /*
                      ** Selling water process
                      */
+                    //Creating dictionary for buyer volume and pricingc
                     addBehaviour(new RequestPerformer());
                     // Add the behaviour serving purchase orders from buyer agents
                     //addBehaviour(new PurchaseOrdersServer());
@@ -177,6 +178,9 @@ public class CombinatorialSeller extends Agent {
     private class RequestPerformer extends Behaviour {
         //The list of known water selling agent
         private AID[] bidderAgent;
+        //Creating Dictionaty to contain volumn and price
+        Dictionary<String, String> bidderDict = new Hashtable<String, String>();
+
         private int repliesCnt; // The counter of replies from seller agents
         private MessageTemplate mt; // The template to receive replies
         ArrayList<Double> order = new ArrayList<Double>();  //sorted list follows maximumprice factor.
