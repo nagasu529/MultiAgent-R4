@@ -13,8 +13,6 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-
-import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -88,7 +86,7 @@ public class CombinatorialSeller extends Agent {
                     /*
                      ** Selling water process
                      */
-                    //Creating dictionary for buyer volume and pricingc
+
                     addBehaviour(new RequestPerformer());
                     // Add the behaviour serving purchase orders from buyer agents
                     //addBehaviour(new PurchaseOrdersServer());
@@ -178,13 +176,15 @@ public class CombinatorialSeller extends Agent {
     private class RequestPerformer extends Behaviour {
         //The list of known water selling agent
         private AID[] bidderAgent;
-        //Creating Dictionaty to contain volumn and price
-        Dictionary<String, String> bidderDict = new Hashtable<String, String>();
-
         private int repliesCnt; // The counter of replies from seller agents
         private MessageTemplate mt; // The template to receive replies
         ArrayList<Double> order = new ArrayList<Double>();  //sorted list follows maximumprice factor.
         ArrayList<combinatorialList> buyerList = new ArrayList<combinatorialList>();    //result list for selling process reference.
+
+        //Creating dictionary for buyer volume and pricing
+        Dictionary<String, Double> volumnDict = new Hashtable<String, Double>();
+        Dictionary<String, Double> priceDict = new Hashtable<String, Double>();
+
         private String agentName;
         private double waterVolFromBidder;
         private double biddedPriceFromBidder;
@@ -252,13 +252,27 @@ public class CombinatorialSeller extends Agent {
                             agentName = arrOfStr[0];
                             waterVolFromBidder = Double.parseDouble(arrOfStr[1]);
                             biddedPriceFromBidder = Double.parseDouble(arrOfStr[2]);
+                            //adding data to dictionary
+                            volumnDict.put(agentName,waterVolFromBidder);
+                            priceDict.put(agentName,biddedPriceFromBidder);
+                            String xx = "";
+                            for(Enumeration e = volumnDict.keys();e.hasMoreElements();) {
+                                xx.concat(e.nextElement().toString());
+                            }
+                            String[] bidderList = {xx};
+
+
+
+
 
                             //created buyerList based on higthest price
+                            /***
                             order.add(biddedPriceFromBidder);
                             Collections.sort(order, Collections.reverseOrder());
                             int x = order.indexOf(biddedPriceFromBidder);
                             combinatorialList xx = new combinatorialList(agentName, waterVolFromBidder, biddedPriceFromBidder, 0);
                             buyerList.add(x,xx);
+                             ***/
                         }
 
                         if (repliesCnt >= bidderAgent.length) {
@@ -275,6 +289,9 @@ public class CombinatorialSeller extends Agent {
                      * Sendding message to bidders wiht two types (Accept proposal or Refuse) based on
                      * accepted water volumn to sell.
                      */
+
+
+                    /***
                     myGui.displayUI("List of bidder for selling water based on offering price" + "\n");
                     Iterator itr = buyerList.iterator();
                     while (itr.hasNext()){
@@ -309,6 +326,7 @@ public class CombinatorialSeller extends Agent {
 
                             }
                         }
+                        ***/
                         myGui.displayUI(bl.agentName + " : " + "Offer price: " + bl.pricePerMM + " " + "Volumn request: " + bl.waterVolume + " " +"Selling volumn to this agent: " +  bl.receivedWaterFromSeller +"\n");
 
                     }
@@ -356,6 +374,7 @@ public class CombinatorialSeller extends Agent {
                 myGui.displayUI("\n" + getAID().getLocalName() + "sold all water" + "\n");
                 myGui.displayUI(getAID().getLocalName() + "is Terminated");
                 myAgent.doSuspend();
+
                 //myGui.dispose();
                 //myGui.displayUI("Attempt failed: do not have bidder now" + "\n");
             }
@@ -474,8 +493,7 @@ public class CombinatorialSeller extends Agent {
         }
     }
 
-    public void xorSum(int arr[], int n)
-    {
+    public void xorSum(int arr[], int n) {
 
         int bits = 0;
 
@@ -484,5 +502,29 @@ public class CombinatorialSeller extends Agent {
             bits |= arr[i];
 
         int ans = bits * (int)Math.pow(2, n-1);
+    }
+
+    static ArrayList<ArrayList<String> > getSubset(String[] set, int index) {
+        ArrayList<ArrayList<String> > allSubsets;
+        if (index < 0) {
+            allSubsets = new ArrayList<ArrayList<String> >();
+            allSubsets.add(new ArrayList<String>());
+        }
+
+        else {
+            allSubsets = getSubset(set, index - 1);
+            String item = set[index];
+            ArrayList<ArrayList<String> > moreSubsets
+                    = new ArrayList<ArrayList<String> >();
+
+            for (ArrayList<String> subset : allSubsets) {
+                ArrayList<String> newSubset = new ArrayList<String>();
+                newSubset.addAll(subset);
+                newSubset.add(item);
+                moreSubsets.add(newSubset);
+            }
+            allSubsets.addAll(moreSubsets);
+        }
+        return allSubsets;
     }
 }
