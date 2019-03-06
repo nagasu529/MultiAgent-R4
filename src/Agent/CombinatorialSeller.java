@@ -255,6 +255,11 @@ public class CombinatorialSeller extends Agent {
                             //adding data to dictionary
                             volumnDict.put(agentName,waterVolFromBidder);
                             priceDict.put(agentName,biddedPriceFromBidder);
+                        }
+
+                        if (repliesCnt >= bidderAgent.length) {
+
+                            // We received all replies
                             for(Enumeration e = volumnDict.keys();e.hasMoreElements();){
                                 String temp = e.nextElement().toString();
                                 bidderList.add(temp);
@@ -262,12 +267,8 @@ public class CombinatorialSeller extends Agent {
                             String[] test = GetStringArray(bidderList);
 
                             int index = test.length - 1;
-                            ArrayList<ArrayList<String> > result = getSubset(test, index);
-                            System.out.println(result);
-                        }
-
-                        if (repliesCnt >= bidderAgent.length) {
-                            // We received all replies
+                            ArrayList<ArrayList<String> > powersetResult = getSubset(test, index);
+                            System.out.println(powersetResult);
                             step = 2;
                         }
                     }else {
@@ -280,7 +281,13 @@ public class CombinatorialSeller extends Agent {
                      * Sendding message to bidders wiht two types (Accept proposal or Refuse) based on
                      * accepted water volumn to sell.
                      */
+                    //Result arrays which are volumeFact, PriceFact, CombiFact
+                    String[] result = new String[3];
 
+                    //looping to find the best result
+                    for(int i = 0; i <= )
+
+                    /***
                     myGui.displayUI("List of bidder for selling water based on offering price" + "\n");
                     Iterator itr = buyerList.iterator();
                     while (itr.hasNext()){
@@ -319,6 +326,7 @@ public class CombinatorialSeller extends Agent {
                         myGui.displayUI(bl.agentName + " : " + "Offer price: " + bl.pricePerMM + " " + "Volumn request: " + bl.waterVolume + " " +"Selling volumn to this agent: " +  bl.receivedWaterFromSeller +"\n");
 
                     }
+                     ***/
                     step = 3;
                     break;
 
