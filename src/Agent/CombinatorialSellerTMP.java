@@ -13,6 +13,7 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -20,10 +21,10 @@ import java.util.*;
  *
  * @author chiewchk
  */
-public class CombinatorialSeller extends Agent {
+public class CombinatorialSellerTMP extends Agent {
 
     //The list of farmer who are seller (maps the water volumn to its based price)
-    private CombinatorialSellerGUI myGui;
+    private CombinatorialSellerGUITMP myGui;
     CropTest calCrops = new CropTest();
 
     DecimalFormat df = new DecimalFormat("#.##");
@@ -41,7 +42,7 @@ public class CombinatorialSeller extends Agent {
         System.out.println(getAID()+" is ready");
 
         //Creating catalogue and running GUI
-        myGui = new CombinatorialSellerGUI(this);
+        myGui = new CombinatorialSellerGUITMP(this);
         myGui.show();
 
         //Start agent
@@ -86,6 +87,9 @@ public class CombinatorialSeller extends Agent {
                     /*
                      ** Selling water process
                      */
+                    //Creating dictionary for buyer volume and pricing
+                    Dictionary<String, Double> volumnDict = new Hashtable<String, Double>();
+                    Dictionary<String, Double> priceDIct = new Hashtable<String, Double>();
 
                     addBehaviour(new RequestPerformer());
                     // Add the behaviour serving purchase orders from buyer agents
@@ -178,13 +182,8 @@ public class CombinatorialSeller extends Agent {
         private AID[] bidderAgent;
         private int repliesCnt; // The counter of replies from seller agents
         private MessageTemplate mt; // The template to receive replies
-        ArrayList<String> bidderList = new ArrayList<String>();  //sorted list follows maximumprice factor.
+        ArrayList<Double> order = new ArrayList<Double>();  //sorted list follows maximumprice factor.
         ArrayList<combinatorialList> buyerList = new ArrayList<combinatorialList>();    //result list for selling process reference.
-
-        //Creating dictionary for buyer volume and pricing
-        Dictionary<String, Double> volumnDict = new Hashtable<String, Double>();
-        Dictionary<String, Double> priceDict = new Hashtable<String, Double>();
-
         private String agentName;
         private double waterVolFromBidder;
         private double biddedPriceFromBidder;
@@ -252,18 +251,13 @@ public class CombinatorialSeller extends Agent {
                             agentName = arrOfStr[0];
                             waterVolFromBidder = Double.parseDouble(arrOfStr[1]);
                             biddedPriceFromBidder = Double.parseDouble(arrOfStr[2]);
-                            //adding data to dictionary
-                            volumnDict.put(agentName,waterVolFromBidder);
-                            priceDict.put(agentName,biddedPriceFromBidder);
-                            for(Enumeration e = volumnDict.keys();e.hasMoreElements();){
-                                String temp = e.nextElement().toString();
-                                bidderList.add(temp);
-                            }
-                            String[] test = GetStringArray(bidderList);
 
-                            int index = test.length - 1;
-                            ArrayList<ArrayList<String> > result = getSubset(test, index);
-                            System.out.println(result);
+                            //created buyerList based on higthest price
+                            order.add(biddedPriceFromBidder);
+                            Collections.sort(order, Collections.reverseOrder());
+                            int x = order.indexOf(biddedPriceFromBidder);
+                            combinatorialList xx = new combinatorialList(agentName, waterVolFromBidder, biddedPriceFromBidder, 0);
+                            buyerList.add(x,xx);
                         }
 
                         if (repliesCnt >= bidderAgent.length) {
@@ -280,7 +274,6 @@ public class CombinatorialSeller extends Agent {
                      * Sendding message to bidders wiht two types (Accept proposal or Refuse) based on
                      * accepted water volumn to sell.
                      */
-
                     myGui.displayUI("List of bidder for selling water based on offering price" + "\n");
                     Iterator itr = buyerList.iterator();
                     while (itr.hasNext()){
@@ -315,7 +308,6 @@ public class CombinatorialSeller extends Agent {
 
                             }
                         }
-
                         myGui.displayUI(bl.agentName + " : " + "Offer price: " + bl.pricePerMM + " " + "Volumn request: " + bl.waterVolume + " " +"Selling volumn to this agent: " +  bl.receivedWaterFromSeller +"\n");
 
                     }
@@ -363,7 +355,6 @@ public class CombinatorialSeller extends Agent {
                 myGui.displayUI("\n" + getAID().getLocalName() + "sold all water" + "\n");
                 myGui.displayUI(getAID().getLocalName() + "is Terminated");
                 myAgent.doSuspend();
-
                 //myGui.dispose();
                 //myGui.displayUI("Attempt failed: do not have bidder now" + "\n");
             }
@@ -515,18 +506,5 @@ public class CombinatorialSeller extends Agent {
             allSubsets.addAll(moreSubsets);
         }
         return allSubsets;
-    }
-
-    // Function to convert ArrayList<String> to String[]
-    public static String[] GetStringArray(ArrayList<String> arr)
-    {
-        // declaration and initialise String Array
-        String str[] = new String[arr.size()];
-        // ArrayList to Array Conversion
-        for (int j = 0; j < arr.size(); j++) {
-            // Assign each value to String array
-            str[j] = arr.get(j);
-        }
-        return str;
     }
 }
