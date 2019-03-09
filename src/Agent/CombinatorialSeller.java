@@ -15,6 +15,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.stream.Stream;
 
 /**
  *
@@ -184,6 +185,8 @@ public class CombinatorialSeller extends Agent {
         //Creating dictionary for buyer volume and pricing
         Dictionary<String, Double> volumnDict = new Hashtable<String, Double>();
         Dictionary<String, Double> priceDict = new Hashtable<String, Double>();
+        Object[] maxVolumnSell, maxPriceSell;
+        Double maxVolumn = 0.0, maxPrice = 0.0;
 
         private String agentName;
         private double waterVolFromBidder;
@@ -264,11 +267,38 @@ public class CombinatorialSeller extends Agent {
                                 String temp = e.nextElement().toString();
                                 bidderList.add(temp);
                             }
-                            String[] test = GetStringArray(bidderList);
+                            String[] tempBidderList = GetStringArray(bidderList);
 
-                            int index = test.length - 1;
-                            ArrayList<ArrayList<String> > powersetResult = getSubset(test, index);
+                            int index = tempBidderList.length - 1;
+                            ArrayList<ArrayList<String> > powersetResult = getSubset(tempBidderList, index);
                             System.out.println(powersetResult);
+
+                            //Loop and result calculation
+                            for(int i=0; i < powersetResult.size();i++){
+                                String xx = powersetResult.get(i).toString();
+                                System.out.println(xx);
+                                Double tempMaxVolumn = 0.0;
+                                Double tempMaxPrice = 0.0;
+                                for(int j=0; j< powersetResult.get(i).size();j++){
+                                    tempMaxVolumn = tempMaxVolumn + volumnDict.get(powersetResult.get(i).get(j));
+                                    double tempPrice = priceDict.get(powersetResult.get(i).get(j)) * volumnDict.get(powersetResult.get(i).get(j));
+                                    tempMaxPrice = tempMaxPrice + tempPrice;
+                                }
+                                //Storing maximum volumn and price.
+                                if(tempMaxVolumn > maxVolumn && tempMaxVolumn <= farmerInfo.sellingVolume){
+                                    maxVolumn = tempMaxVolumn;
+                                    Stream<String> stream = Stream.of(xx,tempMaxVolumn.toString(),tempMaxPrice.toString());
+                                    maxVolumnSell = stream.toArray();
+                                }
+                                if(tempMaxPrice > maxPrice && tempMaxVolumn <= farmerInfo.sellingVolume){
+                                    maxPrice = tempMaxPrice;
+                                    Stream<String> stream = Stream.of(xx,tempMaxVolumn.toString(),tempMaxPrice.toString());
+                                    maxPriceSell = stream.toArray();
+                                }
+                                System.out.println("\n" + "result set is : " + powersetResult.get(i)+"\n"
+                                        +  "Volumn to sell is  " + tempMaxVolumn + "\n" + "Income is  " + tempMaxPrice);
+                            }
+
                             step = 2;
                         }
                     }else {
@@ -281,28 +311,11 @@ public class CombinatorialSeller extends Agent {
                      * Sendding message to bidders wiht two types (Accept proposal or Refuse) based on
                      * accepted water volumn to sell.
                      */
-                    //Result arrays which are volumeFact, PriceFact, CombiFact
-                    String[] result = new String[3];
-
-                    //looping to find the best result
-                    for(int i = 0; i <= )
+                    myGui.displayUI("Best solution for each case:"+"\n"+"Max volumn selling:  " + Arrays.toString(maxVolumnSell));
+                    myGui.displayUI("Best solution for each case:"+"\n"+"Max price selling:  " + Arrays.toString(maxPriceSell));
 
                     /***
-                    myGui.displayUI("List of bidder for selling water based on offering price" + "\n");
-                    Iterator itr = buyerList.iterator();
-                    while (itr.hasNext()){
-                        String stepLog;
-                        combinatorialList bl = (combinatorialList) itr.next();
-                        if(farmerInfo.sellingVolume > bl.waterVolume) {
-                            bl.receivedWaterFromSeller = bl.waterVolume;
-                            farmerInfo.sellingVolume = farmerInfo.sellingVolume - bl.waterVolume;
-                        }else {
-                            bl.receivedWaterFromSeller = farmerInfo.sellingVolume;
-                            farmerInfo.sellingVolume = 0;
-                        }
-                        for(int i=0; i < bidderAgent.length;i++){
-                            if(bl.receivedWaterFromSeller > 0 && bidderAgent[i].getLocalName().equals(bl.agentName)){
-                                negotiateCnt++;
+
                                 // Send the purchase order to the seller that provided the best offer
                                 ACLMessage acceptedRequest = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
                                 acceptedRequest.addReceiver(bidderAgent[i]);
