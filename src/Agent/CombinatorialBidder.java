@@ -144,15 +144,15 @@ public class CombinatorialBidder extends Agent {
             if (msg != null) {
                 myGUI.displayUI("Accept Proposal Message: " + msg.toString() +"\n");
                 // ACCEPT_PROPOSAL Message received. Process it
-                Double volumnTemp = Double.parseDouble(msg.getContent());
-                farmerInfo.buyingVolumn = farmerInfo.buyingVolumn - volumnTemp;
+                //Double volumnTemp = Double.parseDouble(msg.getContent());
+                farmerInfo.buyingVolumn = 0;
                 ACLMessage reply = msg.createReply();
-                reply.setContent(String.valueOf(volumnTemp));
+                //reply.setContent(String.valueOf(volumnTemp));
                 //System.out.println(farmerInfo.sellingStatus);
                 reply.setPerformative(ACLMessage.INFORM);
                 myAgent.send(reply);
                 //water requirement for next round bidding.
-                myGUI.displayUI(msg.getSender().getLocalName()+" sell water to "+ getAID().getLocalName() +"\n" + "The number of volumn is " + msg.getContent() + "\n");
+                myGUI.displayUI(msg.getSender().getLocalName()+" sell water to "+ getAID().getLocalName() +"\n");
                 if (farmerInfo.buyingVolumn <=0) {
                     farmerInfo.sellingStatus = "Finished bidding";
                     myGUI.displayUI(getAID().getLocalName() +  "is complete in buying process" + "\n" + getAID().getLocalName() + "terminating");
