@@ -22,6 +22,7 @@ public class CombinatorialSellerGUI extends JFrame {
     public static Double sActualReduc;
     public static int sEtSeason;
     public static String sAgentStatus;
+    public static int sEuDecision;
 
 
     public void setFileDir(String fileDir){
@@ -46,6 +47,9 @@ public class CombinatorialSellerGUI extends JFrame {
         return sEtSeason;
     }
 
+    public void setEuDecision (int euDecision){sEuDecision = euDecision;}
+    public static int getEuDecision(){return sEuDecision;}
+
     public void setAgentStatus(String agentStatus){
         sAgentStatus = agentStatus;
     }
@@ -65,6 +69,7 @@ public class CombinatorialSellerGUI extends JFrame {
 
         //Combobox ET0 preference and action listerner.
         String[] etListStrings = { "ET0-Spring", "ET0-Summer", "ET0-Autumn", "ET0-Winter"};
+        String[] euListStrings = {"Maximun value Selling", "Maximium water usage", "balancing method"};
 
         //Open file button and action listerner
         textDirButton = new JButton("Open file");
@@ -90,9 +95,13 @@ public class CombinatorialSellerGUI extends JFrame {
         controls.add(actualReducField);
         controls.setBorder(BorderFactory.createTitledBorder("Farmer input"));
         JComboBox etList = new JComboBox(etListStrings);
+        JComboBox euList = new JComboBox(euListStrings);
         controls.add(etList);
+        controls.add(euList);
         etList.setSelectedIndex(3);
         etList.setEditable(false);
+        euList.setSelectedIndex(2);
+        euList.setEditable(false);
 
         //log area create
         log = new JTextArea(5,20);
@@ -110,7 +119,7 @@ public class CombinatorialSellerGUI extends JFrame {
                 try {
                     String actualReduc = actualReducField.getText().trim();
                     setActualReduc(Double.parseDouble(actualReduc));
-                    myAgent.farmerInput(getFileDir(), getActualReduc(),getEtSeason());
+                    myAgent.farmerInput(getFileDir(), getActualReduc(),getEtSeason(),getEuDecision());
                     //fileDirField.setText("");
                     actualReducField.setText("");
 
@@ -138,6 +147,24 @@ public class CombinatorialSellerGUI extends JFrame {
                     setEtSeason(3);
                     //System.out.println("Winter ET0 choosed");
                     displayUI("Winter ET0 choosed\n");
+                }
+            }
+        });
+
+        euList.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent ae) {
+                if(euList.getSelectedIndex()==0){
+                    setEuDecision(0);
+                    displayUI("Decision method: Maximun value Selling\n");
+
+                }else if(euList.getSelectedIndex()==1){
+                    setEuDecision(1);
+                    //System.out.println("Summer ET0 choosed");
+                    displayUI("Decision method: Maximium water usage\n");
+                }else {
+                    setEuDecision(2);
+                    //System.out.println("Winter ET0 choosed");
+                    displayUI("Decision method: Balancing method\n");
                 }
             }
         });

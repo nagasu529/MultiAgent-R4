@@ -26,6 +26,7 @@ public class CombinatorialSeller extends Agent {
     //The list of farmer who are seller (maps the water volumn to its based price)
     private CombinatorialSellerGUI myGui;
     CropTest calCrops = new CropTest();
+    private int decisionRules;
 
     DecimalFormat df = new DecimalFormat("#.##");
 
@@ -97,7 +98,7 @@ public class CombinatorialSeller extends Agent {
     }
 
     //Update input data from GUI which include water allocation on single farm.
-    public void farmerInput(final String filenameGlob, final Double actualRate, final int etSeason) {
+    public void farmerInput(final String filenameGlob, final Double actualRate, final int etSeason, final int euDecision) {
         StringBuilder resultCal = new StringBuilder();
 
         addBehaviour(new OneShotBehaviour() {
@@ -123,6 +124,19 @@ public class CombinatorialSeller extends Agent {
                     default:
                         calCrops.ET0Winter();
 
+                }
+                switch(euDecision){
+                    case 0:
+                        decisionRules = 0;
+                        break;
+                    case 1:
+                        decisionRules = 1;
+                        break;
+                    case 2:
+                        decisionRules = 2;
+                        break;
+                     default:
+                        decisionRules = 0;
                 }
                 calCrops.ET = calCrops.avgET0;
                 calCrops.farmFactorValues();
@@ -181,14 +195,16 @@ public class CombinatorialSeller extends Agent {
         private MessageTemplate mt; // The template to receive replies
         ArrayList<String> bidderList = new ArrayList<String>();  //sorted list follows maximumprice factor.
         ArrayList<combinatorialList> buyerList = new ArrayList<combinatorialList>();    //result list for selling process reference.
-        ArrayList<String> maxVolumnList = new ArrayList<String>();
-        ArrayList<String> maxPriceList = new ArrayList<String>();
+
         //Creating dictionary for buyer volume and pricing
         Dictionary<String, Double> volumnDict = new Hashtable<String, Double>();
         Dictionary<String, Double> priceDict = new Hashtable<String, Double>();
-        Object[] maxVolumnSell, maxPriceSell;
-        Double maxVolumn = 0.0, maxPrice = 0.0;
-
+        Object[] maxVolumnObj, maxPriceObj, maxEuObj;
+        Double maxVolumn = 0.0, maxPrice = 0.0, maxEuValue = 0.0;
+        ArrayList<String> maxVolumnList = new ArrayList<String>();
+        ArrayList<String> maxPriceList = new ArrayList<String>();
+        ArrayList<String> maxEuList = new ArrayList<String>();
+        ArrayList<String> resultList = new ArrayList<String>();
 
         private String agentName;
         private double waterVolFromBidder;
@@ -280,25 +296,38 @@ public class CombinatorialSeller extends Agent {
                                 String xx = powersetResult.get(i).toString();
                                 Double tempMaxVolumn = 0.0;
                                 Double tempMaxPrice = 0.0;
+                                Double tempMaxEuValue = 0.0;
                                 for(int j=0; j< powersetResult.get(i).size();j++){
                                     tempMaxVolumn = tempMaxVolumn + volumnDict.get(powersetResult.get(i).get(j));
                                     double tempPrice = priceDict.get(powersetResult.get(i).get(j)) * volumnDict.get(powersetResult.get(i).get(j));
                                     tempMaxPrice = tempMaxPrice + tempPrice;
                                 }
 
-                                //Storing maximum volumn and price.
+                                //Combination method (0.5 * 0.5 for concerned factors)
+                                tempMaxEuValue = (0.5*tempMaxVolumn) + (0.5*tempMaxPrice);
+                                if(tempMaxEuValue > maxEuValue && tempMaxVolumn <= farmerInfo.sellingVolume ){
+                                    maxEuValue = tempMaxEuValue;
+                                    maxEuObj = new String[]{xx, tempMaxVolumn.toString(), tempMaxPrice.toString()};
+                                    maxEuList = powersetResult.get(i);
+                                }
+
+                                //1.0 Volumn factor.
                                 if(tempMaxVolumn > maxVolumn && tempMaxVolumn <= farmerInfo.sellingVolume){
                                     maxVolumn = tempMaxVolumn;
-                                    maxVolumnSell = new String[]{xx,tempMaxVolumn.toString(),tempMaxPrice.toString()};
+                                    maxVolumnObj = new String[]{xx,tempMaxVolumn.toString(),tempMaxPrice.toString()};
                                     maxVolumnList = powersetResult.get(i);
                                 }
+                                //1.0 Price factor.
                                 if(tempMaxPrice > maxPrice && tempMaxVolumn <= farmerInfo.sellingVolume){
                                     maxPrice = tempMaxPrice;
-                                    maxPriceSell = new String[]{xx, tempMaxVolumn.toString(),tempMaxPrice.toString()};
+                                    maxPriceObj = new String[]{xx, tempMaxVolumn.toString(),tempMaxPrice.toString()};
                                     maxPriceList = powersetResult.get(i);
                                 }
+
+
                                 System.out.println("\n" + "result set is : " + powersetResult.get(i).toString()+"\n"
                                         +  "Volumn to sell is  " + tempMaxVolumn + "\n" + "Income is  " + tempMaxPrice);
+                                System.out.println(decisionRules);
                             }
 
                             step = 2;
@@ -313,12 +342,19 @@ public class CombinatorialSeller extends Agent {
                      * Sendding message to bidders wiht two types (Accept proposal or Refuse) based on
                      * accepted water volumn to sell.
                      */
+                    if(decisionRules == 0){
+                        myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"Max price selling:  " + Arrays.toString(maxPriceObj) + "\n");
+                        resultList = maxPriceList;
+                    }else if(decisionRules == 1) {
+                        myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"Max volumn selling:  " + Arrays.toString(maxVolumnObj)+ "\n");
+                        resultList = maxVolumnList;
+                    }else {
+                        myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"balancing between volumn and price:  " + Arrays.toString(maxEuObj)+ "\n");
+                        resultList = maxEuList;
+                    }
 
-                    myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"Max volumn selling:  " + Arrays.toString(maxVolumnSell)+ "\n");
-                    myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"Max price selling:  " + Arrays.toString(maxPriceSell) + "\n");
-                    myGui.displayUI("List of bidder for selling water based on offering price" + "\n");
                     for(int i=0; i < bidderAgent.length; ++i){
-                        for (String e: maxVolumnList
+                        for (String e: resultList
                              ) {
                             if(bidderAgent[i].getLocalName().equals(e)){
                                 // Send the purchase order to the seller that provided the best offer
