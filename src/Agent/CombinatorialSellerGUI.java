@@ -69,7 +69,7 @@ public class CombinatorialSellerGUI extends JFrame {
 
         //Combobox ET0 preference and action listerner.
         String[] etListStrings = { "ET0-Spring", "ET0-Summer", "ET0-Autumn", "ET0-Winter"};
-        String[] euListStrings = {"Maximun value Selling", "Maximium water usage", "balancing method"};
+        String[] euListStrings = {"Maximun value Selling", "Maximium water usage", "Profit loss reduction", "balancing method"};
 
         //Open file button and action listerner
         textDirButton = new JButton("Open file");
@@ -98,9 +98,9 @@ public class CombinatorialSellerGUI extends JFrame {
         JComboBox euList = new JComboBox(euListStrings);
         controls.add(etList);
         controls.add(euList);
-        etList.setSelectedIndex(3);
+        etList.setSelectedIndex(0);
         etList.setEditable(false);
-        euList.setSelectedIndex(2);
+        euList.setSelectedIndex(0);
         euList.setEditable(false);
 
         //log area create
@@ -159,11 +159,12 @@ public class CombinatorialSellerGUI extends JFrame {
 
                 }else if(euList.getSelectedIndex()==1){
                     setEuDecision(1);
-                    //System.out.println("Summer ET0 choosed");
                     displayUI("Decision method: Maximium water usage\n");
-                }else {
+                }else if(euList.getSelectedIndex()==2){
                     setEuDecision(2);
-                    //System.out.println("Winter ET0 choosed");
+                    displayUI("Decision method: Profit loss reduction");
+                }else {
+                    setEuDecision(3);
                     displayUI("Decision method: Balancing method\n");
                 }
             }

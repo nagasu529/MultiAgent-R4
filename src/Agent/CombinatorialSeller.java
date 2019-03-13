@@ -134,7 +134,10 @@ public class CombinatorialSeller extends Agent {
                     case 2:
                         decisionRules = 2;
                         break;
-                     default:
+                    case 3:
+                        decisionRules = 3;
+                        break;
+                    default:
                         decisionRules = 0;
                 }
                 calCrops.ET = calCrops.avgET0;
@@ -199,6 +202,7 @@ public class CombinatorialSeller extends Agent {
         //Creating dictionary for buyer volume and pricing
         Dictionary<String, Double> volumnDict = new Hashtable<String, Double>();
         Dictionary<String, Double> priceDict = new Hashtable<String, Double>();
+        Dictionary<String, Double> profitLossDict = new Hashtable<>();
         Object[] maxEuObj;
         Double maxEuValue = 0.0;
         ArrayList<String> maxEuList = new ArrayList<String>();
@@ -206,6 +210,7 @@ public class CombinatorialSeller extends Agent {
         private String agentName;
         private double waterVolFromBidder;
         private double biddedPriceFromBidder;
+        private double profitLossPct;
 
         private int step = 0;
 
@@ -269,9 +274,11 @@ public class CombinatorialSeller extends Agent {
                             agentName = arrOfStr[0];
                             waterVolFromBidder = Double.parseDouble(arrOfStr[1]);
                             biddedPriceFromBidder = Double.parseDouble(arrOfStr[2]);
+                            profitLossPct = Double.parseDouble(arrOfStr[3]);
                             //adding data to dictionary
                             volumnDict.put(agentName,waterVolFromBidder);
                             priceDict.put(agentName,biddedPriceFromBidder);
+                            profitLossDict.put(agentName, profitLossPct);
                         }
 
                         if (repliesCnt >= bidderAgent.length) {
@@ -293,36 +300,46 @@ public class CombinatorialSeller extends Agent {
                                 Double tempMaxVolumn = 0.0;
                                 Double tempMaxPrice = 0.0;
                                 Double tempMaxEuValue = 0.0;
+                                Double tempMaxProfitLoss = 0.0;
                                 for(int j=0; j< powersetResult.get(i).size();j++){
                                     tempMaxVolumn = tempMaxVolumn + volumnDict.get(powersetResult.get(i).get(j));
+                                    tempMaxProfitLoss = tempMaxProfitLoss + profitLossDict.get(powersetResult.get(i).get(j));
                                     double tempPrice = priceDict.get(powersetResult.get(i).get(j)) * volumnDict.get(powersetResult.get(i).get(j));
                                     tempMaxPrice = tempMaxPrice + tempPrice;
                                 }
                                 if(decisionRules == 0){
-                                    tempMaxEuValue = (0 * tempMaxVolumn) + (0.5 * tempMaxPrice);
+                                    tempMaxEuValue = (0 * tempMaxVolumn) + (0.5 * tempMaxPrice) + (0 * tempMaxProfitLoss);
                                     if(tempMaxEuValue > maxEuValue && tempMaxVolumn <= farmerInfo.sellingVolume){
                                         maxEuValue = tempMaxEuValue;
-                                        maxEuObj = new String[]{xx, tempMaxVolumn.toString(),tempMaxPrice.toString()};
+                                        maxEuObj = new String[]{xx, tempMaxVolumn.toString(),tempMaxPrice.toString(), tempMaxProfitLoss.toString()};
                                         maxEuList = powersetResult.get(i);
                                     }
                                 }else if(decisionRules == 1){
-                                    tempMaxEuValue = (0.5 * tempMaxVolumn) + (0 * tempMaxPrice);
+                                    tempMaxEuValue = (0.5 * tempMaxVolumn) + (0 * tempMaxPrice) + (0 * tempMaxProfitLoss);
                                     if(tempMaxEuValue > maxEuValue && tempMaxVolumn <= farmerInfo.sellingVolume){
                                         maxEuValue = tempMaxEuValue;
-                                        maxEuObj = new String[]{xx, tempMaxVolumn.toString(),tempMaxPrice.toString()};
+                                        maxEuObj = new String[]{xx, tempMaxVolumn.toString(),tempMaxPrice.toString(),tempMaxProfitLoss.toString()};
                                         maxEuList = powersetResult.get(i);
                                     }
-                                }else {
-                                    tempMaxEuValue = (0.5 * tempMaxVolumn) + (0.5 * tempMaxPrice);
+                                }else if(decisionRules ==2){
+                                    tempMaxEuValue = (0 * tempMaxVolumn) + (0 * tempMaxPrice) + (0.5 * tempMaxProfitLoss);
                                     if(tempMaxEuValue > maxEuValue && tempMaxVolumn <= farmerInfo.sellingVolume){
                                         maxEuValue = tempMaxEuValue;
-                                        maxEuObj = new String[]{xx, tempMaxVolumn.toString(),tempMaxPrice.toString()};
+                                        maxEuObj = new String[]{xx, tempMaxVolumn.toString(),tempMaxPrice.toString(), tempMaxProfitLoss.toString()};
+                                        maxEuList = powersetResult.get(i);
+                                    }
+                                }
+                                else {
+                                    tempMaxEuValue = (0.5 * tempMaxVolumn) + (0.5 * tempMaxPrice) + (0 * tempMaxProfitLoss);
+                                    if(tempMaxEuValue > maxEuValue && tempMaxVolumn <= farmerInfo.sellingVolume){
+                                        maxEuValue = tempMaxEuValue;
+                                        maxEuObj = new String[]{xx, tempMaxVolumn.toString(),tempMaxPrice.toString(), tempMaxProfitLoss.toString()};
                                         maxEuList = powersetResult.get(i);
                                     }
                                 }
 
                                 System.out.println("\n" + "result set is : " + powersetResult.get(i).toString()+"\n"
-                                        +  "Volumn to sell is  " + tempMaxVolumn + "\n" + "Income is  " + tempMaxPrice);
+                                        +  "Volumn to sell is  " + tempMaxVolumn + "\n" + "Income is  " + tempMaxPrice + "\n" + "Total profit loss: " + tempMaxProfitLoss + "\n" );
                                 System.out.println(decisionRules);
                             }
 
@@ -342,9 +359,12 @@ public class CombinatorialSeller extends Agent {
                         myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"Max price selling:  " + Arrays.toString(maxEuObj) + "\n");
                     }else if(decisionRules == 1) {
                         myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"Max volumn selling:  " + Arrays.toString(maxEuObj)+ "\n");
-                    }else {
+                    }else if(decisionRules == 2){
+                        myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"Max profit loss protection:  " + Arrays.toString(maxEuObj)+ "\n");
+                    }else{
                         myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"balancing between volumn and price:  " + Arrays.toString(maxEuObj)+ "\n");
                     }
+
 
                     for(int i=0; i < bidderAgent.length; ++i){
                         for (String e: maxEuList

@@ -62,6 +62,7 @@ public class CombinatorialBidder extends Agent {
                     myGUI.displayUI("Water need currently " + df.format(farmerInfo.currentLookingVolumn) + "\n");
                     myGUI.displayUI("Maximum buying price (per MM.) " + df.format(farmerInfo.buyingPricePerMM) + "\n");
                     myGUI.displayUI("Selling / Buying stages " + farmerInfo.sellingStatus + "\n");
+                    myGUI.displayUI("Profit loss (%): " + farmerInfo.profitLossPct);
                     myGUI.displayUI("\n");
 
                     /*
@@ -109,7 +110,7 @@ public class CombinatorialBidder extends Agent {
                 myGUI.displayUI("Offer from Seller: " + currentOffer + "\n");
                 farmerInfo.waterVolumnFromSeller = Double.parseDouble(arrOfstr[0]);
                 farmerInfo.waterPriceFromSeller = Double.parseDouble(arrOfstr[1]);
-                //farmerInfo.numBidder = Integer.parseInt(arrOfstr[2]);
+
 
                 myGUI.displayUI("Price setting up from Seller: " + farmerInfo.waterPriceFromSeller + " per MM" + "\n");
                 myGUI.displayUI("Selling volume from seller:" + farmerInfo.waterVolumnFromSeller + "\n");
@@ -117,7 +118,7 @@ public class CombinatorialBidder extends Agent {
                 //Auction Process
                 if (farmerInfo.waterPriceFromSeller <= farmerInfo.buyingPricePerMM) {
                     reply.setPerformative(ACLMessage.PROPOSE);
-                    String sendingOffer = farmerInfo.farmerName + "-" + farmerInfo.buyingVolumn + "-" + farmerInfo.buyingPricePerMM;
+                    String sendingOffer = farmerInfo.farmerName + "-" + farmerInfo.buyingVolumn + "-" + farmerInfo.buyingPricePerMM + "-" + farmerInfo.profitLossPct;
                     //String sendingOffer = farmerInfo.buyingVolumn + "-" + farmerInfo.buyingPricePerMM;
                     reply.setContent(sendingOffer);
                     myAgent.send(reply);
@@ -165,7 +166,7 @@ public class CombinatorialBidder extends Agent {
         }
     }
 
-    public void bidderInput(final Double buyingPrice, Double volumnToBuy){
+    public void bidderInput(final Double buyingPrice, Double volumnToBuy, Double profitLossPct){
 
         addBehaviour(new OneShotBehaviour() {
             @Override
@@ -174,6 +175,7 @@ public class CombinatorialBidder extends Agent {
                 farmerInfo.sellingStatus = "looking";
                 farmerInfo.buyingPricePerMM = buyingPrice;
                 farmerInfo.buyingVolumn = volumnToBuy;
+                farmerInfo.profitLossPct = profitLossPct;
             }
         });
     }
@@ -187,10 +189,10 @@ public class CombinatorialBidder extends Agent {
         String sellingStatus;
         double waterVolumnFromSeller;
         double waterPriceFromSeller;
-        double numBidder;
+        double profitLossPct;
 
         agentInfo(String farmerName, String agentType, double buyingVolumn, double currentLookingVolumn,
-                  double buyingPricePerMM, String sellingStatus, double waterVolumnFromSeller, double waterPriceFromSeller, double numBidder){
+                  double buyingPricePerMM, String sellingStatus, double waterVolumnFromSeller, double waterPriceFromSeller, double profitLossPct){
             this.farmerName = farmerName;
             this.agentType = agentType;
             this.buyingVolumn = buyingVolumn;
@@ -199,7 +201,7 @@ public class CombinatorialBidder extends Agent {
             this.sellingStatus = sellingStatus;
             this.waterVolumnFromSeller = waterVolumnFromSeller;
             this.waterPriceFromSeller = waterPriceFromSeller;
-            this.numBidder = numBidder;
+            this.profitLossPct = profitLossPct;
         }
     }
 }

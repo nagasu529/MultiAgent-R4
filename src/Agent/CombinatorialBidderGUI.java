@@ -8,7 +8,7 @@ public class CombinatorialBidderGUI extends JFrame {
     private CombinatorialBidder bidderAgent;
 
     //Creating setter and getter for passing parameters.
-    public static Double sPrice, sVolumnToBuy;
+    public static Double sPrice, sVolumnToBuy, sProfitLoss;
 
     public void setPrice(Double Price){
         sPrice = Price;
@@ -22,8 +22,10 @@ public class CombinatorialBidderGUI extends JFrame {
     public static Double getVolumnToBuy(){
         return sVolumnToBuy;
     }
+    public void setProfitLoss(Double profitLoss){sProfitLoss = profitLoss;}
+    public static Double getsProfitLoss() {return sProfitLoss;}
 
-    private JTextField buyingPriceField, volumeToBuyField;
+    private JTextField buyingPriceField, volumeToBuyField, profitLossField;
     private JTextArea log;
 
     CombinatorialBidderGUI(CombinatorialBidder a){
@@ -39,6 +41,10 @@ public class CombinatorialBidderGUI extends JFrame {
         p.add(new JLabel("Volume to buy:"));
         volumeToBuyField = new JTextField(5);
         p.add(volumeToBuyField);
+
+        p.add(new JLabel("Profit loss (%):"));
+        profitLossField = new JTextField(5);
+        p.add(profitLossField);
 
 
         getContentPane().add(p, BorderLayout.CENTER);
@@ -59,9 +65,12 @@ public class CombinatorialBidderGUI extends JFrame {
                     setPrice(Double.parseDouble(buyingPirce));
                     String volume = volumeToBuyField.getText().trim();
                     setVolumeToBuy(Double.parseDouble(volume));
-                    bidderAgent.bidderInput(getPrice(), getVolumnToBuy());
+                    String profitLoss = profitLossField.getText().trim();
+                    setProfitLoss(Double.parseDouble(profitLoss));
+                    bidderAgent.bidderInput(getPrice(), getVolumnToBuy(),getsProfitLoss());
                     buyingPriceField.setText("");
                     volumeToBuyField.setText("");
+                    profitLossField.setText("");
 
                 }
                 catch (Exception e) {
