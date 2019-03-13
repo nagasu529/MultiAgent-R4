@@ -1,6 +1,6 @@
 package Agent;
 
-import Agent.CropTest.cropType;
+import Agent.Crop.cropType;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -25,7 +25,7 @@ public class CombinatorialSellerTMP extends Agent {
 
     //The list of farmer who are seller (maps the water volumn to its based price)
     private CombinatorialSellerGUITMP myGui;
-    CropTest calCrops = new CropTest();
+    Crop calCrops = new Crop();
 
     DecimalFormat df = new DecimalFormat("#.##");
 

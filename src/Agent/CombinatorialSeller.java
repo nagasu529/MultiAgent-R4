@@ -1,6 +1,6 @@
 package Agent;
 
-import Agent.CropTest.cropType;
+import Agent.Crop.cropType;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -15,7 +15,6 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import java.text.DecimalFormat;
 import java.util.*;
-import java.util.stream.Stream;
 
 /**
  *
@@ -25,7 +24,7 @@ public class CombinatorialSeller extends Agent {
 
     //The list of farmer who are seller (maps the water volumn to its based price)
     private CombinatorialSellerGUI myGui;
-    CropTest calCrops = new CropTest();
+    Crop calCrops = new Crop();
     private int decisionRules;
 
     DecimalFormat df = new DecimalFormat("#.##");
@@ -154,11 +153,12 @@ public class CombinatorialSeller extends Agent {
                             " " + df.format(st.literPerSecHec) + " " + df.format(st.waterReq) + " " + df.format(st.soilWaterContainValue) + " " + df.format(st.waterReqWithSoil) +
                             " " + df.format(st.cropCoefficient) + " " + df.format(st.waterReduction) + " " + df.format(st.productValueLost) + "\n");
                 }
-                resultCal.append("Total water requirement on farm: " + calCrops.totalWaterReq + "\n");
+                resultCal.append("\nTotal water requirement on farm: " + calCrops.totalWaterReq + "\n");
                 resultCal.append("The water reduction requirement (%): " + actualRate + "\n");
                 resultCal.append("Water volume to reduction: " + calCrops.totalWaterReductionReq + "\n");
                 resultCal.append("Actual reduction on farm:" + calCrops.totalReduction + "\n");
                 resultCal.append("Actual reducion (%):" + calCrops.resultReductionPct + "\n");
+                //resultCal.append("Profit befor reduction ($)" + calCrops.profitBeforeReduction);
 
                 if (calCrops.resultReductionPct >= actualRate) {
                     farmerInfo.agentType = "owner";
@@ -199,17 +199,13 @@ public class CombinatorialSeller extends Agent {
         //Creating dictionary for buyer volume and pricing
         Dictionary<String, Double> volumnDict = new Hashtable<String, Double>();
         Dictionary<String, Double> priceDict = new Hashtable<String, Double>();
-        Object[] maxVolumnObj, maxPriceObj, maxEuObj;
-        Double maxVolumn = 0.0, maxPrice = 0.0, maxEuValue = 0.0;
-        ArrayList<String> maxVolumnList = new ArrayList<String>();
-        ArrayList<String> maxPriceList = new ArrayList<String>();
+        Object[] maxEuObj;
+        Double maxEuValue = 0.0;
         ArrayList<String> maxEuList = new ArrayList<String>();
-        ArrayList<String> resultList = new ArrayList<String>();
 
         private String agentName;
         private double waterVolFromBidder;
         private double biddedPriceFromBidder;
-        private int negotiateCnt;
 
         private int step = 0;
 
@@ -302,28 +298,28 @@ public class CombinatorialSeller extends Agent {
                                     double tempPrice = priceDict.get(powersetResult.get(i).get(j)) * volumnDict.get(powersetResult.get(i).get(j));
                                     tempMaxPrice = tempMaxPrice + tempPrice;
                                 }
-
-                                //Combination method (0.5 * 0.5 for concerned factors)
-                                tempMaxEuValue = (0.5*tempMaxVolumn) + (0.5*tempMaxPrice);
-                                if(tempMaxEuValue > maxEuValue && tempMaxVolumn <= farmerInfo.sellingVolume ){
-                                    maxEuValue = tempMaxEuValue;
-                                    maxEuObj = new String[]{xx, tempMaxVolumn.toString(), tempMaxPrice.toString()};
-                                    maxEuList = powersetResult.get(i);
+                                if(decisionRules == 0){
+                                    tempMaxEuValue = (0 * tempMaxVolumn) + (0.5 * tempMaxPrice);
+                                    if(tempMaxEuValue > maxEuValue && tempMaxVolumn <= farmerInfo.sellingVolume){
+                                        maxEuValue = tempMaxEuValue;
+                                        maxEuObj = new String[]{xx, tempMaxVolumn.toString(),tempMaxPrice.toString()};
+                                        maxEuList = powersetResult.get(i);
+                                    }
+                                }else if(decisionRules == 1){
+                                    tempMaxEuValue = (0.5 * tempMaxVolumn) + (0 * tempMaxPrice);
+                                    if(tempMaxEuValue > maxEuValue && tempMaxVolumn <= farmerInfo.sellingVolume){
+                                        maxEuValue = tempMaxEuValue;
+                                        maxEuObj = new String[]{xx, tempMaxVolumn.toString(),tempMaxPrice.toString()};
+                                        maxEuList = powersetResult.get(i);
+                                    }
+                                }else {
+                                    tempMaxEuValue = (0.5 * tempMaxVolumn) + (0.5 * tempMaxPrice);
+                                    if(tempMaxEuValue > maxEuValue && tempMaxVolumn <= farmerInfo.sellingVolume){
+                                        maxEuValue = tempMaxEuValue;
+                                        maxEuObj = new String[]{xx, tempMaxVolumn.toString(),tempMaxPrice.toString()};
+                                        maxEuList = powersetResult.get(i);
+                                    }
                                 }
-
-                                //1.0 Volumn factor.
-                                if(tempMaxVolumn > maxVolumn && tempMaxVolumn <= farmerInfo.sellingVolume){
-                                    maxVolumn = tempMaxVolumn;
-                                    maxVolumnObj = new String[]{xx,tempMaxVolumn.toString(),tempMaxPrice.toString()};
-                                    maxVolumnList = powersetResult.get(i);
-                                }
-                                //1.0 Price factor.
-                                if(tempMaxPrice > maxPrice && tempMaxVolumn <= farmerInfo.sellingVolume){
-                                    maxPrice = tempMaxPrice;
-                                    maxPriceObj = new String[]{xx, tempMaxVolumn.toString(),tempMaxPrice.toString()};
-                                    maxPriceList = powersetResult.get(i);
-                                }
-
 
                                 System.out.println("\n" + "result set is : " + powersetResult.get(i).toString()+"\n"
                                         +  "Volumn to sell is  " + tempMaxVolumn + "\n" + "Income is  " + tempMaxPrice);
@@ -343,18 +339,15 @@ public class CombinatorialSeller extends Agent {
                      * accepted water volumn to sell.
                      */
                     if(decisionRules == 0){
-                        myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"Max price selling:  " + Arrays.toString(maxPriceObj) + "\n");
-                        resultList = maxPriceList;
+                        myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"Max price selling:  " + Arrays.toString(maxEuObj) + "\n");
                     }else if(decisionRules == 1) {
-                        myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"Max volumn selling:  " + Arrays.toString(maxVolumnObj)+ "\n");
-                        resultList = maxVolumnList;
+                        myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"Max volumn selling:  " + Arrays.toString(maxEuObj)+ "\n");
                     }else {
                         myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"balancing between volumn and price:  " + Arrays.toString(maxEuObj)+ "\n");
-                        resultList = maxEuList;
                     }
 
                     for(int i=0; i < bidderAgent.length; ++i){
-                        for (String e: resultList
+                        for (String e: maxEuList
                              ) {
                             if(bidderAgent[i].getLocalName().equals(e)){
                                 // Send the purchase order to the seller that provided the best offer

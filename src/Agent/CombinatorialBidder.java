@@ -1,21 +1,19 @@
 package Agent;
 
 import jade.core.Agent;
-import jade.core.AID;
 import jade.core.behaviours.*;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import Agent.CropTest.cropType;
+import Agent.Crop.cropType;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import java.text.DecimalFormat;
-import java.util.*;
 
 public class CombinatorialBidder extends Agent {
     //The list of farmer who are seller (maps the water volumn to its based price)
-    CropTest calCrops = new CropTest();
+    Crop calCrops = new Crop();
 
     DecimalFormat df = new DecimalFormat("#.##");
 

@@ -1,20 +1,21 @@
 package Agent;
 
 import Database.databaseConn;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.text.DecimalFormat;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.Iterator;
 
 
 public class Crop extends databaseConn
 {
+    DecimalFormat df = new DecimalFormat("#.##");
+
     //Farm information
     public String cropName;
     public String farmName;
@@ -157,7 +158,6 @@ public class Crop extends databaseConn
             calcSTValue();
             calcDSValue();
             calcCVValue();
-            //calcCropEU();
             calcWaterRequirement();
             calcSoilMoistureValue(15, 30);
             calcWaterReqWithSoil();
@@ -173,6 +173,8 @@ public class Crop extends databaseConn
 
             listSize --;
         }
+
+        //Making Decision rules for crops based on water usage situation.
 
         calcCropEU();
         //Adding groosMargin fuction to calculate profit and margin on farm for making decision
@@ -245,6 +247,59 @@ public class Crop extends databaseConn
         }
     }
 
+    public void farmFacValueRandom(){
+
+        //Prepairing random data
+
+        Random rand = new Random();
+        List<String> farmerNameGen = Arrays.asList("John", "Mark", "Dave", "Morgan", "Steve", "Anna", "Heather", "Nick", "Toby", "Rob");
+        List<String> cropNameGen = Arrays.asList("Wheat", "Barley", "Pea(fresh)", "Maize(sweet)", "Tomato", "Bean(green)");
+        List<String> irrigationTypeGen = Arrays.asList("Sprinkler", "Basin", "Border", "Furrow", "Trickle");
+        List<String> cropStageGenText = Arrays.asList("Flowering", "Germination", "Development", "Ripening");
+        int cropStageGen = ThreadLocalRandom.current().nextInt(1, 4);
+        int droughtSensitivityGen = ThreadLocalRandom.current().nextInt(1,3);
+        double plotSizeGen = ThreadLocalRandom.current().nextDouble(300,1000);
+        int soilTypeGen = ThreadLocalRandom.current().nextInt(1, 3);
+        double consentCostGen = ThreadLocalRandom.current().nextDouble(10000, 20000);
+
+        //Generate 5 of crops are planted on single farm.
+        int numberOfElements = 5;
+        int farmNameGenIndex = rand.nextInt(farmerNameGen.size());
+        farmName = farmerNameGen.get(farmNameGenIndex);
+        waterConsentCost = rand.nextDouble();
+        for (int i = 0;i < numberOfElements; i++){
+            int cropNameGenIndex = rand.nextInt(cropNameGen.size());
+            cropName = cropNameGen.get(cropNameGenIndex);
+            cropNameGen.remove(cropNameGenIndex);
+            cropStage = cropStageGen;
+            droughtSensitivity = droughtSensitivityGen;
+            plotSize = plotSizeGen;
+            yieldAmount = getYieldAmount(cropName);
+            pricePerKg = getPricePerKG(cropName);
+            soilType = soilTypeGen;
+            int irrigationTypeIndex = rand.nextInt(irrigationTypeGen.size());
+            getIrrigationTypeValue(irrigationTypeGen.get(irrigationTypeIndex));
+            KcStageValue(cropName, cropStageGenText.get(cropStage), irrigationTypeGen.get(irrigationTypeIndex) );
+            cropKCoefficient = KcValue;
+
+            calcSTValue();
+            calcDSValue();
+            calcCVValue();
+            //calcCropEU();
+            calcWaterRequirement();
+            calcSoilMoistureValue(15, 30);
+            calcWaterReqWithSoil();
+            totalWaterReq();
+
+            cropType xx = new cropType(cropEU, cropName, cropStage, droughtSensitivity, dsValue, stValue,
+                    cvValue, literPerSecHec, waterReq, soilWaterContainValue, waterReqWithSoil, cropKCoefficient, waterReduction, productValueLost);
+            //adding multi value list
+            cropT.add(xx);
+
+            i ++;
+        }
+    }
+
     public void calTotalProfit(){
     }
 
@@ -312,12 +367,9 @@ public class Crop extends databaseConn
         outputVariable = farmProductionValue - waterConsentCost;
     }
 
-    public void calcProductValueLost(double waterReductionMM, double cropProductValue, double cropWaterReq, double outputVariable) {
-        if (waterReductionMM == 0) {
-            outputVariable = 0;
-        } else{
-            outputVariable = (waterReductionMM * cropProductValue) / cropWaterReq;
-        }
+    public double calcProductValueLost(double waterReductionMM, double cropProductValue, double cropWaterReq) {
+        double outputVariable = (waterReductionMM * cropProductValue) / cropWaterReq;
+        return outputVariable;
     }
 
     public void calcCropEU(){
@@ -349,11 +401,6 @@ public class Crop extends databaseConn
                 st.cropEU = (0.4 * st.dsValue) + (0.2 * st.stValue) + (0.6 * st.cvValue);
                 order.add(st.cropEU);
                 Collections.sort(order);
-                //Collections.reverse(order);
-                    /*System.out.println(st.cropEU + " " + st.cropName + " " + st.cropStage +
-                        " " + st.droubhtSensitivity + " " + st.dsValue + " " + st.stValue + " " + st.cvValue +
-                        " " + literPerSecHec + " " + st.waterReq + " " + st.cropCoefficient + " " + st.waterReduction);
-                    */
                 int x = order.indexOf(st.cropEU);
                 cropType xx = new cropType(st.cropEU, st.cropName, st.cropStage, st.droubhtSensitivity, st.dsValue, st.stValue,
                         st.cvValue, st.literPerSecHec, st.waterReq, st.soilWaterContainValue, st.waterReqWithSoil, st.cropCoefficient, st.waterReduction, st.productValueLost);
@@ -392,17 +439,6 @@ public class Crop extends databaseConn
             }
         }
 
-/*
-            //Result calculation
-            System.out.println("Water reduction result:");
-            System.out.println("");
-            Iterator itrR=resultList.iterator();
-            while (itrR.hasNext()) {
-                cropType st = (cropType)itrR.next();
-                System.out.println(st.cropEU + " " + st.cropName + " " + st.cropStage +
-                        " " + st.droubhtSensitivity + " " + st.dsValue + " " + st.stValue + " " + st.cvValue +
-                        " " + literPerSecHec + " " + st.waterReq + " " + st.cropCoefficient + " " + st.waterReduction);
-            }*/
     }
 
     //From Farmer file
@@ -414,44 +450,44 @@ public class Crop extends databaseConn
             if (ct.cropName.equals("Pasture")&& ct.cropStage==1) {
                 ct.waterReduction = ct.waterReqWithSoil * 0.5;
                 totalReduction = totalReduction + ct.waterReduction;
-                calcProductValueLost(ct.waterReduction, ct.cvValue, ct.waterReqWithSoil, ct.productValueLost);
-                System.out.println(ct.productValueLost + " " + ct.waterReduction + " " + ct.cvValue + " " + ct.waterReqWithSoil);
+                ct.productValueLost = calcProductValueLost(ct.waterReduction, ct.cvValue, ct.waterReqWithSoil);
+                System.out.println(df.format(ct.productValueLost) + " " + df.format(ct.waterReduction) + " " + df.format(ct.cvValue) + " " + df.format(ct.waterReqWithSoil));
             }
             else if (ct.cropName.equals("pasture") && ct.cropStage==2) {
                 ct.waterReduction = ct.waterReqWithSoil*0.2;
                 totalReduction = totalReduction + ct.waterReduction;
-                calcProductValueLost(ct.waterReduction, ct.cvValue, ct.waterReqWithSoil, ct.productValueLost);
-                System.out.println(ct.productValueLost + " " + ct.waterReduction + " " + ct.cvValue + " " + ct.waterReqWithSoil);
+                ct.productValueLost = calcProductValueLost(ct.waterReduction, ct.cvValue, ct.waterReqWithSoil);
+                System.out.println(df.format(ct.productValueLost) + " " + df.format(ct.waterReduction) + " " + df.format(ct.cvValue) + " " + df.format(ct.waterReqWithSoil));
             }
             else if (ct.cropName.equals("Pasture") && ct.cropStage==3) {
                 ct.waterReduction = ct.waterReqWithSoil*0.1;
                 totalReduction = totalReduction + ct.waterReduction;
-                calcProductValueLost(ct.waterReduction, ct.cvValue, ct.waterReqWithSoil, ct.productValueLost);
-                System.out.println(ct.productValueLost + " " + ct.waterReduction + " " + ct.cvValue + " " + ct.waterReqWithSoil);
+                ct.productValueLost = calcProductValueLost(ct.waterReduction, ct.cvValue, ct.waterReqWithSoil);
+                System.out.println(df.format(ct.productValueLost) + " " + df.format(ct.waterReduction) + " " + df.format(ct.cvValue) + " " + df.format(ct.waterReqWithSoil));
             }
             else if (ct.cropStage==1) {
                 ct.waterReduction = ct.waterReqWithSoil*0.5;
                 totalReduction = totalReduction + ct.waterReduction;
-                calcProductValueLost(ct.waterReduction, ct.cvValue, ct.waterReqWithSoil, ct.productValueLost);
-                System.out.println(ct.productValueLost + " " + ct.waterReduction + " " + ct.cvValue + " " + ct.waterReqWithSoil);
+                ct.productValueLost = calcProductValueLost(ct.waterReduction, ct.cvValue, ct.waterReqWithSoil);
+                System.out.println(df.format(ct.productValueLost) + " " + df.format(ct.waterReduction) + " " + df.format(ct.cvValue) + " " + df.format(ct.waterReqWithSoil));
             }
             else if (ct.cropStage==2) {
                 ct.waterReduction = ct.waterReqWithSoil*0.2;
                 totalReduction = totalReduction + ct.waterReduction;
-                calcProductValueLost(ct.waterReduction, ct.cvValue, ct.waterReqWithSoil, ct.productValueLost);
-                System.out.println(ct.productValueLost + " " + ct.waterReduction + " " + ct.cvValue + " " + ct.waterReqWithSoil);
+                ct.productValueLost = calcProductValueLost(ct.waterReduction, ct.cvValue, ct.waterReqWithSoil);
+                System.out.println(df.format(ct.productValueLost) + " " + df.format(ct.waterReduction) + " " + df.format(ct.cvValue) + " " + df.format(ct.waterReqWithSoil));
             }
             else if (ct.cropStage==3) {
                 ct.waterReduction = ct.waterReqWithSoil*0.15;
                 totalReduction = totalReduction + ct.waterReduction;
-                calcProductValueLost(ct.waterReduction, ct.cvValue, ct.waterReqWithSoil, ct.productValueLost);
-                System.out.println(ct.productValueLost + " " + ct.waterReduction + " " + ct.cvValue + " " + ct.waterReqWithSoil);
+                ct.productValueLost = calcProductValueLost(ct.waterReduction, ct.cvValue, ct.waterReqWithSoil);
+                System.out.println(df.format(ct.productValueLost) + " " + df.format(ct.waterReduction) + " " + df.format(ct.cvValue) + " " + df.format(ct.waterReqWithSoil));
             }
             else{
                 ct.waterReduction = ct.waterReqWithSoil*0.1;
                 totalReduction = totalReduction + ct.waterReduction;
-                calcProductValueLost(ct.waterReduction, ct.cvValue, ct.waterReqWithSoil, ct.productValueLost);
-                System.out.println(ct.productValueLost + " " + ct.waterReduction + " " + ct.cvValue + " " + ct.waterReqWithSoil);
+                ct.productValueLost = calcProductValueLost(ct.waterReduction, ct.cvValue, ct.waterReqWithSoil);
+                System.out.println(df.format(ct.productValueLost) + " " + df.format(ct.waterReduction) + " " + df.format(ct.cvValue) + " " + df.format(ct.waterReqWithSoil));
             }
 
 
@@ -504,7 +540,7 @@ public class Crop extends databaseConn
     //Profit Function and making decision about selling and buying water from others.
 
     public void profitFunction(double revenueValue, double waterReq, double waterReduction){
+
+
     }
-
-
 }
