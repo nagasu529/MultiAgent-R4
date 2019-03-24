@@ -365,7 +365,6 @@ public class CombinatorialSeller extends Agent {
                         myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"balancing between volumn and price:  " + Arrays.toString(maxEuObj)+ "\n");
                     }
 
-
                     for(int i=0; i < bidderAgent.length; ++i){
                         for (String e: maxEuList
                              ) {
