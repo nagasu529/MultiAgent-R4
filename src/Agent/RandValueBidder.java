@@ -24,7 +24,6 @@ public class RandValueBidder extends Agent {
 
     //Global bidding parameter
 
-
     protected void setup() {
         System.out.println(getAID().getName()+"  is ready" );
 

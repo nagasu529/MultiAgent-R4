@@ -298,6 +298,10 @@ public class Crop extends databaseConn
 
             i ++;
         }
+        System.out.println("\n==> colletion stream() util...");
+        cropT.forEach((temp) -> {
+            System.out.println(temp);
+        });
     }
 
     public void calTotalProfit(){
@@ -540,7 +544,6 @@ public class Crop extends databaseConn
     //Profit Function and making decision about selling and buying water from others.
 
     public void profitFunction(double revenueValue, double waterReq, double waterReduction){
-
 
     }
 }
