@@ -14,17 +14,23 @@ import java.text.DecimalFormat;
 import java.util.*;
 
 public class RandValueSeller extends Agent{
+    RandValueSellerGUI myGUI;
+
+
     //General arameters prepairation.
     DecimalFormat df = new DecimalFormat("#.##");
     private int decisionRule;
     randValue randValue = new randValue();
-    agentInfo farmerInfo = new agentInfo(randValue.getRandElementString(randValue.farmerNameGen),"",0,0, randValue.getRandDoubleRange(12,16),
+    agentInfo farmerInfo = new agentInfo(randValue.getRandElementString(randValue.farmerNameGen),"",0,0, randValue.getRandDoubleRange(10,12),
             randValue.getRandDoubleRange(15000,22000),0,"",0);
     int countTick;
     int decisionRules = 3;
 
     //Seting up and starting agent.
     protected void setup(){
+        // Create and show the GUI
+        myGUI = new RandValueSellerGUI(this);
+        myGUI.show();
         System.out.println(getAID().getLocalName() + " is ready");
         //Start agent
         DFAgentDescription dfd = new DFAgentDescription();
@@ -46,24 +52,22 @@ public class RandValueSeller extends Agent{
         //Add a TickerBehaviour that chooses agent status to buyer or seller.
         addBehaviour(new TickerBehaviour(this, 50000){
             protected void onTick() {
-                System.out.println("Name: " + farmerInfo.farmerName + "\n");
-                System.out.println("Status: " + farmerInfo.agentType + "\n");
-                System.out.println("Volumn to sell: " + farmerInfo.sellingVolume + "\n");
-                System.out.println("Selling price: " + farmerInfo.sellingPrice + "\n");
-                System.out.println("Selling status: " + farmerInfo.sellingStatus + "\n");
-                System.out.println("Providing price" + "\n");
-                System.out.println("\n");
+                myGUI.displayUI("Name: " + farmerInfo.farmerName + "\n");
+                myGUI.displayUI("Status: " + farmerInfo.agentType + "\n");
+                myGUI.displayUI("Volumn to sell: " + farmerInfo.sellingVolume + "\n");
+                myGUI.displayUI("Selling price: " + farmerInfo.sellingPrice + "\n");
+                myGUI.displayUI("Selling status: " + farmerInfo.sellingStatus + "\n");
+                myGUI.displayUI("Providing price" + "\n");
+                myGUI.displayUI("\n");
 
                     /*
                      ** Selling water process
                      */
-
                     addBehaviour(new RequestPerformer());
                     // Add the behaviour serving purchase orders from buyer agents
                     //addBehaviour(new PurchaseOrdersServer());
             }
         } );
-
     }
 
     private class RequestPerformer extends Behaviour {
@@ -107,13 +111,12 @@ public class RandValueSeller extends Agent{
                         for (int i = 0; i < result.length; ++i) {
                             bidderAgent[i] = result[i].getName();
                             System.out.println(bidderAgent[i].getName());
-                            System.out.println("tick time:" + countTick);
+                            //System.out.println("tick time:" + countTick);
                         }
                     }
                     catch (FIPAException fe) {
                         fe.printStackTrace();
                     }
-
                     // Send the cfp to all sellers (Sending water volumn required to all bidding agent)
                     ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
                     for (int i = 0; i < bidderAgent.length; ++i) {

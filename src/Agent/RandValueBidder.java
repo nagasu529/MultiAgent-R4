@@ -15,17 +15,17 @@ import java.text.DecimalFormat;
 
 public class RandValueBidder extends Agent {
     //The list of farmer who are seller (maps the water volumn to its based price)
-    Crop calCrops = new Crop();
+    randValue randValue = new randValue();
 
     DecimalFormat df = new DecimalFormat("#.##");
 
     //Farmer information on each agent.
-    agentInfo farmerInfo = new agentInfo("", "", 0.0,0.0, 0.0, "", 0.0, 0.0, 0);
+    agentInfo farmerInfo = new agentInfo("", "", randValue.getRandDoubleRange(500, 1200),0.0, randValue.getRandDoubleRange(12,16), "looking", 0.0, 0.0, randValue.getRandDoubleRange(5,12));
 
     //Global bidding parameter
 
     protected void setup() {
-        System.out.println(getAID().getName()+"  is ready" );
+        System.out.println(getAID().getLocalName()+"  is ready" );
 
         //Start Agent
         // Register the book-selling service in the yellow pages
@@ -33,10 +33,10 @@ public class RandValueBidder extends Agent {
         dfd.setName(getAID());
         ServiceDescription sd = new ServiceDescription();
         farmerInfo.agentType = "Farmer-auctioneer";
+        farmerInfo.farmerName = getAID().getLocalName();
         sd.setType("bidder");
         //sd.setType(farmerInfo.agentType);
         sd.setName(getAID().getName());
-        farmerInfo.farmerName = getAID().getLocalName();
         dfd.addServices(sd);
         try {
             DFService.register(this, dfd);
@@ -49,15 +49,15 @@ public class RandValueBidder extends Agent {
             public void onTick() {
 
                 if (farmerInfo.sellingStatus=="looking"){
-                    //myGUI.displayUI("\n");
-                    //myGUI.displayUI("Name: " + farmerInfo.farmerName + "\n");
-                    //myGUI.displayUI("Status: " + farmerInfo.agentType + "\n");
-                    //myGUI.displayUI("Total buying water needed: " + df.format(farmerInfo.buyingVolumn) + "\n");
-                    //myGUI.displayUI("Water need currently " + df.format(farmerInfo.currentLookingVolumn) + "\n");
-                    //myGUI.displayUI("Maximum buying price (per MM.) " + df.format(farmerInfo.buyingPricePerMM) + "\n");
-                    //myGUI.displayUI("Selling / Buying stages " + farmerInfo.sellingStatus + "\n");
-                    //myGUI.displayUI("Profit loss (%): " + farmerInfo.profitLossPct);
-                    //myGUI.displayUI("\n");
+                    System.out.println("\n");
+                    System.out.println("Name: " + farmerInfo.farmerName + "\n");
+                    System.out.println("Status: " + farmerInfo.agentType + "\n");
+                    System.out.println("Total buying water needed: " + df.format(farmerInfo.buyingVolumn) + "\n");
+                    System.out.println("Water need currently " + df.format(farmerInfo.currentLookingVolumn) + "\n");
+                    System.out.println("Maximum buying price (per MM.) " + df.format(farmerInfo.buyingPricePerMM) + "\n");
+                    System.out.println("Selling / Buying stages " + farmerInfo.sellingStatus + "\n");
+                    System.out.println("Profit loss (%): " + farmerInfo.profitLossPct);
+                    System.out.println("\n");
 
                     /*
                      ** Bidding water process
@@ -121,7 +121,7 @@ public class RandValueBidder extends Agent {
                     reply.setPerformative(ACLMessage.REFUSE);
                     //reply.setContent(getAID().getName() + " is surrender");
                     myAgent.send(reply);
-                    //myGUI.displayUI(getAID().getName() + " is surrender");
+                    System.out.println(getAID().getName() + " is surrender");
                 }
             } else {
                 block();
