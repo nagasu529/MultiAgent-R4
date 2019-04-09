@@ -22,7 +22,7 @@ public class RandValueSeller extends Agent{
     private int decisionRule;
     randValue randValue = new randValue();
     agentInfo farmerInfo = new agentInfo(randValue.getRandElementString(randValue.farmerNameGen),"",0,0, randValue.getRandDoubleRange(10,12),
-            randValue.getRandDoubleRange(15000,22000),0,"",0);
+            randValue.getRandDoubleRange(1500,2000),0,"",0);
     int countTick;
     int decisionRules = 3;
 
@@ -76,7 +76,7 @@ public class RandValueSeller extends Agent{
         private int repliesCnt; // The counter of replies from seller agents
         private MessageTemplate mt; // The template to receive replies
         ArrayList<String> bidderList = new ArrayList<String>();  //sorted list follows maximumprice factor.
-        ArrayList<combinatorialList> buyerList = new ArrayList<combinatorialList>();    //result list for selling process reference.
+        //ArrayList<combinatorialList> buyerList = new ArrayList<combinatorialList>();    //result list for selling process reference.
 
         //Creating dictionary for buyer volume and pricing
         Dictionary<String, Double> volumnDict = new Hashtable<String, Double>();
@@ -233,6 +233,15 @@ public class RandValueSeller extends Agent{
                      * Sendding message to bidders wiht two types (Accept proposal or Refuse) based on
                      * accepted water volumn to sell.
                      */
+                    if(decisionRules == 0){
+                        myGUI.displayUI("\n" + "Best solution for each case:"+"\n"+"Max price selling:  " + Arrays.toString(maxEuObj) + "\n");
+                    }else if(decisionRules == 1) {
+                        myGUI.displayUI("\n" + "Best solution for each case:"+"\n"+"Max volumn selling:  " + Arrays.toString(maxEuObj)+ "\n");
+                    }else if(decisionRules == 2){
+                        myGUI.displayUI("\n" + "Best solution for each case:"+"\n"+"Max profit loss protection:  " + Arrays.toString(maxEuObj)+ "\n");
+                    }else{
+                        myGUI.displayUI("\n" + "Best solution for each case:"+"\n"+"balancing between volumn and price:  " + Arrays.toString(maxEuObj)+ "\n");
+                    }
                         System.out.println("\n" + "Best solution for each case:"+"\n"+"Max price selling:  " + Arrays.toString(maxEuObj) + "\n");
 
                     for(int i=0; i < bidderAgent.length; ++i){
@@ -279,6 +288,7 @@ public class RandValueSeller extends Agent{
                             //myGui.displayUI("\n" + farmerInfo.farmerName +" successfully purchased from agent "+reply.getSender().getName() +"\n");
                             //myGui.displayUI("Price = " + farmerInfo.currentPricePerMM);
                             myAgent.doSuspend();
+                            //myAgent.doDelete();
                             //myGui.dispose();
                         }
                         else {
@@ -449,19 +459,5 @@ public class RandValueSeller extends Agent{
             str[j] = arr.get(j);
         }
         return str;
-    }
-
-    public class combinatorialList{
-        String agentName;
-        double waterVolume;
-        double pricePerMM;
-        double receivedWaterFromSeller;
-
-        combinatorialList(String agentName, double waterVolume, double pricePerMM, double receivedWaterFromSeller){
-            this.agentName = agentName;
-            this.waterVolume = waterVolume;
-            this.pricePerMM = pricePerMM;
-            this.receivedWaterFromSeller = receivedWaterFromSeller;
-        }
     }
 }

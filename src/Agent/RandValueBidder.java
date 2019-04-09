@@ -148,8 +148,8 @@ public class RandValueBidder extends Agent {
                 if (farmerInfo.buyingVolumn <=0) {
                     farmerInfo.sellingStatus = "Finished bidding";
                     //myGUI.displayUI(getAID().getLocalName() +  "is complete in buying process" + "\n" + getAID().getLocalName() + "terminating");
-
-                    myAgent.doSuspend();
+                    myAgent.doDelete();
+                    //myAgent.doSuspend();
                     //myGUI.dispose();
                     System.out.println(getAID().getName() + " terminating.");
                 }
