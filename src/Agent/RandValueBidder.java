@@ -45,19 +45,19 @@ public class RandValueBidder extends Agent {
             fe.printStackTrace();
         }
         //Bidding process.
-        addBehaviour(new TickerBehaviour(this, 10000) {
+        addBehaviour(new TickerBehaviour(this, 1000) {
             public void onTick() {
 
                 if (farmerInfo.sellingStatus=="looking"){
-                    System.out.println("\n");
-                    System.out.println("Name: " + farmerInfo.farmerName + "\n");
-                    System.out.println("Status: " + farmerInfo.agentType + "\n");
-                    System.out.println("Total buying water needed: " + df.format(farmerInfo.buyingVolumn) + "\n");
-                    System.out.println("Water need currently " + df.format(farmerInfo.currentLookingVolumn) + "\n");
-                    System.out.println("Maximum buying price (per MM.) " + df.format(farmerInfo.buyingPricePerMM) + "\n");
-                    System.out.println("Selling / Buying stages " + farmerInfo.sellingStatus + "\n");
-                    System.out.println("Profit loss (%): " + farmerInfo.profitLossPct);
-                    System.out.println("\n");
+                    //System.out.println("\n");
+                    //System.out.println("Name: " + farmerInfo.farmerName + "\n");
+                    //System.out.println("Status: " + farmerInfo.agentType + "\n");
+                    //System.out.println("Total buying water needed: " + df.format(farmerInfo.buyingVolumn) + "\n");
+                    //System.out.println("Water need currently " + df.format(farmerInfo.currentLookingVolumn) + "\n");
+                    //System.out.println("Maximum buying price (per MM.) " + df.format(farmerInfo.buyingPricePerMM) + "\n");
+                    //System.out.println("Selling / Buying stages " + farmerInfo.sellingStatus + "\n");
+                    //System.out.println("Profit loss (%): " + farmerInfo.profitLossPct);
+                    //System.out.println("\n");
 
                     /*
                      ** Bidding water process
@@ -67,9 +67,6 @@ public class RandValueBidder extends Agent {
 
                     //Add the behaviour serving purhase orders from water provider agent.
                     addBehaviour(new PurchaseOrdersServer());
-                }
-                else {
-                    //myGUI.displayUI("Do not want to bid water this time" + "\n");
                 }
             }
         });

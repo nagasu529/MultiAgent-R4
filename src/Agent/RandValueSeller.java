@@ -50,7 +50,7 @@ public class RandValueSeller extends Agent{
         System.out.println(farmerInfo.farmerName + "  is ready" + "\n" + "Stage is" + farmerInfo.agentType + "\n");
 
         //Add a TickerBehaviour that chooses agent status to buyer or seller.
-        addBehaviour(new TickerBehaviour(this, 50000){
+        addBehaviour(new TickerBehaviour(this, 5000){
             protected void onTick() {
                 myGUI.displayUI("Name: " + farmerInfo.farmerName + "\n");
                 myGUI.displayUI("Status: " + farmerInfo.agentType + "\n");
