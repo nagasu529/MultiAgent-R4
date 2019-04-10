@@ -15,7 +15,7 @@ import java.util.*;
 public class MornitoringAgent extends Agent {
     private MornitoringAgentGUI myGui;
     DecimalFormat df = new DecimalFormat("#.##");
-    ArrayList<agentInfoMornitor> resultList = new ArrayList<agentInfoMornitor>();
+    ArrayList<String> resultList = new ArrayList<>();
 
     //Farmer information on each agent.
     //agentInfoMornitor agentInfo = new agentInfoMornitor("", "",0.0, 0.0, "", 0.0);
@@ -109,19 +109,22 @@ public class MornitoringAgent extends Agent {
                             buyingVolumn = Double.parseDouble(arrOfStr[1]);
                             pricePerMM = Double.parseDouble(arrOfStr[2]);
                             profitLostPct = Double.parseDouble(arrOfStr[3]);
-                            agentInfoMornitor xx = new agentInfoMornitor(bidderName, buyingVolumn, pricePerMM, profitLostPct);
+                            Obj[] xx =
+                            resultList.add(bidderName, buyingVolumn, pricePerMM, profitLostPct);
+                            //agentInfoMornitor xx = new agentInfoMornitor(bidderName, buyingVolumn, pricePerMM, profitLostPct);
+                            //myGui.displayUI(bidderName + "  " + buyingVolumn + "  " + pricePerMM + "  " + profitLostPct);
                             resultList.add(xx);
                         }
                         if (repliesCnt >= bidderAgent.length) {
-                            myGui.displayUI("Active agent:" + "\n");
-                            for (int i = 0; i < resultList.size(); i++) {
-                                myGui.displayUI(resultList.get(i).toString());
+                            step = 2;
+                            //Iterator itrR=resultList.iterator();
+                            //while (itrR.hasNext()){
+                            //    agentInfoMornitor ct = (agentInfoMornitor)itrR.next();
+                                //System.out.print(ct.farmerName + "  " + df.format(ct.buyingVolumn) + "  " + df.format(ct.buyingPricePerMM) + "  " + df.format(ct.buyingPricePerMM + "\n"));
                             }
-                        }
                     } else {
                         block();
                     }
-                    step = 2;
                     break;
 
                 case 2:
