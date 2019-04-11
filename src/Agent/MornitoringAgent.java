@@ -15,7 +15,7 @@ import java.util.*;
 public class MornitoringAgent extends Agent {
     private MornitoringAgentGUI myGui;
     DecimalFormat df = new DecimalFormat("#.##");
-    ArrayList<String> resultList = new ArrayList<>();
+    ArrayList<agentInfoMornitor> resultList = new ArrayList<agentInfoMornitor>();
 
     //Farmer information on each agent.
     //agentInfoMornitor agentInfo = new agentInfoMornitor("", "",0.0, 0.0, "", 0.0);
@@ -52,10 +52,17 @@ public class MornitoringAgent extends Agent {
         private AID[] bidderAgent;
         private MessageTemplate mt;
         private int repliesCnt = 0;
-        String bidderName;
-        double buyingVolumn;
-        double pricePerMM;
-        double profitLostPct;
+        private String bidderName;
+        private double buyingVolumn;
+        private double pricePerMM;
+        private double profitLostPct;
+
+        //Summarizing results
+        private double totalBuyingVol;
+        private double totalProfitLoss;
+        private double pctProfitReduction;
+        private double pctProfitLoss;
+
         private int step = 0;
 
         public void action() {
@@ -72,7 +79,7 @@ public class MornitoringAgent extends Agent {
                         bidderAgent = new AID[result.length];
                         for (int i = 0; i < result.length; ++i) {
                             bidderAgent[i] = result[i].getName();
-                            myGui.displayUI(bidderAgent[i].getName() + "\n");
+                            //myGui.displayUI(bidderAgent[i].getName() + "\n");
                         }
                     } catch (FIPAException fe) {
                         fe.printStackTrace();
@@ -109,19 +116,18 @@ public class MornitoringAgent extends Agent {
                             buyingVolumn = Double.parseDouble(arrOfStr[1]);
                             pricePerMM = Double.parseDouble(arrOfStr[2]);
                             profitLostPct = Double.parseDouble(arrOfStr[3]);
-                            Obj[] xx =
-                            resultList.add(bidderName, buyingVolumn, pricePerMM, profitLostPct);
-                            //agentInfoMornitor xx = new agentInfoMornitor(bidderName, buyingVolumn, pricePerMM, profitLostPct);
-                            //myGui.displayUI(bidderName + "  " + buyingVolumn + "  " + pricePerMM + "  " + profitLostPct);
+                            agentInfoMornitor xx = new agentInfoMornitor(bidderName, buyingVolumn, pricePerMM, profitLostPct);
                             resultList.add(xx);
                         }
                         if (repliesCnt >= bidderAgent.length) {
-                            step = 2;
-                            //Iterator itrR=resultList.iterator();
-                            //while (itrR.hasNext()){
-                            //    agentInfoMornitor ct = (agentInfoMornitor)itrR.next();
-                                //System.out.print(ct.farmerName + "  " + df.format(ct.buyingVolumn) + "  " + df.format(ct.buyingPricePerMM) + "  " + df.format(ct.buyingPricePerMM + "\n"));
+                            myGui.displayUI("Total bidder number are " + resultList.size());
+                            Iterator itrR=resultList.iterator();
+                            while (itrR.hasNext()){
+                                agentInfoMornitor ct = (agentInfoMornitor)itrR.next();
+                                myGui.displayUI(ct.farmerName + "     " + df.format(ct.buyingVolumn) + "     " + df.format(ct.buyingPricePerMM) + "     " + df.format(ct.profitLossPct) + "\n");
                             }
+                            step = 2;
+                        }
                     } else {
                         block();
                     }
