@@ -15,11 +15,11 @@ public class MornitoringAgentGUI extends JFrame{
     private JTextArea log;
 
     MornitoringAgentGUI(MornitoringAgent a) {
-        super(a.getLocalName() + " Monitoring");
+        super(a.getLocalName() + " Interface");
         myAgent = a;
 
         //log area create
-        log = new JTextArea(5,20);
+        log = new JTextArea(15,40);
         log.setEditable(false);
         getContentPane().add(log, BorderLayout.CENTER);
         log.setMargin(new Insets(5,5,100,100));

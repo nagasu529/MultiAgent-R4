@@ -17,8 +17,11 @@ public class MornitoringAgent extends Agent {
     DecimalFormat df = new DecimalFormat("#.##");
     ArrayList<agentInfoMornitor> resultList = new ArrayList<agentInfoMornitor>();
 
-    //Farmer information on each agent.
-    //agentInfoMornitor agentInfo = new agentInfoMornitor("", "",0.0, 0.0, "", 0.0);
+    //Summarizing results
+    private int maxBiderAgents;
+    private double maxBuyingVol;
+    private double maxProfitLoss;
+    private double maxPctProfitReduction;
 
     protected void setup(){
         //Create and show GUI
@@ -57,11 +60,10 @@ public class MornitoringAgent extends Agent {
         private double pricePerMM;
         private double profitLostPct;
 
-        //Summarizing results
-        private double totalBuyingVol;
-        private double totalProfitLoss;
-        private double pctProfitReduction;
-        private double pctProfitLoss;
+        private double currentNumBidderAgent;
+        private double currentBuyingVol;
+        private double currentProfitLoss;
+        private double currentPctProfitReduction;
 
         private int step = 0;
 
@@ -77,7 +79,12 @@ public class MornitoringAgent extends Agent {
                         DFAgentDescription[] result = DFService.search(myAgent, template);
                         myGui.displayUI("Found acutioneer agents:");
                         bidderAgent = new AID[result.length];
-                        for (int i = 0; i < result.length; ++i) {
+                        int tempNumBidderAgent = bidderAgent.length;
+                        if(tempNumBidderAgent > maxBiderAgents){
+                            maxBiderAgents = tempNumBidderAgent;
+                        }
+                        currentNumBidderAgent = tempNumBidderAgent;
+                        for (int i = 0; i < currentNumBidderAgent; ++i) {
                             bidderAgent[i] = result[i].getName();
                             //myGui.displayUI(bidderAgent[i].getName() + "\n");
                         }
@@ -86,7 +93,7 @@ public class MornitoringAgent extends Agent {
                     }
                     // Send the cfp to all sellers (Sending water volumn required to all bidding agent)
                     ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
-                    for (int i = 0; i < bidderAgent.length; ++i) {
+                    for (int i = 0; i < currentNumBidderAgent; ++i) {
                         if (bidderAgent[i].getName().equals(getAID().getName()) == false) {
                             cfp.addReceiver(bidderAgent[i]);
                         }
@@ -117,15 +124,29 @@ public class MornitoringAgent extends Agent {
                             pricePerMM = Double.parseDouble(arrOfStr[2]);
                             profitLostPct = Double.parseDouble(arrOfStr[3]);
                             agentInfoMornitor xx = new agentInfoMornitor(bidderName, buyingVolumn, pricePerMM, profitLostPct);
+                            currentBuyingVol = currentBuyingVol + buyingVolumn;
+                            currentProfitLoss = currentProfitLoss + profitLostPct;
                             resultList.add(xx);
                         }
-                        if (repliesCnt >= bidderAgent.length) {
-                            myGui.displayUI("Total bidder number are " + resultList.size());
-                            Iterator itrR=resultList.iterator();
+                        if (repliesCnt >= currentNumBidderAgent) {
+                            //myGui.displayUI("\n" + "Max bidder number are " + currentNumBidderAgent + "\n");
+                            myGui.displayUI("max" + maxBiderAgents + "     " + currentNumBidderAgent);
+                            if(maxBiderAgents <= currentNumBidderAgent){
+                                maxBuyingVol = currentBuyingVol;
+                                maxProfitLoss = currentProfitLoss;
+                                myGui.displayUI("\n" + "Total bidder numbers is " + maxBiderAgents + "\n");
+                                myGui.displayUI("Total water request from the groups of buyers:  " + maxBuyingVol + "  " + ((maxBuyingVol*100)/(maxBuyingVol)) + "%" + "\n");
+                                myGui.displayUI("Total profit loss from group of buyers:  " + (100*maxProfitLoss)/(maxProfitLoss) + "\n");
+                            }else {
+                                myGui.displayUI("Current bidder numbers is:  " + currentNumBidderAgent + "  " + (maxBiderAgents - currentNumBidderAgent) + " bidders leave" + "\n");
+                                myGui.displayUI("Total water need currently: " + currentBuyingVol + "  " + df.format(100 - (((currentBuyingVol*100)/(maxBuyingVol)))) + "% of reduction" + "\n");
+                                myGui.displayUI("Total profit loss reduction currlently: " + df.format(100 - (currentProfitLoss*100)/(maxProfitLoss)) + "\n");
+                            }
+                            /***Iterator itrR=resultList.iterator();
                             while (itrR.hasNext()){
                                 agentInfoMornitor ct = (agentInfoMornitor)itrR.next();
                                 myGui.displayUI(ct.farmerName + "     " + df.format(ct.buyingVolumn) + "     " + df.format(ct.buyingPricePerMM) + "     " + df.format(ct.profitLossPct) + "\n");
-                            }
+                            }***/
                             step = 2;
                         }
                     } else {
