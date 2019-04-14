@@ -77,13 +77,14 @@ public class MornitoringAgent extends Agent {
                     template.addServices(sd);
                     try {
                         DFAgentDescription[] result = DFService.search(myAgent, template);
-                        myGui.displayUI("Found acutioneer agents:");
                         bidderAgent = new AID[result.length];
                         int tempNumBidderAgent = bidderAgent.length;
                         if(tempNumBidderAgent > maxBiderAgents){
                             maxBiderAgents = tempNumBidderAgent;
                         }
                         currentNumBidderAgent = tempNumBidderAgent;
+                        myGui.displayUI( "\n" + "Found acutioneer agents:" +"\n");
+                        myGui.displayUI("Number of agent is " + bidderAgent.length + "\n");
                         for (int i = 0; i < currentNumBidderAgent; ++i) {
                             bidderAgent[i] = result[i].getName();
                             //myGui.displayUI(bidderAgent[i].getName() + "\n");
@@ -102,12 +103,12 @@ public class MornitoringAgent extends Agent {
                     cfp.setConversationId("bidding");
                     cfp.setReplyWith("cfp" + System.currentTimeMillis()); // Unique value
                     myAgent.send(cfp);
-                    myGui.displayUI("cfp message :" + "\n" + cfp);
+                    //myGui.displayUI("cfp message :" + "\n" + cfp);
                     // Prepare the template to get proposals
                     mt = MessageTemplate.and(MessageTemplate.MatchConversationId("bidding"),
                             MessageTemplate.MatchInReplyTo(cfp.getReplyWith()));
                     step = 1;
-                    myGui.displayUI("\n" + step);
+                    //myGui.displayUI("\n" + step);
                     break;
 
                 case 1:
@@ -130,7 +131,7 @@ public class MornitoringAgent extends Agent {
                         }
                         if (repliesCnt >= currentNumBidderAgent) {
                             //myGui.displayUI("\n" + "Max bidder number are " + currentNumBidderAgent + "\n");
-                            myGui.displayUI("max" + maxBiderAgents + "     " + currentNumBidderAgent);
+                            myGui.displayUI("\n" + "Max bidder: " + maxBiderAgents + "     " + "Current biider no.: " +  currentNumBidderAgent + "\n");
                             if(maxBiderAgents <= currentNumBidderAgent){
                                 maxBuyingVol = currentBuyingVol;
                                 maxProfitLoss = currentProfitLoss;
