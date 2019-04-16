@@ -142,6 +142,7 @@ public class MornitoringAgent extends Agent {
                                 myGui.displayUI("Current bidder numbers is:  " + currentNumBidderAgent + "  " + (maxBiderAgents - currentNumBidderAgent) + " bidders leave" + "\n");
                                 myGui.displayUI("Total water need currently: " + currentBuyingVol + "  " + df.format(100 - (((currentBuyingVol*100)/(maxBuyingVol)))) + "% of reduction" + "\n");
                                 myGui.displayUI("Total profit loss reduction currlently: " + df.format(100 - (currentProfitLoss*100)/(maxProfitLoss)) + "\n");
+                                myGui.displayUI("Total sharing volumn (m^3) " + (maxBuyingVol - currentBuyingVol));
                             }
                             /***Iterator itrR=resultList.iterator();
                             while (itrR.hasNext()){

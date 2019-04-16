@@ -21,9 +21,9 @@ public class RandValueSeller extends Agent{
     private int decisionRule;
     randValue randValue = new randValue();
     agentInfo farmerInfo = new agentInfo(randValue.getRandElementString(randValue.farmerNameGen),"",0,0, randValue.getRandDoubleRange(10,12),
-            randValue.getRandDoubleRange(1500,2000),0,"",0);
+            randValue.getRandDoubleRange(1300,1500),0,"",0);
     int countTick;
-    int decisionRules = 3;
+    int decisionRules = 1;
 
     //Seting up and starting agent.
     protected void setup(){
