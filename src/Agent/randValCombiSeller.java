@@ -1,50 +1,36 @@
 package Agent;
 
-import Agent.Crop.cropType;
-import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.Behaviour;
-import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.OneShotBehaviour;
-import jade.core.behaviours.TickerBehaviour;
-import jade.domain.DFService;
-import jade.domain.FIPAAgentManagement.DFAgentDescription;
-import jade.domain.FIPAAgentManagement.ServiceDescription;
-import jade.domain.FIPAException;
+import jade.core.behaviours.*;
+import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-
+import jade.domain.DFService;
+import jade.domain.FIPAException;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
 import java.text.DecimalFormat;
 import java.util.*;
 
-/**
- *
- * @author chiewchk
- */
-public class CombinatorialSellerTMP extends Agent {
+public class randValCombiSeller extends Agent{
+    randValCombiSellerGUI myGUI;
 
-    //The list of farmer who are seller (maps the water volumn to its based price)
-    private CombinatorialSellerGUITMP myGui;
-    Crop calCrops = new Crop();
 
+    //General arameters prepairation.
     DecimalFormat df = new DecimalFormat("#.##");
-
-    //Counting list (single negotiation process)
+    private int decisionRule;
+    randValue randValue = new randValue();
+    agentInfo farmerInfo = new agentInfo(randValue.getRandElementString(randValue.farmerNameGen),"",0,0, randValue.getRandDoubleRange(10,12),
+            randValue.getRandDoubleRange(1300,1500),0,"",0);
     int countTick;
+    int decisionRules = 1;
 
-    //Farmer information on each agent.
-    agentInfo farmerInfo = new agentInfo("", "", 0.0,0.0, 10.0, 0.0, 0.0,"", 0);
-
-    //The list of information (buying or selling) from agent which include price and mm^3
-    private HashMap catalogue = new HashMap();
-
+    //Seting up and starting agent.
     protected void setup(){
-        System.out.println(getAID()+" is ready");
-
-        //Creating catalogue and running GUI
-        myGui = new CombinatorialSellerGUITMP(this);
-        myGui.show();
-
+        // Create and show the GUI
+        myGUI = new randValCombiSellerGUI(this);
+        myGUI.show();
+        System.out.println(getAID().getLocalName() + " is ready");
         //Start agent
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
@@ -60,134 +46,49 @@ public class CombinatorialSellerTMP extends Agent {
             fe.printStackTrace();
         }
 
-        myGui.displayUI("Hello "+ farmerInfo.farmerName + "\n" + "Stage is " + farmerInfo.agentType + "\n");
+        System.out.println(farmerInfo.farmerName + "  is ready" + "\n" + "Stage is" + farmerInfo.agentType + "\n");
 
         //Add a TickerBehaviour that chooses agent status to buyer or seller.
-        addBehaviour(new TickerBehaviour(this, 50000){
+        addBehaviour(new TickerBehaviour(this, 5000){
             protected void onTick() {
-
-                myGui.displayUI("Agent status is " + farmerInfo.agentType + "\n");
-                if (farmerInfo.agentType == "owner"||farmerInfo.agentType=="Farmer-owner") {
-                    //Register the seller description service on yellow pages.
-                    farmerInfo.agentType = "Farmer-owner";
-                    farmerInfo.sellingPrice = 10;
-                    sd.setType(farmerInfo.agentType);
-                    sd.setName(getAID().getName());
-                    farmerInfo.farmerName = getAID().getLocalName();
-
-                    myGui.displayUI("\n");
-                    myGui.displayUI("Name: " + farmerInfo.farmerName + "\n");
-                    myGui.displayUI("Status: " + farmerInfo.agentType + "\n");
-                    myGui.displayUI("Volumn to sell: " + farmerInfo.sellingVolume + "\n");
-                    myGui.displayUI("Selling price: " + farmerInfo.sellingPrice + "\n");
-                    myGui.displayUI("Selling status: " + farmerInfo.sellingStatus + "\n");
-                    myGui.displayUI("Providing price" + "\n");
-                    myGui.displayUI("\n");
+                myGUI.displayUI("Name: " + farmerInfo.farmerName + "\n");
+                myGUI.displayUI("Status: " + farmerInfo.agentType + "\n");
+                myGUI.displayUI("Volumn to sell: " + farmerInfo.sellingVolume + "\n");
+                myGUI.displayUI("Selling price: " + farmerInfo.sellingPrice + "\n");
+                myGUI.displayUI("Selling status: " + farmerInfo.sellingStatus + "\n");
+                myGUI.displayUI("Providing price" + "\n");
+                myGUI.displayUI("\n");
 
                     /*
                      ** Selling water process
                      */
-                    //Creating dictionary for buyer volume and pricing
-                    Dictionary<String, Double> volumnDict = new Hashtable<String, Double>();
-                    Dictionary<String, Double> priceDIct = new Hashtable<String, Double>();
-
                     addBehaviour(new RequestPerformer());
                     // Add the behaviour serving purchase orders from buyer agents
                     //addBehaviour(new PurchaseOrdersServer());
-                }
             }
         } );
     }
 
-    //Update input data from GUI which include water allocation on single farm.
-    public void farmerInput(final String filenameGlob, final Double actualRate, final int etSeason) {
-        StringBuilder resultCal = new StringBuilder();
-
-        addBehaviour(new OneShotBehaviour() {
-            public void action() {
-
-                //Input parameters from GUI
-                calCrops.readText(filenameGlob);
-                double totalWaterReductionPctg = actualRate/100;
-                //Choosing ET0 from database.
-                switch(etSeason){
-                    case 0:
-                        calCrops.ET0Spring();
-
-                        break;
-                    case 1:
-                        calCrops.ET0Summer();
-
-                        break;
-                    case 2:
-                        calCrops.ET0Autumn();
-
-                        break;
-                    default:
-                        calCrops.ET0Winter();
-
-                }
-                calCrops.ET = calCrops.avgET0;
-                calCrops.farmFactorValues();
-                calCrops.calcWaterReduction(totalWaterReductionPctg);
-                resultCal.append("\n");
-                resultCal.append("Result:\n");
-                resultCal.append("\n");
-
-                //Result calculation
-                Iterator itrR=calCrops.resultList.iterator();
-                while (itrR.hasNext()) {
-                    cropType st = (cropType)itrR.next();
-                    resultCal.append(st.cropName + " " + st.cropStage +
-                            " " + st.droubhtSensitivity + " " + df.format(st.dsValue) + " " + df.format(st.stValue) + " " + df.format(st.cvValue) +
-                            " " + df.format(st.literPerSecHec) + " " + df.format(st.waterReq) + " " + df.format(st.soilWaterContainValue) + " " + df.format(st.waterReqWithSoil) +
-                            " " + df.format(st.cropCoefficient) + " " + df.format(st.waterReduction) + " " + df.format(st.productValueLost) + "\n");
-                }
-                resultCal.append("Total water requirement on farm: " + calCrops.totalWaterReq + "\n");
-                resultCal.append("The water reduction requirement (%): " + actualRate + "\n");
-                resultCal.append("Water volume to reduction: " + calCrops.totalWaterReductionReq + "\n");
-                resultCal.append("Actual reduction on farm:" + calCrops.totalReduction + "\n");
-                resultCal.append("Actual reducion (%):" + calCrops.resultReductionPct + "\n");
-
-                if (calCrops.resultReductionPct >= actualRate) {
-                    farmerInfo.agentType = "owner";
-                    resultCal.append("Selling water volumn: " + calCrops.waterVolToMarket);
-                    farmerInfo.sellingVolume = calCrops.waterVolToMarket;
-                }else {
-                    farmerInfo.agentType = "owner";
-                    resultCal.append("Buying water volumn: " + calCrops.waterVolToMarket);
-                    farmerInfo.buyingVolumn = calCrops.waterVolToMarket;
-                }
-
-                myGui.displayUI(resultCal.toString());
-
-                //Clean parameter
-                calCrops.resultList.clear();
-                calCrops.calList.clear();
-                calCrops.cropT.clear();
-                calCrops.cv.clear();
-                calCrops.ds.clear();
-                calCrops.order.clear();
-                calCrops.st.clear();
-            }
-        } );
-    }
-    /*
-     * 	Request performer
-     *
-     * 	This behaviour is used by buyer mechanism to request seller agents for water pricing ana selling capacity.
-     */
     private class RequestPerformer extends Behaviour {
         //The list of known water selling agent
         private AID[] bidderAgent;
         private int repliesCnt; // The counter of replies from seller agents
         private MessageTemplate mt; // The template to receive replies
-        ArrayList<Double> order = new ArrayList<Double>();  //sorted list follows maximumprice factor.
-        ArrayList<combinatorialList> buyerList = new ArrayList<combinatorialList>();    //result list for selling process reference.
+        ArrayList<String> bidderList = new ArrayList<String>();  //sorted list follows maximumprice factor.
+        //ArrayList<combinatorialList> buyerList = new ArrayList<combinatorialList>();    //result list for selling process reference.
+
+        //Creating dictionary for buyer volume and pricing
+        Dictionary<String, Double> volumnDict = new Hashtable<String, Double>();
+        Dictionary<String, Double> priceDict = new Hashtable<String, Double>();
+        Dictionary<String, Double> profitLossDict = new Hashtable<>();
+        Object[] maxEuObj;
+        Double maxEuValue = 0.0;
+        ArrayList<String> maxEuList = new ArrayList<String>();
+
         private String agentName;
         private double waterVolFromBidder;
         private double biddedPriceFromBidder;
-        private int negotiateCnt;
+        private double profitLossPct;
 
         private int step = 0;
 
@@ -209,13 +110,12 @@ public class CombinatorialSellerTMP extends Agent {
                         for (int i = 0; i < result.length; ++i) {
                             bidderAgent[i] = result[i].getName();
                             System.out.println(bidderAgent[i].getName());
-                            System.out.println("tick time:" + countTick);
+                            //System.out.println("tick time:" + countTick);
                         }
                     }
                     catch (FIPAException fe) {
                         fe.printStackTrace();
                     }
-
                     // Send the cfp to all sellers (Sending water volumn required to all bidding agent)
                     ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
                     for (int i = 0; i < bidderAgent.length; ++i) {
@@ -251,17 +151,75 @@ public class CombinatorialSellerTMP extends Agent {
                             agentName = arrOfStr[0];
                             waterVolFromBidder = Double.parseDouble(arrOfStr[1]);
                             biddedPriceFromBidder = Double.parseDouble(arrOfStr[2]);
-
-                            //created buyerList based on higthest price
-                            order.add(biddedPriceFromBidder);
-                            Collections.sort(order, Collections.reverseOrder());
-                            int x = order.indexOf(biddedPriceFromBidder);
-                            combinatorialList xx = new combinatorialList(agentName, waterVolFromBidder, biddedPriceFromBidder, 0);
-                            buyerList.add(x,xx);
+                            profitLossPct = Double.parseDouble(arrOfStr[3]);
+                            //adding data to dictionary
+                            volumnDict.put(agentName,waterVolFromBidder);
+                            priceDict.put(agentName,biddedPriceFromBidder);
+                            profitLossDict.put(agentName, profitLossPct);
                         }
 
                         if (repliesCnt >= bidderAgent.length) {
+
                             // We received all replies
+                            for(Enumeration e = volumnDict.keys(); e.hasMoreElements();){
+                                String temp = e.nextElement().toString();
+                                bidderList.add(temp);
+                            }
+                            String[] tempBidderList = GetStringArray(bidderList);
+
+                            int index = tempBidderList.length - 1;
+                            ArrayList<ArrayList<String> > powersetResult = getSubset(tempBidderList, index);
+                            System.out.println(powersetResult);
+
+                            //Loop and result calculation
+                            for(int i=0; i < powersetResult.size();i++){
+                                String xx = powersetResult.get(i).toString();
+                                Double tempMaxVolumn = 0.0;
+                                Double tempMaxPrice = 0.0;
+                                Double tempMaxEuValue = 0.0;
+                                Double tempMaxProfitLoss = 0.0;
+                                for(int j=0; j< powersetResult.get(i).size();j++){
+                                    tempMaxVolumn = tempMaxVolumn + volumnDict.get(powersetResult.get(i).get(j));
+                                    tempMaxProfitLoss = tempMaxProfitLoss + profitLossDict.get(powersetResult.get(i).get(j));
+                                    double tempPrice = priceDict.get(powersetResult.get(i).get(j)) * volumnDict.get(powersetResult.get(i).get(j));
+                                    tempMaxPrice = tempMaxPrice + tempPrice;
+                                }
+                                if(decisionRules == 0){
+                                    tempMaxEuValue = (0 * tempMaxVolumn) + (0.5 * tempMaxPrice) + (0 * tempMaxProfitLoss);
+                                    if(tempMaxEuValue > maxEuValue && tempMaxVolumn <= farmerInfo.sellingVolume){
+                                        maxEuValue = tempMaxEuValue;
+                                        maxEuObj = new String[]{xx, tempMaxVolumn.toString(),tempMaxPrice.toString(), tempMaxProfitLoss.toString()};
+                                        maxEuList = powersetResult.get(i);
+                                    }
+                                }else if(decisionRules == 1){
+                                    tempMaxEuValue = (0.5 * tempMaxVolumn) + (0 * tempMaxPrice) + (0 * tempMaxProfitLoss);
+                                    if(tempMaxEuValue > maxEuValue && tempMaxVolumn <= farmerInfo.sellingVolume){
+                                        maxEuValue = tempMaxEuValue;
+                                        maxEuObj = new String[]{xx, tempMaxVolumn.toString(),tempMaxPrice.toString(),tempMaxProfitLoss.toString()};
+                                        maxEuList = powersetResult.get(i);
+                                    }
+                                }else if(decisionRules ==2){
+                                    tempMaxEuValue = (0 * tempMaxVolumn) + (0 * tempMaxPrice) + (0.5 * tempMaxProfitLoss);
+                                    if(tempMaxEuValue > maxEuValue && tempMaxVolumn <= farmerInfo.sellingVolume){
+                                        maxEuValue = tempMaxEuValue;
+                                        maxEuObj = new String[]{xx, tempMaxVolumn.toString(),tempMaxPrice.toString(), tempMaxProfitLoss.toString()};
+                                        maxEuList = powersetResult.get(i);
+                                    }
+                                }
+                                else {
+                                    tempMaxEuValue = (0.5 * tempMaxVolumn) + (0.5 * tempMaxPrice) + (0 * tempMaxProfitLoss);
+                                    if(tempMaxEuValue > maxEuValue && tempMaxVolumn <= farmerInfo.sellingVolume){
+                                        maxEuValue = tempMaxEuValue;
+                                        maxEuObj = new String[]{xx, tempMaxVolumn.toString(),tempMaxPrice.toString(), tempMaxProfitLoss.toString()};
+                                        maxEuList = powersetResult.get(i);
+                                    }
+                                }
+
+                                System.out.println("\n" + "result set is : " + powersetResult.get(i).toString()+"\n"
+                                        +  "Volumn to sell is  " + tempMaxVolumn + "\n" + "Income is  " + tempMaxPrice + "\n" + "Total profit loss: " + tempMaxProfitLoss + "\n" );
+                                System.out.println(decisionRules);
+                            }
+
                             step = 2;
                         }
                     }else {
@@ -274,43 +232,40 @@ public class CombinatorialSellerTMP extends Agent {
                      * Sendding message to bidders wiht two types (Accept proposal or Refuse) based on
                      * accepted water volumn to sell.
                      */
-                    myGui.displayUI("List of bidder for selling water based on offering price" + "\n");
-                    Iterator itr = buyerList.iterator();
-                    while (itr.hasNext()){
-                        String stepLog;
-                        combinatorialList bl = (combinatorialList) itr.next();
-                        if(farmerInfo.sellingVolume > bl.waterVolume) {
-                            bl.receivedWaterFromSeller = bl.waterVolume;
-                            farmerInfo.sellingVolume = farmerInfo.sellingVolume - bl.waterVolume;
-                        }else {
-                            bl.receivedWaterFromSeller = farmerInfo.sellingVolume;
-                            farmerInfo.sellingVolume = 0;
-                        }
-                        for(int i=0; i < bidderAgent.length;i++){
-                            if(bl.receivedWaterFromSeller > 0 && bidderAgent[i].getLocalName().equals(bl.agentName)){
-                                negotiateCnt++;
+                    if(decisionRules == 0){
+                        myGUI.displayUI("\n" + "Best solution for each case:"+"\n"+"Max price selling:  " + Arrays.toString(maxEuObj) + "\n");
+                    }else if(decisionRules == 1) {
+                        myGUI.displayUI("\n" + "Best solution for each case:"+"\n"+"Max volumn selling:  " + Arrays.toString(maxEuObj)+ "\n");
+                    }else if(decisionRules == 2){
+                        myGUI.displayUI("\n" + "Best solution for each case:"+"\n"+"Max profit loss protection:  " + Arrays.toString(maxEuObj)+ "\n");
+                    }else{
+                        myGUI.displayUI("\n" + "Best solution for each case:"+"\n"+"balancing between volumn and price:  " + Arrays.toString(maxEuObj)+ "\n");
+                    }
+                        System.out.println("\n" + "Best solution for each case:"+"\n"+"Max price selling:  " + Arrays.toString(maxEuObj) + "\n");
+
+                    for(int i=0; i < bidderAgent.length; ++i){
+                        for (String e: maxEuList
+                        ) {
+                            if(bidderAgent[i].getLocalName().equals(e)){
                                 // Send the purchase order to the seller that provided the best offer
                                 ACLMessage acceptedRequest = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
                                 acceptedRequest.addReceiver(bidderAgent[i]);
-                                acceptedRequest.setContent(String.valueOf(bl.receivedWaterFromSeller));
                                 acceptedRequest.setConversationId("bidding");
                                 acceptedRequest.setReplyWith("acceptedRequest" + System.currentTimeMillis());
                                 //myGui.displayUI(acceptedRequest.toString());
                                 myAgent.send(acceptedRequest);
                                 mt = MessageTemplate.and(MessageTemplate.MatchConversationId("bidding"),MessageTemplate.MatchInReplyTo
                                         (acceptedRequest.getReplyWith()));
-                            }else{
+                            }else {
                                 //Refuse message prepairing
                                 ACLMessage rejectedRequest = new ACLMessage(ACLMessage.REFUSE);
                                 rejectedRequest.addReceiver(bidderAgent[i]);
                                 //myGui.displayUI(rejectedRequest.toString());
                                 myAgent.send(rejectedRequest);
-
                             }
                         }
-                        myGui.displayUI(bl.agentName + " : " + "Offer price: " + bl.pricePerMM + " " + "Volumn request: " + bl.waterVolume + " " +"Selling volumn to this agent: " +  bl.receivedWaterFromSeller +"\n");
-
                     }
+
                     step = 3;
                     break;
 
@@ -319,29 +274,25 @@ public class CombinatorialSellerTMP extends Agent {
                     reply = myAgent.receive(mt);
                     if (reply != null) {
                         double soldVolumn = 0;
-                        negotiateCnt--;
                         //System.out.println("\n" + "Reply message:" + reply.toString());
                         //myGui.displayUI("\n" + "Reply message:" + reply.toString());
                         // Purchase order reply received
                         if (reply.getPerformative() == ACLMessage.INFORM) {
-                            System.out.println("accepted volumn from seller" + reply.getContent());
+                            System.out.println("accepted volumn from seller" + reply.getSender().getLocalName());
                             farmerInfo.sellingVolume = farmerInfo.sellingVolume - soldVolumn;
                             System.out.println("Water volumn left :  " + farmerInfo.sellingVolume);
                             // Purchase successful. We can terminate
                             //System.out.println(farmerInfo.farmerName +" successfully purchased from agent "+reply.getSender().getName() + "\n");
                             //System.out.println("Price = "+farmerInfo.currentPricePerMM);
-                            myGui.displayUI("\n" + farmerInfo.farmerName +" successfully purchased from agent "+reply.getSender().getName() +"\n");
+                            //myGui.displayUI("\n" + farmerInfo.farmerName +" successfully purchased from agent "+reply.getSender().getName() +"\n");
                             //myGui.displayUI("Price = " + farmerInfo.currentPricePerMM);
-                            //myAgent.doSuspend();
+                            myAgent.doSuspend();
+                            //myAgent.doDelete();
                             //myGui.dispose();
                         }
                         else {
                             System.out.println("Attempt failed: requested water volumn already sold." + "\n");
-                            myGui.displayUI("Attempt failed: requested water volumn already sold." + "\n");
-                        }
-                        if (negotiateCnt == 0) {
-                            // We received all replies
-                            step = 4;
+                            //myGui.displayUI("Attempt failed: requested water volumn already sold." + "\n");
                         }
                     }
                     else {
@@ -351,10 +302,11 @@ public class CombinatorialSellerTMP extends Agent {
             }
         }
         public boolean done() {
-            if (step == 4 || farmerInfo.sellingVolume == 0) {
-                myGui.displayUI("\n" + getAID().getLocalName() + "sold all water" + "\n");
-                myGui.displayUI(getAID().getLocalName() + "is Terminated");
+            if (step == 4) {
+                System.out.println("\n" + getAID().getLocalName() + "sold all water" + "\n");
+                System.out.println(getAID().getLocalName() + "is Terminated");
                 myAgent.doSuspend();
+
                 //myGui.dispose();
                 //myGui.displayUI("Attempt failed: do not have bidder now" + "\n");
             }
@@ -376,13 +328,13 @@ public class CombinatorialSellerTMP extends Agent {
             if (msg != null) {
                 // ACCEPT_PROPOSAL Message received. Process it
                 ACLMessage reply = msg.createReply();
-                myGui.displayUI(msg.toString());
+                //myGui.displayUI(msg.toString());
                 System.out.println(farmerInfo.sellingStatus);
                 reply.setPerformative(ACLMessage.INFORM);
                 if (farmerInfo.sellingStatus=="avalable") {
                     farmerInfo.sellingStatus = "sold";
                     //System.out.println(getAID().getName()+" sold water to agent "+msg.getSender().getName());
-                    myGui.displayUI(getAID().getLocalName()+" sold water to "+msg.getSender().getLocalName());
+                    System.out.println(getAID().getLocalName()+" sold water to "+msg.getSender().getLocalName());
                     //myGui.displayUI(farmerInfo.sellingStatus.toString());
                     //System.out.println(farmerInfo.sellingStatus);
                     doSuspend();
@@ -390,7 +342,7 @@ public class CombinatorialSellerTMP extends Agent {
                     // The requested book has been sold to another buyer in the meanwhile.
                     reply.setPerformative(ACLMessage.FAILURE);
                     reply.setContent("not-available for sale");
-                    myGui.displayUI("not avalable to sell");
+                    //myGui.displayUI("not avalable to sell");
                 }
 
             }else {
@@ -435,20 +387,7 @@ public class CombinatorialSellerTMP extends Agent {
         }
     }
 
-    public class combinatorialList{
-        String agentName;
-        double waterVolume;
-        double pricePerMM;
-        double receivedWaterFromSeller;
-
-        combinatorialList(String agentName, double waterVolume, double pricePerMM, double receivedWaterFromSeller){
-            this.agentName = agentName;
-            this.waterVolume = waterVolume;
-            this.pricePerMM = pricePerMM;
-            this.receivedWaterFromSeller = receivedWaterFromSeller;
-        }
-    }
-
+    //All parameters and method for combinatorial auction process.
     public void powerSet(double set[]){
         int n = set.length;
 
@@ -506,5 +445,18 @@ public class CombinatorialSellerTMP extends Agent {
             allSubsets.addAll(moreSubsets);
         }
         return allSubsets;
+    }
+
+    // Function to convert ArrayList<String> to String[]
+    public static String[] GetStringArray(ArrayList<String> arr)
+    {
+        // declaration and initialise String Array
+        String str[] = new String[arr.size()];
+        // ArrayList to Array Conversion
+        for (int j = 0; j < arr.size(); j++) {
+            // Assign each value to String array
+            str[j] = arr.get(j);
+        }
+        return str;
     }
 }

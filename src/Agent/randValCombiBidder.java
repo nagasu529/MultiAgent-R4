@@ -13,7 +13,7 @@ import jade.lang.acl.MessageTemplate;
 
 import java.text.DecimalFormat;
 
-public class RandValueBidder extends Agent {
+public class randValCombiBidder extends Agent {
     //The list of farmer who are seller (maps the water volumn to its based price)
     randValue randValue = new randValue();
 
