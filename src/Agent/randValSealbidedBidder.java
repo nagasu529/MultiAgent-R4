@@ -14,8 +14,9 @@ import java.text.DecimalFormat;
 
 public class randValSealbidedBidder extends Agent {
     randValue randValue = new randValue();
+    DecimalFormat df = new DecimalFormat("#.##");
 
-    agentInfo bidderInfo = new agentInfo("","bidder", randValue.getRandDoubleRange(10,14), randValue.getRandDoubleRange(300,1000),0.0, 0.0, 0);
+    agentInfo bidderInfo = new agentInfo("","bidder", randValue.getRandDoubleRange(13,15), randValue.getRandDoubleRange(300,1000),0.0, 0.0, 0);
 
     protected void setup(){
         System.out.println(getAID().getLocalName() + "is Ready");
@@ -36,8 +37,7 @@ public class randValSealbidedBidder extends Agent {
         //Bidding process
         addBehaviour(new TickerBehaviour(this, 1000) {
             protected void onTick() {
-                System.out.println("Agent Name: " + bidderInfo.farmerName + "  " + "Buying price: " + bidderInfo.buyingPrice + "  " + "Water volumn need: " +bidderInfo.buyingVolumn);
-
+                System.out.println("Agent Name: " + bidderInfo.farmerName + "  " + "Buying price: " + bidderInfo.buyingPrice + "  " + "Water volumn need: " + bidderInfo.buyingVolumn);
                 addBehaviour(new OfferRequestsServer());
                 addBehaviour(new PurchaseOrdersServer());
             }
@@ -67,6 +67,7 @@ public class randValSealbidedBidder extends Agent {
             //CFP Message received. Process it.
             if(msg != null){
                 ACLMessage reply = msg.createReply();
+                System.out.println("True");
 
                 //Current price Per MM. and the number of volumn to sell.
                 String currentOffer = msg.getContent();
@@ -101,29 +102,25 @@ public class randValSealbidedBidder extends Agent {
             MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
             ACLMessage msg = myAgent.receive(mt);
             if (msg != null) {
+                //myGUI.displayUI("Accept Proposal Message: " + msg.toString() +"\n");
                 // ACCEPT_PROPOSAL Message received. Process it
+                //Double volumnTemp = Double.parseDouble(msg.getContent());
+                bidderInfo.buyingVolumn = 0.0;
                 ACLMessage reply = msg.createReply();
-                myGUI.displayUI(msg.toString());
-                System.out.println(farmerInfo.sellingStatus);
+                //reply.setContent(String.valueOf(volumnTemp));
+                //System.out.println(farmerInfo.sellingStatus);
                 reply.setPerformative(ACLMessage.INFORM);
-
+                myAgent.send(reply);
                 //water requirement for next round bidding.
-                myGUI.displayUI(msg.getSender().getLocalName()+" sell water to agent "+ getAID().getLocalName());
-                farmerInfo.currentBidVolumn = farmerInfo.waterVolumn;
-                farmerInfo.currentLookingVolumn = farmerInfo.currentLookingVolumn - farmerInfo.currentBidVolumn;
-
-                if (farmerInfo.currentLookingVolumn <=0) {
-                    farmerInfo.sellingStatus = "Finished bidding";
-                    myAgent.send(reply);
-
-                    //Delete service and deregister service from the system.
+                //myGUI.displayUI(msg.getSender().getLocalName()+" sell water to "+ getAID().getLocalName() +"\n");
+                if (bidderInfo.buyingVolumn <=0) {
+                    bidderInfo.sellingStatus = "Finished bidding";
+                    //myGUI.displayUI(getAID().getLocalName() +  "is complete in buying process" + "\n" + getAID().getLocalName() + "terminating");
                     myAgent.doDelete();
-                    myGUI.dispose();
+                    //myAgent.doSuspend();
+                    //myGUI.dispose();
                     System.out.println(getAID().getName() + " terminating.");
                 }
-
-                myAgent.send(reply);
-                //doSuspend();
             }else {
                 block();
             }
@@ -149,5 +146,4 @@ public class randValSealbidedBidder extends Agent {
             this.numSeller = numSeller;
         }
     }
-
 }

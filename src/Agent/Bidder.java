@@ -102,7 +102,7 @@ public class Bidder extends Agent {
     }
 
     private class OfferRequestsServer extends CyclicBehaviour {
-        Decision auctRules = new Decision();
+        randValue auctRules = new randValue();
         private int step = 0;
         public void action() {
             MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);

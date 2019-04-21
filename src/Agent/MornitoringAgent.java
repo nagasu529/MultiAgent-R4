@@ -43,7 +43,7 @@ public class MornitoringAgent extends Agent {
         }
 
         //Adding the TickBehaviour for service moritoring.
-        addBehaviour(new TickerBehaviour(this, 50000) {
+        addBehaviour(new TickerBehaviour(this, 15000) {
             protected void onTick() {
                 addBehaviour(new AgentMornitoring());
             }
