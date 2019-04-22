@@ -21,6 +21,7 @@ public class randValSealbidedBidder extends Agent {
     protected void setup(){
         System.out.println(getAID().getLocalName() + "is Ready");
         bidderInfo.farmerName = getAID().getLocalName();
+        bidderInfo.acceptedPrice = bidderInfo.buyingPrice;
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
         ServiceDescription sd = new ServiceDescription();
@@ -34,8 +35,8 @@ public class randValSealbidedBidder extends Agent {
             fe.printStackTrace();
         }
 
-        //Bidding process
-        addBehaviour(new TickerBehaviour(this, 1000) {
+        //Bidding water process
+        addBehaviour(new TickerBehaviour(this, 5000) {
             protected void onTick() {
                 System.out.println("Agent Name: " + bidderInfo.farmerName + "  " + "Buying price: " + bidderInfo.buyingPrice + "  " + "Water volumn need: " + bidderInfo.buyingVolumn);
                 addBehaviour(new OfferRequestsServer());
@@ -44,56 +45,102 @@ public class randValSealbidedBidder extends Agent {
         });
     }
 
-    protected void takeDown(){
+    private class OfferRequestsServer extends Behaviour {
+        //The seller list is update and choosing lowest price for seller.
+        private AID[] sellerAgents;
+        private double tempVolumn;
+        private double tempPrice;
+        private int repliesCnt;
+        private String tempName;
 
-    }
+        private int step = 0;
 
-    private class OfferRequestsServer extends CyclicBehaviour {
         public void action() {
-            DFAgentDescription template = new DFAgentDescription();
-            ServiceDescription sd = new ServiceDescription();
-            sd.setType("Seller");
-            template.addServices(sd);
-            try{
-                DFAgentDescription[] result = DFService.search(myAgent, template);
-                bidderInfo.numSeller = result.length;
-            }catch (FIPAException fe){
-                fe.printStackTrace();
-            }
-
-            MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
-            ACLMessage msg = myAgent.receive(mt);
-            String log = new String();
-            //CFP Message received. Process it.
-            if(msg != null){
-                ACLMessage reply = msg.createReply();
-                System.out.println("True");
-
-                //Current price Per MM. and the number of volumn to sell.
-                String currentOffer = msg.getContent();
-                String[] arrOfstr = currentOffer.split("-");
-                bidderInfo.offeredVolumn = Double.parseDouble(arrOfstr[0]);
-                bidderInfo.offeredPrice = Double.parseDouble(arrOfstr[1]);
-
-                //Sealed bid acution;
-                if (bidderInfo.buyingPrice < bidderInfo.offeredPrice && bidderInfo.buyingVolumn < bidderInfo.offeredVolumn) {
-                    if(bidderInfo.numSeller > 0){
-                        bidderInfo.numSeller = bidderInfo.numSeller -1;
+            switch (step) {
+                case 0:
+                    DFAgentDescription template = new DFAgentDescription();
+                    ServiceDescription sd = new ServiceDescription();
+                    sd.setType("Seller");
+                    template.addServices(sd);
+                    try {
+                        DFAgentDescription[] result = DFService.search(myAgent, template);
+                        sellerAgents = new AID[result.length];
+                        bidderInfo.numSeller = sellerAgents.length;
+                        System.out.println("Seller agent NO.     " + sellerAgents.length);
+                        for (int i = 0; i < result.length; i++) {
+                            sellerAgents[i] = result[i].getName();
+                            System.out.println(sellerAgents[i]);
+                        }
+                    } catch (FIPAException fe) {
+                        fe.printStackTrace();
                     }
 
-                    String currentBidOffer;
-                    currentBidOffer = bidderInfo.buyingVolumn + "-" + bidderInfo.buyingPrice;
-                    reply.setContent(currentBidOffer);
-                    myAgent.send(reply);
-                }else {
-                    reply.setPerformative(ACLMessage.REFUSE);
-                    //reply.setContent(getAID().getName() + " is surrender");
-                    myAgent.send(reply);
-                    //myGUI.displayUI(getAID().getName() + " is surrender");
-                }
-            }else {
-                block();
+                    step = 1;
+                    System.out.println(step);
+                    break;
+
+                case 1:
+                    //CFP Message received.
+                    MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
+                    ACLMessage msg = myAgent.receive(mt);
+                    if (msg != null) {
+                        repliesCnt++;
+                        //Offered price Per MM. and the number of volumn from each seller.
+                        String currentOffer = msg.getContent();
+                        String[] arrOfstr = currentOffer.split("-");
+                        tempVolumn = Double.parseDouble(arrOfstr[0]);
+                        tempPrice = Double.parseDouble(arrOfstr[1]);
+                        if (tempPrice <= bidderInfo.acceptedPrice && tempVolumn >= bidderInfo.acceptedVolumn) {
+                            bidderInfo.acceptedPrice = tempPrice;
+                            bidderInfo.acceptedVolumn = tempVolumn;
+                            tempName = msg.getSender().getName();
+                            System.out.println("dddddddddddddddddddddddddddddddddddddddddddd" + tempName + tempPrice +tempVolumn);
+                        }
+                        step = 2;
+                    }else {
+                        block();
+                    }
+                    break;
+
+                case 2:
+                    if (repliesCnt >= sellerAgents.length) {
+                        step = 3;
+                    }else {
+                        step = 0;
+                    }
+                    break;
+
+                case 3:
+                    System.out.println("66666666666666666666666666666666666666666666666666666666666" + tempName + tempVolumn + tempPrice);
+                    for (int i = 0; i < sellerAgents.length; i++) {
+                        if (tempName.equals(sellerAgents[i])) {
+                            ACLMessage acceptedBidding = new ACLMessage((ACLMessage.PROPOSE));
+                            acceptedBidding.addReceiver(sellerAgents[i]);
+                            acceptedBidding.setConversationId("bidding");
+                            String arrOfbidding = bidderInfo.acceptedVolumn + "-" + bidderInfo.acceptedPrice + "-";
+                            acceptedBidding.setContent(arrOfbidding);
+                            myAgent.send(acceptedBidding);
+                            System.out.println("sssssss" + acceptedBidding);
+                        }
+                        else {
+                            //Refuse message prepairing
+                            ACLMessage rejectedRequest = new ACLMessage(ACLMessage.REFUSE);
+                            rejectedRequest.addReceiver(sellerAgents[i]);
+                            //myGui.displayUI(rejectedRequest.toString());
+                            myAgent.send(rejectedRequest);
+                            System.out.println("yyyyyyy" + rejectedRequest);
+                        }
+                    }
+                    step = 4;
+                    System.out.println(step);
+                    break;
             }
+        }
+        public boolean done(){
+            if(step == 4){
+                System.out.println("\n" + getAID().getLocalName() + " finished bidding process");
+            }
+            return step == 0;
         }
     }
 
@@ -102,24 +149,22 @@ public class randValSealbidedBidder extends Agent {
             MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
             ACLMessage msg = myAgent.receive(mt);
             if (msg != null) {
-                //myGUI.displayUI("Accept Proposal Message: " + msg.toString() +"\n");
                 // ACCEPT_PROPOSAL Message received. Process it
-                //Double volumnTemp = Double.parseDouble(msg.getContent());
-                bidderInfo.buyingVolumn = 0.0;
                 ACLMessage reply = msg.createReply();
-                //reply.setContent(String.valueOf(volumnTemp));
-                //System.out.println(farmerInfo.sellingStatus);
+                System.out.println(bidderInfo.sellingStatus);
                 reply.setPerformative(ACLMessage.INFORM);
-                myAgent.send(reply);
-                //water requirement for next round bidding.
-                //myGUI.displayUI(msg.getSender().getLocalName()+" sell water to "+ getAID().getLocalName() +"\n");
-                if (bidderInfo.buyingVolumn <=0) {
-                    bidderInfo.sellingStatus = "Finished bidding";
-                    //myGUI.displayUI(getAID().getLocalName() +  "is complete in buying process" + "\n" + getAID().getLocalName() + "terminating");
-                    myAgent.doDelete();
-                    //myAgent.doSuspend();
-                    //myGUI.dispose();
-                    System.out.println(getAID().getName() + " terminating.");
+                if (bidderInfo.sellingStatus=="avalable") {
+                    bidderInfo.sellingStatus = "sold";
+                    //System.out.println(getAID().getName()+" sold water to agent "+msg.getSender().getName());
+                    System.out.println(getAID().getLocalName()+" sold water to "+msg.getSender().getLocalName());
+                    //myGui.displayUI(farmerInfo.sellingStatus.toString());
+                    //System.out.println(farmerInfo.sellingStatus);
+                    doSuspend();
+                } else {
+                    // The requested book has been sold to another buyer in the meanwhile.
+                    reply.setPerformative(ACLMessage.FAILURE);
+                    reply.setContent("not-available for sale");
+                    //myGui.displayUI("not avalable to sell");
                 }
             }else {
                 block();
@@ -127,22 +172,33 @@ public class randValSealbidedBidder extends Agent {
         }
     }
 
+    protected void takeDown() {
+        try {
+            DFService.deregister(this);
+        }
+        catch (FIPAException fe) {
+            fe.printStackTrace();
+        }
+        // Printout a dismissal message
+        System.out.println(getAID().getName()+" terminating.");
+    }
+
     public class agentInfo{
         String farmerName;
         String sellingStatus;
         Double buyingPrice;
         Double buyingVolumn;
-        Double offeredPrice;
-        Double offeredVolumn;
+        Double acceptedPrice;
+        Double acceptedVolumn;
         int numSeller;
 
-        agentInfo(String farmerName, String agentType, double buyingPrice, double buyingVolumn, double offeredPrice, double offeredVolumn, int numSeller){
+        agentInfo(String farmerName, String agentType, double buyingPrice, double buyingVolumn, double acceptedPrice, double acceptedVolumn, int numSeller){
             this.farmerName = farmerName;
             this.sellingStatus = agentType;
             this.buyingPrice = buyingPrice;
             this.buyingVolumn = buyingVolumn;
-            this.offeredPrice = offeredPrice;
-            this.offeredVolumn = offeredVolumn;
+            this.acceptedPrice = acceptedPrice;
+            this.acceptedVolumn = acceptedVolumn;
             this.numSeller = numSeller;
         }
     }
