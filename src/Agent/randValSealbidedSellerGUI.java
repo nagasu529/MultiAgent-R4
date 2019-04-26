@@ -17,7 +17,7 @@ public class randValSealbidedSellerGUI extends JFrame {
         myAgent = a;
 
         //log area create
-        log = new JTextArea(5,20);
+        log = new JTextArea(10,50);
         log.setEditable(false);
         getContentPane().add(log, BorderLayout.CENTER);
         log.setMargin(new Insets(5,5,100,100));
