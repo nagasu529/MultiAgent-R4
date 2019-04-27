@@ -21,9 +21,9 @@ public class randValSealbidedSeller extends Agent {
     //General papameter information
     DecimalFormat df = new DecimalFormat("#.##");
     randValue randValue = new randValue();
-    agentInfo sellerInfo = new agentInfo("", "agent", randValue.getRandDoubleRange(10,12), randValue.getRandDoubleRange(5000,13000), 0, 0.0, "", 0);
+    agentInfo sellerInfo = new agentInfo("", "seller", randValue.getRandDoubleRange(10,12), randValue.getRandDoubleRange(5000,13000), 0, 0.0, "", 0);
     //Instant papameter for AID[]
-    AID[] bidderAgents;
+    AID[] agentsList;
 
     protected void setup(){
         myGui = new randValSealbidedSellerGUI(this);
@@ -33,7 +33,7 @@ public class randValSealbidedSeller extends Agent {
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
         ServiceDescription sd = new ServiceDescription();
-        sd.setType(sellerInfo.agentType);
+        sd.setType("agent");
         sd.setName(getAID().getName());
         dfd.addServices(sd);
         try{
@@ -61,6 +61,43 @@ public class randValSealbidedSeller extends Agent {
         System.out.println(getAID().getLocalName() + " is terminated");
     }
 
+    private class RequestPerformer extends Behaviour {
+        private int step = 0;
+        private double tempVolumn;
+        private double tempPrice;
+        private double tempValue;
+        private String tempAgentstatus;
+        private String[] arrOfStr;
+        private int repliesCnt;
+        private MessageTemplate mt;
+
+        public void action() {
+            //prepairing services, parameters and rules.
+            DFAgentDescription template = new DFAgentDescription();
+            ServiceDescription sd = new ServiceDescription();
+            sd.setType("agent");
+            template.addServices(sd);
+            try {
+                DFAgentDescription[] result = DFService.search(myAgent, template);
+                agentsList = new AID[result.length];
+                for (int i = 0; i < result.length; i++) {
+                    if (result[i].getName().equals(getAID().getName()) == false) {
+                        agentsList[i] = result[i].getName();
+                    }
+                }
+            } catch (FIPAException fe) {
+                fe.printStackTrace();
+            }
+
+            //adding parameter and rules.
+            switch (step) {
+                //catagories seller-agent with selling offers.
+                case 0:
+            }
+        }
+    }
+
+/***
     private class RequestPerformer extends Behaviour {
         private MessageTemplate mt; // The template to receive replies
         private int step = 0;
@@ -146,6 +183,7 @@ public class randValSealbidedSeller extends Agent {
             return ((step == 2 && sellerInfo.acceptedName == null) || step == 3);
         }
     }
+***/
     /**
      Inner class PurchaseOrdersServer.
      This is the behaviour used by Book-seller agents to serve incoming
