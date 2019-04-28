@@ -15,8 +15,7 @@ import java.text.DecimalFormat;
 public class randValSealbidedBidder extends Agent {
     randValue randValue = new randValue();
     DecimalFormat df = new DecimalFormat("#.##");
-    private AID[] agentsList;
-    private AID acceptedAgent;
+
 
 
     agentInfo bidderInfo = new agentInfo("","bidder", randValue.getRandDoubleRange(13,15), randValue.getRandDoubleRange(300,1000),0.0, 0.0, 0);
@@ -39,13 +38,33 @@ public class randValSealbidedBidder extends Agent {
             fe.printStackTrace();
         }
         System.out.println("Agent type is  " + sd.getType());
-
-        addBehaviour(new TickerBehaviour(this, 2000) {
+        addBehaviour(new AdvertiseService());
+        addBehaviour(new TickerBehaviour(this, 1000) {
             protected void onTick() {
                 addBehaviour(new FindingAgentsService());
             }
         });
     }
+
+    private class AdvertiseService extends CyclicBehaviour{
+        public void action(){
+            MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
+            ACLMessage msg = myAgent.receive(mt);
+            if (msg != null) {
+                // CFP Message received. Process it
+                String title = msg.getContent();
+                ACLMessage reply = msg.createReply();
+                reply.setPerformative(ACLMessage.PROPOSE);
+                reply.setContent(bidderInfo.buyingVolumn + "-" + bidderInfo.buyingPrice + "-" + bidderInfo.agentType);
+                myAgent.send(reply);
+                System.out.println(reply);
+            }
+            else {
+                block();
+            }
+        }
+    }
+
     private class FindingAgentsService extends Behaviour{
         private int step = 0;
         private double tempVolumn;
@@ -55,6 +74,10 @@ public class randValSealbidedBidder extends Agent {
         private String[] arrOfStr;
         private int repliesCnt;
         private MessageTemplate mt;
+        private AID[] agentsList;
+        private AID acceptedAgent;
+        double bidderValue = bidderInfo.buyingVolumn * bidderInfo.buyingPrice;
+        double acceptedValue = bidderValue;
 
         public void action(){
             //prepairing services, parameters and rules.
@@ -64,9 +87,10 @@ public class randValSealbidedBidder extends Agent {
             template.addServices(sd);
             try {
                 DFAgentDescription[] result = DFService.search(myAgent, template);
-                agentsList = new AID[result.length];
-                for(int i=0; i < result.length;i++){
+                agentsList = new AID[result.length - 1];
+                for(int i=0; i < result.length -1;i++){
                     if(result[i].getName().equals(getAID().getName())==false){
+                        System.out.println(result[i].getName() + "            " + i + "          " + result.length);
                         agentsList[i] = result[i].getName();
                     }
                 }
@@ -81,57 +105,69 @@ public class randValSealbidedBidder extends Agent {
                     ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
                     for (int i = 0; i < agentsList.length; i++) {
                         cfp.addReceiver(agentsList[i]);
+                        System.out.println(agentsList[i] + "\n");
                     }
-                    cfp.setContent(bidderInfo.buyingVolumn + "-" + bidderInfo.buyingPrice + "-" + bidderInfo.agentType);
-                    cfp.setConversationId("looking from buyer");
-                    cfp.setReplyWith("cfp" + System.currentTimeMillis());
+                    cfp.setContent(0 + "-" + 0 + "-" + bidderInfo.agentType);
+                    cfp.setConversationId("looking");
+                    //cfp.setReplyWith("cfp" + System.currentTimeMillis());
                     myAgent.send(cfp);
                     System.out.println(cfp);
 
                     //Prepare the template to get proposals
-                    mt = MessageTemplate.and(MessageTemplate.MatchConversationId("looking"), MessageTemplate.MatchInReplyTo(cfp.getReplyWith()));
                     step = 1;
+                    System.out.println("cvcvcvcvcvcvcvcvcvcvc      " + step);
                     break;
-
-                //Receiving CFP
-                // Receive all proposals/refusals from all agent.
                 case 1:
-                ACLMessage reply = myAgent.receive(mt);
-                if (reply != null) {
-                    if (reply.getPerformative() == ACLMessage.PROPOSE) {
-                        arrOfStr = reply.getContent().split("-");
-                        tempVolumn = Double.parseDouble(arrOfStr[0]);
-                        tempPrice = Double.parseDouble(arrOfStr[1]);
-                        tempAgentstatus = arrOfStr[2];
-                        tempValue = tempPrice * tempValue;
-                        if(tempAgentstatus == "seller" && bidderValue <= tempValue){
-                            bidderInfo.offeredVolumn = tempVolumn;
-                            bidderInfo.offeredPrice = tempPrice;
+                    ACLMessage reply = myAgent.receive(mt);
+                    if (reply != null) {
+                        if(reply.getPerformative()==ACLMessage.PROPOSE){
+                            System.out.println(reply);
+                            arrOfStr = reply.getContent().split("-");
+                            tempVolumn = Double.parseDouble(arrOfStr[0]);
+                            tempPrice = Double.parseDouble(arrOfStr[1]);
+                            tempAgentstatus = arrOfStr[2];
+                            tempValue = tempPrice * tempVolumn;
+                            System.out.println("\n" + "dddddddddddddddddddddddddddddddddddd"+ tempAgentstatus + tempValue);
+                            System.out.println("\n" + "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"+ (tempAgentstatus.equals("seller")) + "\n");
+                            if(tempAgentstatus.equals("seller")){
+                                if(acceptedValue == 0 || acceptedValue > tempValue){
+                                    bidderInfo.offeredVolumn = tempVolumn;
+                                    bidderInfo.offeredPrice = tempPrice;
+                                    acceptedValue = tempValue;
+                                    acceptedAgent = reply.getSender();
+                                }
+                            }
+                        }
+                        repliesCnt++;
+                        if (repliesCnt >= agentsList.length) {
+                            System.out.println("Best Result:  " + bidderInfo.offeredVolumn + "   " + bidderInfo.offeredPrice + acceptedAgent.getLocalName() + "    " + repliesCnt + "    " + agentsList.length);
+                            //myAgent.doSuspend();
+                            // We received all replies
+                            step = 2;
+                            System.out.println("trueeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee             " + step + agentsList.length);
                         }
                     }
-                    repliesCnt++;
-                    if (repliesCnt >= agentsList.length) {
-                        // We received all replies
-                        step = 2;
+                    else {
+                        block();
                     }
-                }
-                else {
-                    block();
-                }
-                break;
-
+                    break;
                 case 2:
-                    //Sending ACCEPT_PROPOSAL to best offer seller.
-                    ACLMessage order = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
-                    order.addReceiver(acceptedAgent);
-                    order.setContent(bidderInfo.buyingVolumn + "-" + bidderInfo.buyingPrice + "-" + bidderInfo.agentType);
-                    order.setConversationId("bidder-trade");
-                    order.setReplyWith("order"+System.currentTimeMillis());
-                    myAgent.send(order);
-                    // Prepare the template to get the purchase order reply
-                    mt = MessageTemplate.and(MessageTemplate.MatchConversationId("bidder-trade"),
-                            MessageTemplate.MatchInReplyTo(order.getReplyWith()));
+                    //Sending accept proposal to accepted bidder.
+                    ACLMessage accepMsg = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
+                    ACLMessage refuseMsg = new ACLMessage(ACLMessage.REFUSE);
+                    for(int i = 0; i < agentsList.length; i++){
+                        System.out.println("\n" + agentsList[i].toString() + "   " + "no = " + i + "\n");
+                        if(acceptedAgent.equals(agentsList[i])==true){
+                            accepMsg.addReceiver(acceptedAgent);
+                            accepMsg.setContent(bidderInfo.offeredVolumn + "-" + bidderInfo.offeredPrice + "-" + bidderInfo.agentType);
+                            System.out.println("\n" + accepMsg.toString() + "\n");
+                        }else {
+                            refuseMsg.addReceiver(agentsList[i]);
+                            System.out.println(refuseMsg.toString() + "\n");
+                        }
+                    }
                     step = 3;
+                    //myAgent.doSuspend();
                     break;
 
                 case 3:
