@@ -5,7 +5,6 @@ import jade.core.Agent;
 import jade.core.behaviours.*;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import Agent.Crop.cropType;
 import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -38,34 +37,32 @@ public class randValSealbidedBidder extends Agent {
             fe.printStackTrace();
         }
         System.out.println("Agent type is  " + sd.getType());
-        addBehaviour(new AdvertiseService());
-        addBehaviour(new TickerBehaviour(this, 1000) {
+        addBehaviour(new RejectSameAgentType());
+
+        //Agent activities.
+
+        addBehaviour(new TickerBehaviour(this, 2000) {
             protected void onTick() {
-                addBehaviour(new FindingAgentsService());
+                addBehaviour(new RequestPerformers());
             }
         });
     }
 
-    private class AdvertiseService extends CyclicBehaviour{
+    private class RejectSameAgentType extends CyclicBehaviour{
         public void action(){
             MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
             ACLMessage msg = myAgent.receive(mt);
-            if (msg != null) {
-                // CFP Message received. Process it
-                String title = msg.getContent();
+            if(msg != null){
                 ACLMessage reply = msg.createReply();
-                reply.setPerformative(ACLMessage.PROPOSE);
-                reply.setContent(bidderInfo.buyingVolumn + "-" + bidderInfo.buyingPrice + "-" + bidderInfo.agentType);
+                reply.setPerformative(ACLMessage.REFUSE);
                 myAgent.send(reply);
-                System.out.println(reply);
-            }
-            else {
+            }else {
                 block();
             }
         }
     }
 
-    private class FindingAgentsService extends Behaviour{
+    private class RequestPerformers extends Behaviour{
         private int step = 0;
         private double tempVolumn;
         private double tempPrice;
@@ -87,8 +84,8 @@ public class randValSealbidedBidder extends Agent {
             template.addServices(sd);
             try {
                 DFAgentDescription[] result = DFService.search(myAgent, template);
-                agentsList = new AID[result.length - 1];
-                for(int i=0; i < result.length -1;i++){
+                agentsList = new AID[result.length];
+                for(int i=0; i < result.length ;i++){
                     if(result[i].getName().equals(getAID().getName())==false){
                         System.out.println(result[i].getName() + "            " + i + "          " + result.length);
                         agentsList[i] = result[i].getName();
@@ -107,7 +104,6 @@ public class randValSealbidedBidder extends Agent {
                         cfp.addReceiver(agentsList[i]);
                         System.out.println(agentsList[i] + "\n");
                     }
-                    cfp.setContent(0 + "-" + 0 + "-" + bidderInfo.agentType);
                     cfp.setConversationId("looking");
                     //cfp.setReplyWith("cfp" + System.currentTimeMillis());
                     myAgent.send(cfp);
@@ -135,10 +131,12 @@ public class randValSealbidedBidder extends Agent {
                                     bidderInfo.offeredPrice = tempPrice;
                                     acceptedValue = tempValue;
                                     acceptedAgent = reply.getSender();
+                                    System.out.println("             " + bidderInfo.offeredPrice + bidderInfo.offeredVolumn + acceptedAgent);
                                 }
                             }
                         }
                         repliesCnt++;
+                        System.out.println("\n" + "sssssssssssssssssssssssssssssssssssssssssss                " + repliesCnt + "          " + agentsList.length);
                         if (repliesCnt >= agentsList.length) {
                             System.out.println("Best Result:  " + bidderInfo.offeredVolumn + "   " + bidderInfo.offeredPrice + acceptedAgent.getLocalName() + "    " + repliesCnt + "    " + agentsList.length);
                             //myAgent.doSuspend();
@@ -154,43 +152,26 @@ public class randValSealbidedBidder extends Agent {
                 case 2:
                     //Sending accept proposal to accepted bidder.
                     ACLMessage accepMsg = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
-                    ACLMessage refuseMsg = new ACLMessage(ACLMessage.REFUSE);
-                    for(int i = 0; i < agentsList.length; i++){
-                        System.out.println("\n" + agentsList[i].toString() + "   " + "no = " + i + "\n");
-                        if(acceptedAgent.equals(agentsList[i])==true){
-                            accepMsg.addReceiver(acceptedAgent);
-                            accepMsg.setContent(bidderInfo.offeredVolumn + "-" + bidderInfo.offeredPrice + "-" + bidderInfo.agentType);
-                            System.out.println("\n" + accepMsg.toString() + "\n");
-                        }else {
-                            refuseMsg.addReceiver(agentsList[i]);
-                            System.out.println(refuseMsg.toString() + "\n");
-                        }
-                    }
+                    accepMsg.addReceiver(acceptedAgent);
+                    accepMsg.setConversationId("bidderOffer");
+                    accepMsg.setReplyWith("bidderOffer" + System.currentTimeMillis());
+                    //Prepare the template to get the purchase order reply.
+                    mt = MessageTemplate.and(MessageTemplate.MatchConversationId("bidderOffer"),MessageTemplate.MatchInReplyTo(accepMsg.getReplyWith()));
+                    System.out.println("\n" + accepMsg.toString() + "\n");
+
                     step = 3;
                     //myAgent.doSuspend();
                     break;
-
                 case 3:
-                    //Received purchesed order reply.
+                    //Receive the purchase order reply
                     reply = myAgent.receive(mt);
-                    if (reply != null) {
-                        // Purchase order reply received
-                        if (reply.getPerformative() == ACLMessage.INFORM) {
-                            // Purchase successful. We can terminate
-                            System.out.println(getAID().getLocalName() + " successfully purchased from agent "+reply.getSender().getLocalName() + "\n");
-                            System.out.println("Volumn = "+bidderInfo.offeredVolumn + "   " + "Price = " + bidderInfo.offeredPrice);
-                            myAgent.doSuspend();
+                    if(reply != null){
+                        if(reply.getPerformative()==ACLMessage.INFORM){
+                            System.out.println(getAID().getLocalName() + "  succcessfully purchased from agent " + reply.getSender().getLocalName() + "\n");
+                            System.out.println("Volumn:  " + bidderInfo.offeredVolumn + "     " + "Price ($ per mm^3):  " + bidderInfo.offeredPrice);
                         }
-                        else {
-                            System.out.println("Attempt failed: requested water already sold to others agent.");
-                        }
+                    }
 
-                        step = 4;
-                    }
-                    else {
-                        block();
-                    }
-                    break;
             }
         }
         public boolean done(){
