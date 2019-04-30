@@ -59,12 +59,12 @@ public class randValCombiSeller extends Agent{
                 myGUI.displayUI("Providing price" + "\n");
                 myGUI.displayUI("\n");
 
-                    /*
-                     ** Selling water process
-                     */
-                    addBehaviour(new RequestPerformer());
-                    // Add the behaviour serving purchase orders from buyer agents
-                    //addBehaviour(new PurchaseOrdersServer());
+                /*
+                 ** Selling water process
+                 */
+                addBehaviour(new RequestPerformer());
+                // Add the behaviour serving purchase orders from buyer agents
+                //addBehaviour(new PurchaseOrdersServer());
             }
         } );
     }
@@ -241,7 +241,7 @@ public class randValCombiSeller extends Agent{
                     }else{
                         myGUI.displayUI("\n" + "Best solution for each case:"+"\n"+"balancing between volumn and price:  " + Arrays.toString(maxEuObj)+ "\n");
                     }
-                        System.out.println("\n" + "Best solution for each case:"+"\n"+"Max price selling:  " + Arrays.toString(maxEuObj) + "\n");
+                    System.out.println("\n" + "Best solution for each case:"+"\n"+"Max price selling:  " + Arrays.toString(maxEuObj) + "\n");
 
                     for(int i=0; i < bidderAgent.length; ++i){
                         for (String e: maxEuList

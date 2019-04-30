@@ -145,10 +145,10 @@ public class MornitoringAgent extends Agent {
                                 myGui.displayUI("Total sharing volumn (m^3) " + (maxBuyingVol - currentBuyingVol));
                             }
                             /***Iterator itrR=resultList.iterator();
-                            while (itrR.hasNext()){
-                                agentInfoMornitor ct = (agentInfoMornitor)itrR.next();
-                                myGui.displayUI(ct.farmerName + "     " + df.format(ct.buyingVolumn) + "     " + df.format(ct.buyingPricePerMM) + "     " + df.format(ct.profitLossPct) + "\n");
-                            }***/
+                             while (itrR.hasNext()){
+                             agentInfoMornitor ct = (agentInfoMornitor)itrR.next();
+                             myGui.displayUI(ct.farmerName + "     " + df.format(ct.buyingVolumn) + "     " + df.format(ct.buyingPricePerMM) + "     " + df.format(ct.profitLossPct) + "\n");
+                             }***/
                             step = 2;
                         }
                     } else {

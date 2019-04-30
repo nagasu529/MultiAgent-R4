@@ -31,13 +31,13 @@ public class randValCombiSellerGUI extends JFrame {
         JScrollPane logScrollPane = new JScrollPane(log);
         getContentPane().add(logScrollPane, BorderLayout.CENTER);
         /***
-        JPanel p = new JPanel();
-        p.setLayout(new GridLayout(2, 1));
-        p.add(new JLabel("Message monitoring: "));
-        p.add(log);
-        p.add(logScrollPane);
-        getContentPane().add(p, BorderLayout.CENTER);
-        ***/
+         JPanel p = new JPanel();
+         p.setLayout(new GridLayout(2, 1));
+         p.add(new JLabel("Message monitoring: "));
+         p.add(log);
+         p.add(logScrollPane);
+         getContentPane().add(p, BorderLayout.CENTER);
+         ***/
         // Make the agent terminate when the user closes
         // the GUI using the button on the upper right corner
         addWindowListener(new	WindowAdapter() {

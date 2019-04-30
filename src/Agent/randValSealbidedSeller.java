@@ -69,6 +69,7 @@ public class randValSealbidedSeller extends Agent {
                 }catch (FIPAException fe){
                     fe.printStackTrace();
                 }
+                addBehaviour(new PrioritizedOffers());
                 addBehaviour(new PurchaseOrdersServer());
                 //addBehaviour(new PurchaseOrdersServer());
             }
@@ -108,6 +109,7 @@ public class randValSealbidedSeller extends Agent {
             MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
             ACLMessage msg = myAgent.receive(mt);
             if(msg != null){
+                myGui.displayUI(msg.toString());
                 String[] arrOfStr = msg.getContent().split("-");
                 double tempVolumn = Double.parseDouble(arrOfStr[0]);
                 double tempPrice = Double.parseDouble(arrOfStr[1]);
@@ -120,6 +122,7 @@ public class randValSealbidedSeller extends Agent {
                     myGui.displayUI(msg.getSender().getLocalName() + " proposed the highest Value offer now" + "\n");
                 }
             }else {
+                myGui.displayUI("null \n");
                 block();
             }
         }
@@ -142,6 +145,7 @@ public class randValSealbidedSeller extends Agent {
                     }
                 }
             }else {
+                myGui.displayUI("accepted Agent is null \n");
                 block();
             }
         }

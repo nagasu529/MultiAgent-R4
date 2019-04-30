@@ -91,7 +91,7 @@ public class randValCombiBidder extends Agent {
         public void action() {
             MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
             ACLMessage msg = myAgent.receive(mt);
-            String log = new String();
+            //String log = new String();
             //CFP Message received. Process it.
             if (msg != null) {
                 ACLMessage reply = msg.createReply();
