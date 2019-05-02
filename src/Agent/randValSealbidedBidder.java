@@ -9,6 +9,8 @@ import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
+import org.omg.CORBA.TCKind;
+
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -16,9 +18,10 @@ public class randValSealbidedBidder extends Agent {
     randValue randValue = new randValue();
     DecimalFormat df = new DecimalFormat("#.##");
 
-    agentInfo bidderInfo = new agentInfo("","bidder", randValue.getRandDoubleRange(13,15), randValue.getRandDoubleRange(300,1000),0.0, 0.0, 0);
-    double maxValue = bidderInfo.buyingPrice * bidderInfo.buyingVolumn;
-    double acceptedValue = 0;
+    agentInfo bidderInfo = new agentInfo("","bidder", randValue.getRandDoubleRange(13,15), randValue.getRandDoubleRange(300,1000),0.0, 0.0, "");
+
+    //Instant best seller for the ACCEPT_PROPOSAL message.
+    int cnt = 0;
 
     protected void setup() {
         System.out.println(getAID().getLocalName()+"  is ready" );
@@ -40,25 +43,21 @@ public class randValSealbidedBidder extends Agent {
             fe.printStackTrace();
         }
         //Bidding process.
-        addBehaviour(new TickerBehaviour(this, 1000) {
+        addBehaviour(new TickerBehaviour(this, 3000) {
             public void onTick() {
-                //System.out.println("\n");
-                //System.out.println("Name: " + farmerInfo.farmerName + "\n");
-                //System.out.println("Status: " + farmerInfo.agentType + "\n");
-                //System.out.println("Total buying water needed: " + df.format(farmerInfo.buyingVolumn) + "\n");
-                //System.out.println("Water need currently " + df.format(farmerInfo.currentLookingVolumn) + "\n");
-                //System.out.println("Maximum buying price (per MM.) " + df.format(farmerInfo.buyingPricePerMM) + "\n");
-                //System.out.println("Selling / Buying stages " + farmerInfo.sellingStatus + "\n");
-                //System.out.println("Profit loss (%): " + farmerInfo.profitLossPct);
-                //System.out.println("\n");
-                /*
-                 ** Bidding water process
-                 */
+                System.out.println("bidder name: " + bidderInfo.farmerName + "  " + bidderInfo.buyingVolumn + "  " + bidderInfo.buyingPrice + "\n");
                 //Add the behaviour serving queries from Water provider about current price.
                 addBehaviour(new OfferRequestsServer());
 
                 //Add the behaviour serving purhase orders from water provider agent.
                 addBehaviour(new PurchaseOrdersServer());
+            }
+        });
+        addBehaviour(new TickerBehaviour(this, 12000) {
+            protected void onTick() {
+                bidderInfo.offeredName = "";
+                bidderInfo.offeredPrice = 0.0;
+                bidderInfo.offeredVolumn = 0.0;
             }
         });
     }
@@ -86,21 +85,37 @@ public class randValSealbidedBidder extends Agent {
                 String currentOffer = msg.getContent();
                 String[] arrOfstr = currentOffer.split("-");
 
-                bidderInfo.offeredVolumn = Double.parseDouble(arrOfstr[0]);
-                bidderInfo.offeredPrice = Double.parseDouble(arrOfstr[1]);
+                double tempVol = Double.parseDouble(arrOfstr[0]);
+                double tempPrice = Double.parseDouble(arrOfstr[1]);
+
+                System.out.println("Offer price and Vol:  " + tempVol + "   " + tempPrice);
 
                 //myGUI.displayUI("Price setting up from Seller: " + farmerInfo.waterPriceFromSeller + " per MM" + "\n");
                 //myGUI.displayUI("Selling volume from seller:" + farmerInfo.waterVolumnFromSeller + "\n");
 
                 //Auction Process
-                if (bidderInfo.offeredVolumn <= bidderInfo.buyingVolumn && bidderInfo.offeredPrice <= bidderInfo.buyingPrice) {
+                if (tempVol >= bidderInfo.buyingVolumn && tempPrice <= bidderInfo.buyingPrice) {
                     reply.setPerformative(ACLMessage.PROPOSE);
-                    String sendingOffer = bidderInfo.farmerName + "-" + bidderInfo.buyingVolumn + "-" + bidderInfo.buyingPrice;
+                    String sendingOffer = tempVol + "-" + tempPrice;
                     reply.setContent(sendingOffer);
+                    double tempValue = tempPrice * tempVol;
+                    double tempMax = bidderInfo.offeredPrice * bidderInfo.offeredVolumn;
+
+                    //setting up the best offer from seller.
+                    if(tempMax == 0 || tempValue < tempMax ){
+                        bidderInfo.offeredVolumn = tempVol;
+                        bidderInfo.offeredPrice = tempPrice;
+                        bidderInfo.offeredName = msg.getSender().getLocalName();
+                    }
+
+                    System.out.print(getAID().getLocalName() + "the best seller option is   " + bidderInfo.offeredName + " " + bidderInfo.offeredPrice + "  " + bidderInfo.offeredVolumn);
+
                     myAgent.send(reply);
+                    System.out.println(reply.toString());
                 } else {
                     reply.setPerformative(ACLMessage.REFUSE);
                     myAgent.send(reply);
+                    System.out.println(reply.toString());
                     System.out.println(getAID().getName() + " is surrender");
                 }
             } else {
@@ -114,15 +129,22 @@ public class randValSealbidedBidder extends Agent {
             MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
             ACLMessage msg = myAgent.receive(mt);
             if (msg != null) {
-                ACLMessage reply = msg.createReply();
-                reply.setPerformative(ACLMessage.INFORM);
-                myAgent.send(reply);
-                System.out.println("");
+                if(msg.getSender().getLocalName().equals(bidderInfo.offeredName)){
+                    ACLMessage reply = msg.createReply();
+                    reply.setPerformative(ACLMessage.INFORM);
+                    myAgent.send(reply);
+                    System.out.println("");
                     myAgent.doDelete();
                     System.out.println("\n" + getAID().getLocalName() + "accpted to buy water from" + msg.getSender().getLocalName());
                     //myAgent.doSuspend();
                     //myGUI.dispose();
                     System.out.println(getAID().getName() + " terminating.");
+                }else {
+                    ACLMessage reply = msg.createReply();
+                    reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
+                    myAgent.send(reply);
+                }
+
             } else {
                 block();
             }
@@ -136,16 +158,16 @@ public class randValSealbidedBidder extends Agent {
         Double buyingVolumn;
         Double offeredPrice;
         Double offeredVolumn;
-        int numSeller;
+        String offeredName;
 
-        agentInfo(String farmerName, String agentType, double buyingPrice, double buyingVolumn, double offeredPrice, double offeredVolumn, int numSeller){
+        agentInfo(String farmerName, String agentType, double buyingPrice, double buyingVolumn, double offeredPrice, double offeredVolumn, String offeredName){
             this.farmerName = farmerName;
             this.agentType = agentType;
             this.buyingPrice = buyingPrice;
             this.buyingVolumn = buyingVolumn;
             this.offeredPrice = offeredPrice;
             this.offeredVolumn = offeredVolumn;
-            this.numSeller = numSeller;
+            this.offeredName = offeredName;
         }
     }
 }

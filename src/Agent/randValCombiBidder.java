@@ -20,7 +20,7 @@ public class randValCombiBidder extends Agent {
     DecimalFormat df = new DecimalFormat("#.##");
 
     //Farmer information on each agent.
-    agentInfo farmerInfo = new agentInfo("", "", randValue.getRandDoubleRange(500, 1200),0.0, randValue.getRandDoubleRange(12,16), "looking", 0.0, 0.0, randValue.getRandDoubleRange(5,12));
+    agentInfo farmerInfo = new agentInfo("", "", randValue.getRandDoubleRange(500, 1200),0.0, randValue.getRandDoubleRange(12,16), "looking", 0.0, 0.0, randValue.getRandDoubleRange(5,12), "");
 
     //Global bidding parameter
 
@@ -45,7 +45,7 @@ public class randValCombiBidder extends Agent {
             fe.printStackTrace();
         }
         //Bidding process.
-        addBehaviour(new TickerBehaviour(this, 1000) {
+        addBehaviour(new TickerBehaviour(this, 3000) {
             public void onTick() {
 
                 if (farmerInfo.sellingStatus=="looking"){
@@ -68,6 +68,13 @@ public class randValCombiBidder extends Agent {
                     //Add the behaviour serving purhase orders from water provider agent.
                     addBehaviour(new PurchaseOrdersServer());
                 }
+            }
+        });
+        addBehaviour(new TickerBehaviour(this, 12000) {
+            protected void onTick() {
+                farmerInfo.offeredPrice = 0.0;
+                farmerInfo.offeredVolumn = 0.0;
+                farmerInfo.offeredName = "";
             }
         });
     }
@@ -99,18 +106,27 @@ public class randValCombiBidder extends Agent {
                 String currentOffer = msg.getContent();
                 String[] arrOfstr = currentOffer.split("-");
                 //myGUI.displayUI("Offer from Seller: " + currentOffer + "\n");
-                farmerInfo.waterVolumnFromSeller = Double.parseDouble(arrOfstr[0]);
-                farmerInfo.waterPriceFromSeller = Double.parseDouble(arrOfstr[1]);
+                double tempVol = Double.parseDouble(arrOfstr[0]);
+                double tempPrice = Double.parseDouble(arrOfstr[1]);
 
                 //myGUI.displayUI("Price setting up from Seller: " + farmerInfo.waterPriceFromSeller + " per MM" + "\n");
                 //myGUI.displayUI("Selling volume from seller:" + farmerInfo.waterVolumnFromSeller + "\n");
 
                 //Auction Process
-                if (farmerInfo.waterPriceFromSeller <= farmerInfo.buyingPricePerMM) {
+                if (farmerInfo.offeredPrice <= farmerInfo.buyingPricePerMM) {
                     reply.setPerformative(ACLMessage.PROPOSE);
                     String sendingOffer = farmerInfo.farmerName + "-" + farmerInfo.buyingVolumn + "-" + farmerInfo.buyingPricePerMM + "-" + farmerInfo.profitLossPct;
                     //String sendingOffer = farmerInfo.buyingVolumn + "-" + farmerInfo.buyingPricePerMM;
                     reply.setContent(sendingOffer);
+                    double tempValue = tempPrice * tempVol;
+                    double tempMax = farmerInfo.offeredVolumn * farmerInfo.offeredPrice;
+
+                    if(tempMax == 0 || tempValue < tempMax){
+                        farmerInfo.offeredVolumn = tempVol;
+                        farmerInfo.offeredPrice = tempPrice;
+                        farmerInfo.offeredName = msg.getSender().getLocalName();
+                    }
+
                     myAgent.send(reply);
                     //myGUI.displayUI("Sending Offer : " + reply.getContent() + "\n");
                     //myGUI.displayUI(log + "\n");
@@ -133,23 +149,14 @@ public class randValCombiBidder extends Agent {
             if (msg != null) {
                 //myGUI.displayUI("Accept Proposal Message: " + msg.toString() +"\n");
                 // ACCEPT_PROPOSAL Message received. Process it
-                //Double volumnTemp = Double.parseDouble(msg.getContent());
-                farmerInfo.buyingVolumn = 0;
                 ACLMessage reply = msg.createReply();
-                //reply.setContent(String.valueOf(volumnTemp));
-                //System.out.println(farmerInfo.sellingStatus);
                 reply.setPerformative(ACLMessage.INFORM);
                 myAgent.send(reply);
                 //water requirement for next round bidding.
-                //myGUI.displayUI(msg.getSender().getLocalName()+" sell water to "+ getAID().getLocalName() +"\n");
-                if (farmerInfo.buyingVolumn <=0) {
-                    farmerInfo.sellingStatus = "Finished bidding";
-                    //myGUI.displayUI(getAID().getLocalName() +  "is complete in buying process" + "\n" + getAID().getLocalName() + "terminating");
-                    myAgent.doDelete();
-                    //myAgent.doSuspend();
-                    //myGUI.dispose();
-                    System.out.println(getAID().getName() + " terminating.");
-                }
+                //myAgent.doDelete();
+                myAgent.doSuspend();
+                //myGUI.dispose();
+                System.out.println(getAID().getName() + " terminating.");
             }else {
                 block();
             }
@@ -177,20 +184,22 @@ public class randValCombiBidder extends Agent {
         double currentLookingVolumn;
         double buyingPricePerMM;
         String sellingStatus;
-        double waterVolumnFromSeller;
-        double waterPriceFromSeller;
+        double offeredVolumn;
+        double offeredPrice;
+        String offeredName;
         double profitLossPct;
 
         agentInfo(String farmerName, String agentType, double buyingVolumn, double currentLookingVolumn,
-                  double buyingPricePerMM, String sellingStatus, double waterVolumnFromSeller, double waterPriceFromSeller, double profitLossPct){
+                  double buyingPricePerMM, String sellingStatus, double offeredVolumn, double offeredPrice, double profitLossPct, String offeredName){
             this.farmerName = farmerName;
             this.agentType = agentType;
             this.buyingVolumn = buyingVolumn;
             this.currentLookingVolumn = currentLookingVolumn;
             this.buyingPricePerMM = buyingPricePerMM;
             this.sellingStatus = sellingStatus;
-            this.waterVolumnFromSeller = waterVolumnFromSeller;
-            this.waterPriceFromSeller = waterPriceFromSeller;
+            this.offeredVolumn = offeredVolumn;
+            this.offeredPrice = offeredPrice;
+            this.offeredName = offeredName;
             this.profitLossPct = profitLossPct;
         }
     }
