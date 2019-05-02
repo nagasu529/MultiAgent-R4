@@ -32,7 +32,7 @@ public class MornitoringAgent extends Agent {
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
         ServiceDescription sd = new ServiceDescription();
-        sd.setType("Farmer");
+        sd.setType("mornitor");
         sd.setName(getAID().getName());
         //farmerInfo.farmerName = getAID().getName();
         dfd.addServices(sd);
