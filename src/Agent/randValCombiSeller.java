@@ -278,22 +278,16 @@ public class randValCombiSeller extends Agent{
                         //myGui.displayUI("\n" + "Reply message:" + reply.toString());
                         // Purchase order reply received
                         if (reply.getPerformative() == ACLMessage.INFORM) {
-                            System.out.println("accepted volumn from seller" + reply.getSender().getLocalName());
+                            myGUI.displayUI("accepted volumn from seller" + reply.getSender().getLocalName());
                             farmerInfo.sellingVolume = farmerInfo.sellingVolume - soldVolumn;
                             System.out.println("Water volumn left :  " + farmerInfo.sellingVolume);
-                            // Purchase successful. We can terminate
-                            //System.out.println(farmerInfo.farmerName +" successfully purchased from agent "+reply.getSender().getName() + "\n");
-                            //System.out.println("Price = "+farmerInfo.currentPricePerMM);
-                            //myGui.displayUI("\n" + farmerInfo.farmerName +" successfully purchased from agent "+reply.getSender().getName() +"\n");
-                            //myGui.displayUI("Price = " + farmerInfo.currentPricePerMM);
-                            myAgent.doSuspend();
-                            //myAgent.doDelete();
-                            //myGui.dispose();
+
                         }
                         else {
-                            System.out.println("Attempt failed: requested water volumn already sold." + "\n");
+                            myGUI.displayUI("Attempt failed: requested water volumn already sold." + "\n");
                             //myGui.displayUI("Attempt failed: requested water volumn already sold." + "\n");
                         }
+                        step = 4;
                     }
                     else {
                         block();
@@ -303,12 +297,10 @@ public class randValCombiSeller extends Agent{
         }
         public boolean done() {
             if (step == 4) {
-                System.out.println("\n" + getAID().getLocalName() + "sold all water" + "\n");
-                System.out.println(getAID().getLocalName() + "is Terminated");
+                myGUI.displayUI("\n" + getAID().getLocalName() + "sold all water" + "\n");
+                myGUI.displayUI(getAID().getLocalName() + "is Terminated");
                 myAgent.doSuspend();
 
-                //myGui.dispose();
-                //myGui.displayUI("Attempt failed: do not have bidder now" + "\n");
             }
             return step == 0 ;
         }

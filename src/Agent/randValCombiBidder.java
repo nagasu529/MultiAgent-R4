@@ -11,6 +11,7 @@ import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
+import java.security.acl.Acl;
 import java.text.DecimalFormat;
 
 public class randValCombiBidder extends Agent {
@@ -45,38 +46,13 @@ public class randValCombiBidder extends Agent {
             fe.printStackTrace();
         }
         //Bidding process.
-        addBehaviour(new TickerBehaviour(this, 3000) {
-            public void onTick() {
+        //Add the behaviour serving queries from Water provider about current price.
+        addBehaviour(new OfferRequestsServer());
 
-                if (farmerInfo.sellingStatus=="looking"){
-                    //System.out.println("\n");
-                    //System.out.println("Name: " + farmerInfo.farmerName + "\n");
-                    //System.out.println("Status: " + farmerInfo.agentType + "\n");
-                    //System.out.println("Total buying water needed: " + df.format(farmerInfo.buyingVolumn) + "\n");
-                    //System.out.println("Water need currently " + df.format(farmerInfo.currentLookingVolumn) + "\n");
-                    //System.out.println("Maximum buying price (per MM.) " + df.format(farmerInfo.buyingPricePerMM) + "\n");
-                    //System.out.println("Selling / Buying stages " + farmerInfo.sellingStatus + "\n");
-                    //System.out.println("Profit loss (%): " + farmerInfo.profitLossPct);
-                    //System.out.println("\n");
+        //Add the behaviour serving purhase orders from water provider agent.
+        addBehaviour(new PurchaseOrdersServer());
 
-                    /*
-                     ** Bidding water process
-                     */
-                    //Add the behaviour serving queries from Water provider about current price.
-                    addBehaviour(new OfferRequestsServer());
-
-                    //Add the behaviour serving purhase orders from water provider agent.
-                    addBehaviour(new PurchaseOrdersServer());
-                }
-            }
-        });
-        addBehaviour(new TickerBehaviour(this, 12000) {
-            protected void onTick() {
-                farmerInfo.offeredPrice = 0.0;
-                farmerInfo.offeredVolumn = 0.0;
-                farmerInfo.offeredName = "";
-            }
-        });
+        addBehaviour(new RejectandReset());
     }
 
     // Put agent clean-up operations here
@@ -142,6 +118,22 @@ public class randValCombiBidder extends Agent {
         }
     }
 
+    private class RejectandReset extends CyclicBehaviour{
+        public void action(){
+            MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REFUSE);
+            ACLMessage msg = myAgent.receive(mt);
+            if(msg != null){
+                if(msg.getSender().getLocalName().equals(farmerInfo.offeredName)){
+                    farmerInfo.offeredName = "";
+                    farmerInfo.offeredPrice = 0.0;
+                    farmerInfo.offeredVolumn = 0.0;
+                }
+            }else {
+                block();
+            }
+        }
+    }
+
     private class PurchaseOrdersServer extends CyclicBehaviour {
         public void action() {
             MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
@@ -151,30 +143,35 @@ public class randValCombiBidder extends Agent {
                 // ACCEPT_PROPOSAL Message received. Process it
                 ACLMessage reply = msg.createReply();
                 reply.setPerformative(ACLMessage.INFORM);
+                farmerInfo.sellingStatus = "sold";
                 myAgent.send(reply);
                 //water requirement for next round bidding.
-                //myAgent.doDelete();
-                myAgent.doSuspend();
+                myAgent.doDelete();
+                //myAgent.doSuspend();
                 //myGUI.dispose();
                 System.out.println(getAID().getName() + " terminating.");
+                /***
+                if(msg.getSender().getLocalName().equals(farmerInfo.offeredName)){
+                    //myGUI.displayUI("Accept Proposal Message: " + msg.toString() +"\n");
+                    // ACCEPT_PROPOSAL Message received. Process it
+                    ACLMessage reply = msg.createReply();
+                    reply.setPerformative(ACLMessage.INFORM);
+                    myAgent.send(reply);
+                    //water requirement for next round bidding.
+                    //myAgent.doDelete();
+                    myAgent.doSuspend();
+                    //myGUI.dispose();
+                    System.out.println(getAID().getName() + " terminating.");
+                }else {
+                    ACLMessage reply = msg.createReply();
+                    reply.getPerformative(ACLMessage.REJECT_PROPOSAL);
+                    myAgent.send(reply);
+                }
+                 ***/
             }else {
                 block();
             }
         }
-    }
-
-    public void bidderInput(final Double buyingPrice, Double volumnToBuy, Double profitLossPct){
-
-        addBehaviour(new OneShotBehaviour() {
-            @Override
-            public void action() {
-                //input bidding information parameter
-                farmerInfo.sellingStatus = "looking";
-                farmerInfo.buyingPricePerMM = buyingPrice;
-                farmerInfo.buyingVolumn = volumnToBuy;
-                farmerInfo.profitLossPct = profitLossPct;
-            }
-        });
     }
 
     public class agentInfo{

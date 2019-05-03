@@ -52,7 +52,7 @@ public class randValSealbidedSeller extends Agent {
         System.out.println(sellerInfo.farmerName + "  is ready" + "\n" + "Stage is  " + sellerInfo.agentType + "\n");
 
         //Add a TickerBehaviour that chooses agent status to buyer or seller.
-        addBehaviour(new TickerBehaviour(this, 5000){
+        addBehaviour(new TickerBehaviour(this, 15000){
             protected void onTick() {
                 myGui.displayUI("Name: " + sellerInfo.farmerName + "\n");
                 myGui.displayUI("Status: " + sellerInfo.agentType + "\n");
@@ -219,7 +219,7 @@ public class randValSealbidedSeller extends Agent {
                         //myGui.displayUI("\n" + "Reply message:" + reply.toString());
                         // Purchase order reply received
                         if (reply.getPerformative() == ACLMessage.INFORM) {
-                            System.out.println("accepted volumn from seller" + reply.getSender().getLocalName());
+                            myGui.displayUI("Selling water to  " + reply.getSender().getLocalName());
                             sellerInfo.sellingVolumn = sellerInfo.sellingVolumn - soldVolumn;
                             System.out.println("Water volumn left :  " + sellerInfo.sellingVolumn);
                             // Purchase successful. We can terminate
@@ -235,6 +235,7 @@ public class randValSealbidedSeller extends Agent {
                             System.out.println("Attempt failed: requested water volumn already sold." + "\n");
                             //myGui.displayUI("Attempt failed: requested water volumn already sold." + "\n");
                         }
+                        step =4;
                     }
                     else {
                         block();
@@ -243,15 +244,15 @@ public class randValSealbidedSeller extends Agent {
             }
         }
         public boolean done() {
-            if (step == 4) {
-                System.out.println("\n" + getAID().getLocalName() + "sold all water" + "\n");
-                System.out.println(getAID().getLocalName() + "is Terminated");
-                myAgent.doSuspend();
+            if (step == 2 && acceptedName == null) {
+                myGui.displayUI("Do not buyer who provide the matching price.");
+                //myAgent.doSuspend();
 
                 //myGui.dispose();
                 //myGui.displayUI("Attempt failed: do not have bidder now" + "\n");
             }
-            return step == 0 ;
+            return step ==0;
+            //return ((step == 2 && acceptedName == null) || step == 4) ;
         }
     }
 

@@ -1,5 +1,6 @@
 package Agent;
 
+import com.sun.xml.internal.bind.marshaller.MinimumEscapeHandler;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.*;
@@ -42,7 +43,17 @@ public class randValSealbidedBidder extends Agent {
             fe.printStackTrace();
         }
         //Bidding process.
-        addBehaviour(new TickerBehaviour(this, 3000) {
+
+        //Add the behaviour serving queries from Water provider about current price.
+        addBehaviour(new OfferRequestsServer());
+
+        //Add the behaviour serving purhase orders from water provider agent.
+        addBehaviour(new PurchaseOrdersServer());
+
+        addBehaviour(new RejectandReset());
+
+        /***
+        addBehaviour(new TickerBehaviour(this, 500) {
             public void onTick() {
                 System.out.println("bidder name: " + bidderInfo.farmerName + "  " + bidderInfo.buyingVolumn + "  " + bidderInfo.buyingPrice + "\n");
                 //Add the behaviour serving queries from Water provider about current price.
@@ -52,13 +63,14 @@ public class randValSealbidedBidder extends Agent {
                 addBehaviour(new PurchaseOrdersServer());
             }
         });
-        addBehaviour(new TickerBehaviour(this, 12000) {
+
+        addBehaviour(new TickerBehaviour(this, 30000) {
             protected void onTick() {
                 bidderInfo.offeredName = "";
                 bidderInfo.offeredPrice = 0.0;
                 bidderInfo.offeredVolumn = 0.0;
             }
-        });
+        });***/
     }
 
     // Put agent clean-up operations here
@@ -123,26 +135,40 @@ public class randValSealbidedBidder extends Agent {
         }
     }
 
+    private class RejectandReset extends CyclicBehaviour{
+        public void action(){
+            MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REFUSE);
+            ACLMessage msg = myAgent.receive(mt);
+            if(msg != null){
+                if(msg.getSender().getLocalName().equals(bidderInfo.offeredName)){
+                    bidderInfo.offeredName = "";
+                    bidderInfo.offeredPrice = 0.0;
+                    bidderInfo.offeredVolumn = 0.0;
+                }
+            }else {
+                block();
+            }
+        }
+    }
+
     private class PurchaseOrdersServer extends CyclicBehaviour {
         public void action() {
             MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
             ACLMessage msg = myAgent.receive(mt);
             if (msg != null) {
-                if(msg.getSender().getLocalName().equals(bidderInfo.offeredName)){
-                    ACLMessage reply = msg.createReply();
+                ACLMessage reply = msg.createReply();
+                if(msg.getSender().getLocalName().equals(bidderInfo.offeredName) && bidderInfo.offeredName != null){
                     reply.setPerformative(ACLMessage.INFORM);
-                    myAgent.send(reply);
                     System.out.println("");
-                    myAgent.doDelete();
                     System.out.println("\n" + getAID().getLocalName() + "accpted to buy water from" + msg.getSender().getLocalName());
-                    //myAgent.doSuspend();
+                    myAgent.doDelete();
                     //myGUI.dispose();
                     System.out.println(getAID().getName() + " terminating.");
                 }else {
-                    ACLMessage reply = msg.createReply();
-                    reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
+                    reply.setPerformative(ACLMessage.FAILURE);
                     myAgent.send(reply);
                 }
+                myAgent.send(reply);
 
             } else {
                 block();
