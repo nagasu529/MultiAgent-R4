@@ -1,6 +1,5 @@
 package Agent;
 
-import com.sun.xml.internal.bind.marshaller.MinimumEscapeHandler;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.*;

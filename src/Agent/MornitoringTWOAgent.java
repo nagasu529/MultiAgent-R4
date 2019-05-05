@@ -1,19 +1,21 @@
 package Agent;
 
-import jade.core.Agent;
-import jade.core.behaviours.*;
 import jade.core.AID;
-import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
+import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
-import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
-import java.text.DecimalFormat;
-import java.util.*;
+import jade.domain.FIPAException;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 
-public class MornitoringAgent extends Agent {
-    private MornitoringAgentGUI myGui;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+
+public class MornitoringTWOAgent extends Agent {
+    private MornitoringTWOAgentGUI myGui;
     DecimalFormat df = new DecimalFormat("#.##");
     ArrayList<agentInfoMornitor> resultList = new ArrayList<agentInfoMornitor>();
 
@@ -25,7 +27,7 @@ public class MornitoringAgent extends Agent {
 
     protected void setup(){
         //Create and show GUI
-        myGui = new MornitoringAgentGUI(this);
+        myGui = new MornitoringTWOAgentGUI(this);
         myGui.show();
         myGui.displayUI(getAID().getLocalName() + " Monitoring agent is active");
 
@@ -110,9 +112,7 @@ public class MornitoringAgent extends Agent {
                             bidderName = reply.getSender().getLocalName();
                             buyingVolumn = Double.parseDouble(arrOfStr[0]);
                             pricePerMM = Double.parseDouble(arrOfStr[1]);
-                            profitLostPct = Double.parseDouble(arrOfStr[2]);
-                            agentInfoMornitor xx = new agentInfoMornitor(bidderName, buyingVolumn, pricePerMM, profitLostPct, 0, 0, 0);
-                            myGui.displayUI(xx.farmerName + "  " + xx.buyingVolumn + "  " + xx.buyingPricePerMM + "\n");
+                            agentInfoMornitor xx = new agentInfoMornitor(bidderName, buyingVolumn, pricePerMM, 0, 0, 0, 0);
                             currentBuyingVol = currentBuyingVol + buyingVolumn;
                             currentProfitLoss = currentProfitLoss + profitLostPct;
                             resultList.add(xx);

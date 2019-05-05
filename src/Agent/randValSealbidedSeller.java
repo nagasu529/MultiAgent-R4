@@ -235,7 +235,7 @@ public class randValSealbidedSeller extends Agent {
                             System.out.println("Attempt failed: requested water volumn already sold." + "\n");
                             //myGui.displayUI("Attempt failed: requested water volumn already sold." + "\n");
                         }
-                        step =4;
+                        step = 4;
                     }
                     else {
                         block();
@@ -251,7 +251,7 @@ public class randValSealbidedSeller extends Agent {
                 //myGui.dispose();
                 //myGui.displayUI("Attempt failed: do not have bidder now" + "\n");
             }
-            return step ==0;
+            return step == 0;
             //return ((step == 2 && acceptedName == null) || step == 4) ;
         }
     }

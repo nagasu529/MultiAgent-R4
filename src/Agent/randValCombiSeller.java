@@ -148,10 +148,10 @@ public class randValCombiSeller extends Agent{
                             // This is an offer
                             String biddedFromAcutioneer = reply.getContent();
                             String[] arrOfStr = biddedFromAcutioneer.split("-");
-                            agentName = arrOfStr[0];
-                            waterVolFromBidder = Double.parseDouble(arrOfStr[1]);
-                            biddedPriceFromBidder = Double.parseDouble(arrOfStr[2]);
-                            profitLossPct = Double.parseDouble(arrOfStr[3]);
+                            agentName = reply.getSender().getLocalName();
+                            waterVolFromBidder = Double.parseDouble(arrOfStr[0]);
+                            biddedPriceFromBidder = Double.parseDouble(arrOfStr[1]);
+                            profitLossPct = Double.parseDouble(arrOfStr[2]);
                             //adding data to dictionary
                             volumnDict.put(agentName,waterVolFromBidder);
                             priceDict.put(agentName,biddedPriceFromBidder);
@@ -281,13 +281,14 @@ public class randValCombiSeller extends Agent{
                             myGUI.displayUI("accepted volumn from seller" + reply.getSender().getLocalName());
                             farmerInfo.sellingVolume = farmerInfo.sellingVolume - soldVolumn;
                             System.out.println("Water volumn left :  " + farmerInfo.sellingVolume);
-
+                            step = 4;
                         }
                         else {
                             myGUI.displayUI("Attempt failed: requested water volumn already sold." + "\n");
                             //myGui.displayUI("Attempt failed: requested water volumn already sold." + "\n");
+                            step = 0;
                         }
-                        step = 4;
+
                     }
                     else {
                         block();

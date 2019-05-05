@@ -1,6 +1,5 @@
 package Agent;
 
-import com.sun.xml.internal.bind.marshaller.MinimumEscapeHandler;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.*;
@@ -25,6 +24,8 @@ public class randValSealbidedBidder extends Agent {
 
     protected void setup() {
         System.out.println(getAID().getLocalName()+"  is ready" );
+
+        System.out.println("Name :" + bidderInfo.farmerName + "  " + bidderInfo.buyingVolumn + "  " + bidderInfo.buyingPrice + "\n");
 
         //Start Agent
         // Register the book-selling service in the yellow pages
@@ -89,6 +90,14 @@ public class randValSealbidedBidder extends Agent {
         public void action() {
             MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
             ACLMessage msg = myAgent.receive(mt);
+            if(msg != null && msg.getSender().getLocalName().equals("Monitor") == true){
+                ACLMessage reply = msg.createReply();
+                reply.setPerformative(ACLMessage.PROPOSE);
+                String replyMonitor  = bidderInfo.buyingVolumn + "-" +bidderInfo.buyingPrice;
+                reply.setContent(replyMonitor);
+                myAgent.send(reply);
+                System.out.println(reply.toString());
+            }
             if (msg != null) {
                 ACLMessage reply = msg.createReply();
 
@@ -99,15 +108,15 @@ public class randValSealbidedBidder extends Agent {
                 double tempVol = Double.parseDouble(arrOfstr[0]);
                 double tempPrice = Double.parseDouble(arrOfstr[1]);
 
-                System.out.println("Offer price and Vol:  " + tempVol + "   " + tempPrice);
+                System.out.println("Offer price and Vol:  " + tempVol + "   " + tempPrice + "    " + msg.getSender().getLocalName());
 
                 //myGUI.displayUI("Price setting up from Seller: " + farmerInfo.waterPriceFromSeller + " per MM" + "\n");
                 //myGUI.displayUI("Selling volume from seller:" + farmerInfo.waterVolumnFromSeller + "\n");
 
                 //Auction Process
-                if (tempVol >= bidderInfo.buyingVolumn && tempPrice <= bidderInfo.buyingPrice) {
+                if ((tempVol >= bidderInfo.buyingVolumn && tempPrice <= bidderInfo.buyingPrice)) {
                     reply.setPerformative(ACLMessage.PROPOSE);
-                    String sendingOffer = tempVol + "-" + tempPrice;
+                    String sendingOffer = bidderInfo.buyingVolumn + "-" + bidderInfo.buyingPrice;
                     reply.setContent(sendingOffer);
                     double tempValue = tempPrice * tempVol;
                     double tempMax = bidderInfo.offeredPrice * bidderInfo.offeredVolumn;
@@ -123,7 +132,8 @@ public class randValSealbidedBidder extends Agent {
 
                     myAgent.send(reply);
                     System.out.println(reply.toString());
-                } else {
+                }
+                else {
                     reply.setPerformative(ACLMessage.REFUSE);
                     myAgent.send(reply);
                     System.out.println(reply.toString());

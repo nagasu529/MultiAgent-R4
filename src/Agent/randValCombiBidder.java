@@ -10,8 +10,6 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-
-import java.security.acl.Acl;
 import java.text.DecimalFormat;
 
 public class randValCombiBidder extends Agent {
@@ -89,9 +87,9 @@ public class randValCombiBidder extends Agent {
                 //myGUI.displayUI("Selling volume from seller:" + farmerInfo.waterVolumnFromSeller + "\n");
 
                 //Auction Process
-                if (farmerInfo.offeredPrice <= farmerInfo.buyingPricePerMM) {
+                if (farmerInfo.offeredPrice <= farmerInfo.buyingPricePerMM || msg.getSender().getLocalName().equals("Monitor")) {
                     reply.setPerformative(ACLMessage.PROPOSE);
-                    String sendingOffer = farmerInfo.farmerName + "-" + farmerInfo.buyingVolumn + "-" + farmerInfo.buyingPricePerMM + "-" + farmerInfo.profitLossPct;
+                    String sendingOffer = farmerInfo.buyingVolumn + "-" + farmerInfo.buyingPricePerMM + "-" + farmerInfo.profitLossPct;
                     //String sendingOffer = farmerInfo.buyingVolumn + "-" + farmerInfo.buyingPricePerMM;
                     reply.setContent(sendingOffer);
                     double tempValue = tempPrice * tempVol;
@@ -138,7 +136,7 @@ public class randValCombiBidder extends Agent {
         public void action() {
             MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
             ACLMessage msg = myAgent.receive(mt);
-            if (msg != null) {
+            if (msg != null && farmerInfo.sellingStatus.equals("sold")==false) {
                 //myGUI.displayUI("Accept Proposal Message: " + msg.toString() +"\n");
                 // ACCEPT_PROPOSAL Message received. Process it
                 ACLMessage reply = msg.createReply();
