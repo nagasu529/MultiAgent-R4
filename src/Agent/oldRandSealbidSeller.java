@@ -15,12 +15,13 @@ import jade.lang.acl.MessageTemplate;
 import java.text.DecimalFormat;
 import java.util.*;
 
-public class randValSealbidedBidder extends Agent {
+public class oldRandSealbidSeller extends Agent {
+    oldRandSealbidSellerGUI myGui;
 
     //General papameter information
     DecimalFormat df = new DecimalFormat("#.##");
     randValue randValue = new randValue();
-    agentInfo bidderInfo = new agentInfo("", "seller", randValue.getRandDoubleRange(10,16), randValue.getRandDoubleRange(300,2000), 0, 0.0, "", "looking");
+    agentInfo sellerInfo = new agentInfo("", "seller", randValue.getRandDoubleRange(10,12), randValue.getRandDoubleRange(5000,13000), 0, 0.0, "", "looking");
     //double minSellingValue = sellerInfo.sellingVolumn * sellerInfo.sellingPrice;
     double minSellingValue = 0;
     //Instant papameter for AID[]
@@ -30,13 +31,16 @@ public class randValSealbidedBidder extends Agent {
 
 
     protected void setup(){
+        // Create and show the GUI
+        myGui = new oldRandSealbidSellerGUI(this);
+        myGui.show();
         //Start agent
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
         ServiceDescription sd = new ServiceDescription();
-        sd.setType("bidder");
+        sd.setType("seller");
         sd.setName(getAID().getName());
-        bidderInfo.farmerName = getAID().getName();
+        sellerInfo.farmerName = getAID().getName();
         dfd.addServices(sd);
         try {
             DFService.register(this, dfd);
@@ -44,12 +48,17 @@ public class randValSealbidedBidder extends Agent {
             fe.printStackTrace();
         }
 
-        System.out.println(bidderInfo.farmerName + "  is ready" + "\n" + "Stage is  " + bidderInfo.agentType + "\n");
+        System.out.println(sellerInfo.farmerName + "  is ready" + "\n" + "Stage is  " + sellerInfo.agentType + "\n");
 
         //Add a TickerBehaviour that chooses agent status to buyer or seller.
-        addBehaviour(new TickerBehaviour(this, 5000){
+        addBehaviour(new TickerBehaviour(this, 15000){
             protected void onTick() {
-                System.out.println("Bidder Information:  " + getAID().getLocalName() + "  " + bidderInfo.buyingVolume + "  " + bidderInfo.buyingPrice);
+                myGui.displayUI("Name: " + sellerInfo.farmerName + "\n");
+                myGui.displayUI("Status: " + sellerInfo.agentType + "\n");
+                myGui.displayUI("Volumn to sell: " + sellerInfo.sellingVolumn + "\n");
+                myGui.displayUI("Selling price: " + sellerInfo.sellingPrice + "\n");
+                myGui.displayUI("\n");
+
                 /*
                  ** Selling water process
                  */
@@ -89,16 +98,18 @@ public class randValSealbidedBidder extends Agent {
                     //update bidder list
                     DFAgentDescription template = new DFAgentDescription();
                     ServiceDescription sd = new ServiceDescription();
-                    sd.setType("seller");
+                    sd.setType("bidder");
                     template.addServices(sd);
                     try {
                         DFAgentDescription[] result = DFService.search(myAgent, template);
                         if(result.length > 1){
                             countTick = countTick+1;
                         }
+                        myGui.displayUI("Found acutioneer agents:\n");
                         bidderAgent = new AID[result.length];
                         for (int i = 0; i < result.length; ++i) {
                             bidderAgent[i] = result[i].getName();
+                            myGui.displayUI(bidderAgent[i].getName()+ "\n");
                         }
                     }
                     catch (FIPAException fe) {
@@ -107,12 +118,12 @@ public class randValSealbidedBidder extends Agent {
                     // Send the cfp to all sellers (Sending water volumn required to all bidding agent)
                     ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
                     for (int i = 0; i < bidderAgent.length; ++i) {
-                        if (bidderAgent[i].getName().equals(bidderInfo.farmerName)== false) {
+                        if (bidderAgent[i].getName().equals(sellerInfo.farmerName)== false) {
                             cfp.addReceiver(bidderAgent[i]);
                         }
                     }
-                    cfp.setContent(String.valueOf(Double.toString(bidderInfo.buyingVolume) + "-"
-                            + Double.toString((bidderInfo.buyingPrice))));
+                    cfp.setContent(String.valueOf(Double.toString(sellerInfo.sellingVolumn) + "-"
+                            + Double.toString((sellerInfo.sellingPrice))));
                     cfp.setConversationId("bidding");
                     cfp.setReplyWith("cfp"+System.currentTimeMillis()); // Unique value
                     myAgent.send(cfp);
@@ -131,7 +142,7 @@ public class randValSealbidedBidder extends Agent {
                         repliesCnt++;
                         // Reply received
                         if (reply.getPerformative() == ACLMessage.PROPOSE) {
-                            System.out.println("Receive message: \n" + reply);
+                            myGui.displayUI("Receive message: \n" + reply);
                             //Count number of bidder that is propose message for water price bidding.
                             // This is an offer
                             String biddedFromAcutioneer = reply.getContent();
@@ -139,9 +150,9 @@ public class randValSealbidedBidder extends Agent {
                             waterVolFromBidder = Double.parseDouble(arrOfStr[0]);
                             biddedPriceFromBidder = Double.parseDouble(arrOfStr[1]);
                             //adding data to dictionary
-                            if(bidderInfo.buyingVolume >= waterVolFromBidder && (waterVolFromBidder * biddedPriceFromBidder) > acceptedValue){
-                                bidderInfo.acceptedVolume = waterVolFromBidder;
-                                bidderInfo.acceptedPrice = biddedPriceFromBidder;
+                            if(sellerInfo.sellingVolumn >= waterVolFromBidder && (waterVolFromBidder * biddedPriceFromBidder) > acceptedValue){
+                                sellerInfo.acceptedVolumn = waterVolFromBidder;
+                                sellerInfo.acceptedPrice = biddedPriceFromBidder;
                                 acceptedName = reply.getSender().getLocalName();
                                 acceptedValue  = waterVolFromBidder * biddedPriceFromBidder;
                             }
@@ -163,13 +174,13 @@ public class randValSealbidedBidder extends Agent {
                      * accepted water volumn to sell.
                      */
                     if(decisionRules == 0){
-                        System.out.println("\n" + "Best value is from :"+ acceptedName + "\n" + "Volumn to sell: " + bidderInfo.acceptedVolume + "\n" + "Price per mm^3: " + bidderInfo.acceptedPrice);
+                        myGui.displayUI("\n" + "Best value is from :"+ acceptedName + "\n" + "Volumn to sell: " + sellerInfo.acceptedVolumn + "\n" + "Price per mm^3: " + sellerInfo.acceptedPrice);
                     }else if(decisionRules == 1) {
-                        System.out.println("\n" + "Best solution for each case:"+"\n"+"Max volumn selling:  " + Arrays.toString(maxEuObj)+ "\n");
+                        myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"Max volumn selling:  " + Arrays.toString(maxEuObj)+ "\n");
                     }else if(decisionRules == 2){
-                        System.out.println("\n" + "Best solution for each case:"+"\n"+"Max profit loss protection:  " + Arrays.toString(maxEuObj)+ "\n");
+                        myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"Max profit loss protection:  " + Arrays.toString(maxEuObj)+ "\n");
                     }else{
-                        System.out.println("\n" + "Best solution for each case:"+"\n"+"balancing between volumn and price:  " + Arrays.toString(maxEuObj)+ "\n");
+                        myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"balancing between volumn and price:  " + Arrays.toString(maxEuObj)+ "\n");
                     }
                     System.out.println("\n" + "Best solution for each case:"+"\n"+"Max price selling:  " + Arrays.toString(maxEuObj) + "\n");
 
@@ -182,7 +193,7 @@ public class randValSealbidedBidder extends Agent {
                             acceptedRequest.setReplyWith("acceptedRequest" + System.currentTimeMillis());
                             //myGui.displayUI(acceptedRequest.toString());
                             myAgent.send(acceptedRequest);
-                            System.out.println("\n" + acceptedRequest.toString() + "\n");
+                            myGui.displayUI("\n" + acceptedRequest.toString() + "\n");
                             mt = MessageTemplate.and(MessageTemplate.MatchConversationId("bidding"),MessageTemplate.MatchInReplyTo
                                     (acceptedRequest.getReplyWith()));
                         }else {
@@ -191,7 +202,7 @@ public class randValSealbidedBidder extends Agent {
                             rejectedRequest.addReceiver(bidderAgent[i]);
                             //myGui.displayUI(rejectedRequest.toString());
                             myAgent.send(rejectedRequest);
-                            System.out.println("\n" + rejectedRequest.toString() + "\n");
+                            myGui.displayUI("\n" + rejectedRequest.toString() + "\n");
                         }
                     }
 
@@ -207,9 +218,9 @@ public class randValSealbidedBidder extends Agent {
                         //myGui.displayUI("\n" + "Reply message:" + reply.toString());
                         // Purchase order reply received
                         if (reply.getPerformative() == ACLMessage.INFORM) {
-                            System.out.println("Selling water to  " + reply.getSender().getLocalName());
-                            bidderInfo.buyingVolume = bidderInfo.buyingVolume - soldVolumn;
-                            System.out.println("Water volumn left :  " + bidderInfo.buyingVolume);
+                            myGui.displayUI("Selling water to  " + reply.getSender().getLocalName());
+                            sellerInfo.sellingVolumn = sellerInfo.sellingVolumn - soldVolumn;
+                            System.out.println("Water volumn left :  " + sellerInfo.sellingVolumn);
                             // Purchase successful. We can terminate
                             //System.out.println(farmerInfo.farmerName +" successfully purchased from agent "+reply.getSender().getName() + "\n");
                             //System.out.println("Price = "+farmerInfo.currentPricePerMM);
@@ -233,7 +244,7 @@ public class randValSealbidedBidder extends Agent {
         }
         public boolean done() {
             if (step == 2 && acceptedName == null) {
-                System.out.println("Do not buyer who provide the matching price.");
+                myGui.displayUI("Do not buyer who provide the matching price.");
                 //myAgent.doSuspend();
 
                 //myGui.dispose();
@@ -259,10 +270,10 @@ public class randValSealbidedBidder extends Agent {
                 // ACCEPT_PROPOSAL Message received. Process it
                 ACLMessage reply = msg.createReply();
                 //myGui.displayUI(msg.toString());
-                System.out.println(bidderInfo.sellingStatus);
+                System.out.println(sellerInfo.sellingStatus);
                 reply.setPerformative(ACLMessage.INFORM);
-                if (bidderInfo.sellingStatus == "avalable") {
-                    bidderInfo.sellingStatus = "sold";
+                if (sellerInfo.sellingStatus=="avalable") {
+                    sellerInfo.sellingStatus = "sold";
                     //System.out.println(getAID().getName()+" sold water to agent "+msg.getSender().getName());
                     System.out.println(getAID().getLocalName()+" sold water to "+msg.getSender().getLocalName());
                     //myGui.displayUI(farmerInfo.sellingStatus.toString());
@@ -390,30 +401,26 @@ public class randValSealbidedBidder extends Agent {
         return temp;
     }
 
-
     public class agentInfo{
         String farmerName;
         String agentType;
-        Double buyingVolume;
-        Double buyingPrice;
-        Double acceptedVolume;
+        Double sellingPrice;
+        Double sellingVolumn;
         Double acceptedPrice;
+        Double acceptedVolumn;
         String acceptedName;
         String sellingStatus;
 
-        agentInfo(String farmerName, String agentType, double buyingVolume, double buyingPrice, double acceptedVolume, double acceptedPrice, String acceptedName, String sellingStatus){
+        agentInfo(String farmerName, String agentType, double sellingPrice, double sellingVolumn, double acceptedPrice, double acceptedVolumn, String acceptedName, String sellingStatus){
             this.farmerName = farmerName;
             this.agentType = agentType;
-            this.buyingVolume = buyingVolume;
-            this.buyingPrice = buyingPrice;
-            this.acceptedVolume = acceptedVolume;
+            this.sellingPrice = sellingPrice;
+            this.sellingVolumn = sellingVolumn;
             this.acceptedPrice = acceptedPrice;
+            this.acceptedVolumn = acceptedVolumn;
             this.acceptedName = acceptedName;
             this.sellingStatus = sellingStatus;
 
         }
     }
 }
-
-
-

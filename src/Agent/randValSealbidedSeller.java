@@ -26,7 +26,7 @@ public class randValSealbidedSeller extends Agent {
     //Storing all biider data for making decision.
     List<offerOfBidders> bidderList;
     List<Double> order;
-    List<offerOfBidders> resultList;
+    Dictionary replyList = new Hashtable();
 
     //Instant best seller for the ACCEPT_PROPOSAL message.
     int cnt = 0;
@@ -36,7 +36,7 @@ public class randValSealbidedSeller extends Agent {
         myGui.show();
         System.out.println(getAID().getLocalName() + "  is ready");
 
-        System.out.println(getAID().getLocalName() + " " + sellerInfo.sellingVolume+ "  " + sellerInfo.sellingPrice + "\n");
+        System.out.println(getAID().getLocalName() + " " + sellerInfo.sellingVolume + "  " + sellerInfo.sellingPrice + "\n");
 
         //Start Agent
         // Register the book-selling service in the yellow pages
@@ -62,8 +62,7 @@ public class randValSealbidedSeller extends Agent {
         //Add the behaviour serving purhase orders from water provider agent.
         addBehaviour(new TickerBehaviour(this, 30000) {
             protected void onTick() {
-                addBehaviour(new PurchaseOrderServer);
-            }
+                addBehaviour(new PurchaseOrdersServer());}
         });
         //addBehaviour(new PurchaseOrdersServer());
     }
@@ -92,8 +91,11 @@ public class randValSealbidedSeller extends Agent {
                 double tempVol = Double.parseDouble(arrOfstr[0]);
                 double tempPrice = Double.parseDouble(arrOfstr[1]);
                 double tempValue = tempVol * tempPrice;
-                offerOfBidders xx = new offerOfBidders(msg.getSender().getLocalName(), msg.getSender().toString(),tempVol, tempPrice,tempValue);
-                bidderList.add(xx);
+                order.add(tempValue);
+                Collections.sort(order);
+                int x  = order.indexOf(tempValue);
+                offerOfBidders xx = new offerOfBidders(msg.getSender().getLocalName(), msg.getSender().toString(),tempVol, tempPrice,tempValue,0);
+                bidderList.add(x,xx);
                 reply.setPerformative(ACLMessage.PROPOSE);
                 String sendingOffer = String.valueOf(sellerInfo.sellingVolume);
                 reply.setContent(sendingOffer);
@@ -109,7 +111,11 @@ public class randValSealbidedSeller extends Agent {
             MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
             ACLMessage msg = myAgent.receive(mt);
             if (msg != null) {
-                .add(msg.getSender().getLocalName());
+                Iterator itr = bidderList.iterator();
+                while (itr.hasNext()) {
+                    offerOfBidders st =  (offerOfBidders)itr.next();
+                    st.replyStatus = 1;
+                }
             } else {
                 block();
             }
@@ -117,11 +123,40 @@ public class randValSealbidedSeller extends Agent {
     }
 
     private class PurchaseOrdersServer extends CyclicBehaviour{
+        ACLMessage accptMsg = new ACLMessage(ACLMessage.INFORM);
+        ACLMessage rejectMsg = new ACLMessage(ACLMessage.REFUSE);
+        int accpt = 0;
         public void action(){
-            List<offerOfBidders> prioritizedList;
-            Collections.sort(bidderList);
+            Iterator itr = bidderList.iterator();
+            while (itr.hasNext()){
+                offerOfBidders st = (offerOfBidders)itr.next();
+                if(accpt ==0){
+                    //accptMsg.addReceiver(AID(st.agentAddress));
+                }
+            }
+            ACLMessage reply = new ACLMessage(ACLMessage.INFORM);
+            if(reply != null){
+                /***
+                 if(bidderList.size() > 0){
+                 Iterator itr = bidderList.iterator();
+                 while (itr.hasNext()){
+                 offerOfBidders st = (offerOfBidders)itr.next();
+                 if(st.replyStatus == 1){
+                 myGui.displayUI(st.name + st.value);
+                 }
+                 }
+                 }else {
+                 myGui.displayUI("Do not have bidder on this time.");
+                 block();
+                 }
+                 ***/
+            }else {
+                myGui.displayUI("Do not have bidder on this time.");
+                block();
+            }
         }
     }
+
     private class RejectandReset extends CyclicBehaviour {
         public void action() {
             MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REFUSE);
@@ -163,13 +198,15 @@ public class randValSealbidedSeller extends Agent {
         double volume;
         double price;
         double value;
+        double replyStatus;     //0=none; 1 = reply
 
-        offerOfBidders(String name, String agentAddress, double volume, double price, double value){
+        offerOfBidders(String name, String agentAddress, double volume, double price, double value, double replyStatus){
             this.name = name;
             this.agentAddress = agentAddress;
             this.volume = volume;
             this.price = price;
             this.value = value;
+            this.replyStatus = replyStatus;
         }
     }
 }
