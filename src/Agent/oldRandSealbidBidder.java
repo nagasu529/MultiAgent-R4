@@ -105,25 +105,21 @@ public class oldRandSealbidBidder extends Agent {
                 String[] arrOfstr = currentOffer.split("-");
 
                 double tempVol = Double.parseDouble(arrOfstr[0]);
-                double tempPrice = Double.parseDouble(arrOfstr[1]);
 
-                System.out.println("Offer price and Vol:  " + tempVol + "   " + tempPrice + "    " + msg.getSender().getLocalName());
+                System.out.println("Offered Vol:  " + tempVol +"    " + msg.getSender().getLocalName());
 
                 //myGUI.displayUI("Price setting up from Seller: " + farmerInfo.waterPriceFromSeller + " per MM" + "\n");
                 //myGUI.displayUI("Selling volume from seller:" + farmerInfo.waterVolumnFromSeller + "\n");
 
                 //Auction Process
-                if ((tempVol >= bidderInfo.buyingVolumn && tempPrice <= bidderInfo.buyingPrice)) {
+                if ((tempVol >= bidderInfo.buyingVolumn)) {
                     reply.setPerformative(ACLMessage.PROPOSE);
                     String sendingOffer = bidderInfo.buyingVolumn + "-" + bidderInfo.buyingPrice;
                     reply.setContent(sendingOffer);
-                    double tempValue = tempPrice * tempVol;
-                    double tempMax = bidderInfo.offeredPrice * bidderInfo.offeredVolumn;
 
                     //setting up the best offer from seller.
-                    if(tempMax == 0 || tempValue < tempMax ){
+                    if(bidderInfo.offeredVolumn == 0 || tempVol < bidderInfo.offeredVolumn ){
                         bidderInfo.offeredVolumn = tempVol;
-                        bidderInfo.offeredPrice = tempPrice;
                         bidderInfo.offeredName = msg.getSender().getLocalName();
                     }
 

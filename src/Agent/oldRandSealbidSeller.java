@@ -18,15 +18,13 @@ import java.util.*;
 public class oldRandSealbidSeller extends Agent {
     oldRandSealbidSellerGUI myGui;
 
-    //General papameter information
+    //General parameter information
     DecimalFormat df = new DecimalFormat("#.##");
     randValue randValue = new randValue();
     agentInfo sellerInfo = new agentInfo("", "seller", randValue.getRandDoubleRange(10,12), randValue.getRandDoubleRange(5000,13000), 0, 0.0, "", "looking");
     //double minSellingValue = sellerInfo.sellingVolumn * sellerInfo.sellingPrice;
     double minSellingValue = 0;
-    //Instant papameter for AID[]
-    //Create list of offer.
-    HashMap<String, Double> sortHm = new HashMap<String, Double>();
+    //Instant parameter for AID[]
 
 
 
@@ -122,8 +120,7 @@ public class oldRandSealbidSeller extends Agent {
                             cfp.addReceiver(bidderAgent[i]);
                         }
                     }
-                    cfp.setContent(String.valueOf(Double.toString(sellerInfo.sellingVolumn) + "-"
-                            + Double.toString((sellerInfo.sellingPrice))));
+                    cfp.setContent(String.valueOf(Double.toString(sellerInfo.sellingVolumn)));
                     cfp.setConversationId("bidding");
                     cfp.setReplyWith("cfp"+System.currentTimeMillis()); // Unique value
                     myAgent.send(cfp);
