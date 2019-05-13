@@ -16,7 +16,7 @@ public class oldRandSealbidBidder extends Agent {
     randValue randValue = new randValue();
     DecimalFormat df = new DecimalFormat("#.##");
 
-    agentInfo bidderInfo = new agentInfo("","bidder", randValue.getRandDoubleRange(13,15), randValue.getRandDoubleRange(300,1000),0.0, 0.0, "");
+    agentInfo bidderInfo = new agentInfo("","bidder", randValue.getRandDoubleRange(10,16), randValue.getRandDoubleRange(300,2000),0.0, 0.0, "");
 
     //Instant best seller for the ACCEPT_PROPOSAL message.
     int cnt = 0;
@@ -123,7 +123,7 @@ public class oldRandSealbidBidder extends Agent {
                         bidderInfo.offeredName = msg.getSender().getLocalName();
                     }
 
-                    System.out.print(getAID().getLocalName() + "the best seller option is   " + bidderInfo.offeredName + " " + bidderInfo.offeredPrice + "  " + bidderInfo.offeredVolumn);
+                    System.out.print(getAID().getLocalName() + "  the best seller option is   " + bidderInfo.offeredName + " " + bidderInfo.offeredPrice + "  " + bidderInfo.offeredVolumn);
 
                     myAgent.send(reply);
                     System.out.println(reply.toString());
@@ -165,7 +165,7 @@ public class oldRandSealbidBidder extends Agent {
                 if(msg.getSender().getLocalName().equals(bidderInfo.offeredName) && bidderInfo.offeredName != null){
                     reply.setPerformative(ACLMessage.INFORM);
                     System.out.println("");
-                    System.out.println("\n" + getAID().getLocalName() + "accpted to buy water from" + msg.getSender().getLocalName());
+                    System.out.println("\n" + getAID().getLocalName() + "  accpted to buy water from  " + msg.getSender().getLocalName());
                     myAgent.doDelete();
                     //myGUI.dispose();
                     System.out.println(getAID().getName() + " terminating.");

@@ -210,4 +210,3 @@ public class randValSealbidedSeller extends Agent {
         }
     }
 }
-

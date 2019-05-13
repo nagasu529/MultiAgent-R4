@@ -21,7 +21,7 @@ public class oldRandSealbidSeller extends Agent {
     //General parameter information
     DecimalFormat df = new DecimalFormat("#.##");
     randValue randValue = new randValue();
-    agentInfo sellerInfo = new agentInfo("", "seller", randValue.getRandDoubleRange(10,12), randValue.getRandDoubleRange(5000,13000), 0, 0.0, "", "looking");
+    agentInfo sellerInfo = new agentInfo("", "seller", randValue.getRandDoubleRange(10,12), randValue.getRandDoubleRange(1300,1500), 0, 0.0, "", "looking");
     //double minSellingValue = sellerInfo.sellingVolumn * sellerInfo.sellingPrice;
     double minSellingValue = 0;
     //Instant parameter for AID[]

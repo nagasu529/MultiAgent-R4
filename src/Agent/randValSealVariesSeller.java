@@ -22,19 +22,29 @@ public class randValSealVariesSeller extends Agent {
     //General papameter information
     DecimalFormat df = new DecimalFormat("#.##");
     randValue randValue = new randValue();
-    agentInfo sellerInfo = new agentInfo("", "seller", randValue.getRandDoubleRange(10,12), randValue.getRandDoubleRange(5000,13000), 0, 0.0, "", "looking");
+    agentInfo sellerInfo = new agentInfo("", "seller", randValue.getRandDoubleRange(10,12), randValue.getRandDoubleRange(1300,1500), 0, 0.0, "", "looking");
     double minSellingValue = 0;
     LinkedList<agentInfo> totalSellerRound = new LinkedList<agentInfo>();
     double MaxSellingVolumn = sellerInfo.sellingVolumn;
     String log = "";
     int roundCnt = 2;
 
+    int fiveHundredVolRound;
+    double varieVol;
+    int varieVolRound;
 
     protected void setup(){
         // Create and show the GUI
         myGui = new randValSealVariesSellerGUI(this);
         myGui.show();
-        sellerInfo.sellingVolumn = sellerInfo.sellingVolumn/2;
+        //sellerInfo.sellingVolumn = sellerInfo.sellingVolumn/2;
+
+        //Selling volume splited by conditions (each grounp is not over 500 mm^3).
+        if(sellerInfo.sellingVolumn > 1000 && sellerInfo.sellingVolumn <= 1500){
+            fiveHundredVolRound = 2;
+            varieVol = sellerInfo.sellingVolumn - 1000;
+            varieVolRound = 1;
+        }
 
         //Start agent
         DFAgentDescription dfd = new DFAgentDescription();
@@ -124,8 +134,8 @@ public class randValSealVariesSeller extends Agent {
                             cfp.addReceiver(bidderAgent[i]);
                         }
                     }
-                    cfp.setContent(String.valueOf(Double.toString(sellerInfo.sellingVolumn) + "-"
-                            + Double.toString((sellerInfo.sellingPrice))));
+                    //cfp.setContent(String.valueOf(Double.toString(sellerInfo.sellingVolumn) + "-" + Double.toString((sellerInfo.sellingPrice))));
+                    cfp.setContent("500" + "-" + fiveHundredVolRound + "-" + varieVol + "-" + varieVolRound);
                     cfp.setConversationId("bidding");
                     cfp.setReplyWith("cfp"+System.currentTimeMillis()); // Unique value
                     myAgent.send(cfp);

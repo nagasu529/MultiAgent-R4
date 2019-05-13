@@ -17,13 +17,24 @@ public class randValSealVariesBidder extends Agent {
     randValue randValue = new randValue();
     DecimalFormat df = new DecimalFormat("#.##");
 
-    agentInfo bidderInfo = new agentInfo("","bidder", randValue.getRandDoubleRange(13,15), randValue.getRandDoubleRange(300,1000),0.0, 0.0, "");
+    agentInfo bidderInfo = new agentInfo("","bidder", randValue.getRandDoubleRange(10,16), randValue.getRandDoubleRange(300,2000),0.0, 0.0, "");
 
     //Instant best seller for the ACCEPT_PROPOSAL message.
     int cnt = 0;
 
+    int fiveHundredVolRound;
+    double varieVol;
+    int varieVolRound;
+
     protected void setup() {
         System.out.println(getAID().getLocalName()+"  is ready" );
+
+        //Selling volume splited by conditions (each grounp is not over 500 mm^3).
+        if(bidderInfo.buyingVolumn > 1000 && bidderInfo.buyingVolumn <= 1500){
+            fiveHundredVolRound = 2;
+            varieVol = bidderInfo.buyingVolumn - 1000;
+            varieVolRound = 1;
+        }
 
         //Start Agent
         // Register the book-selling service in the yellow pages
@@ -50,26 +61,6 @@ public class randValSealVariesBidder extends Agent {
         addBehaviour(new PurchaseOrdersServer());
 
         addBehaviour(new RejectandReset());
-
-        /***
-         addBehaviour(new TickerBehaviour(this, 500) {
-         public void onTick() {
-         System.out.println("bidder name: " + bidderInfo.farmerName + "  " + bidderInfo.buyingVolumn + "  " + bidderInfo.buyingPrice + "\n");
-         //Add the behaviour serving queries from Water provider about current price.
-         addBehaviour(new OfferRequestsServer());
-
-         //Add the behaviour serving purhase orders from water provider agent.
-         addBehaviour(new PurchaseOrdersServer());
-         }
-         });
-
-         addBehaviour(new TickerBehaviour(this, 30000) {
-         protected void onTick() {
-         bidderInfo.offeredName = "";
-         bidderInfo.offeredPrice = 0.0;
-         bidderInfo.offeredVolumn = 0.0;
-         }
-         });***/
     }
 
     // Put agent clean-up operations here
@@ -95,10 +86,12 @@ public class randValSealVariesBidder extends Agent {
                 String currentOffer = msg.getContent();
                 String[] arrOfstr = currentOffer.split("-");
 
-                double tempVol = Double.parseDouble(arrOfstr[0]);
-                double tempPrice = Double.parseDouble(arrOfstr[1]);
+                double tempFiveHundred = Double.parseDouble(arrOfstr[0]);
+                double tempFiveHunderedRound = Double.parseDouble(arrOfstr[1]);
+                double tempVarieVolume = Double.parseDouble(arrOfstr[2]);
+                double tempVarieRound = Double.parseDouble(arrOfstr[3]);
 
-                System.out.println("Offer price and Vol:  " + tempVol + "   " + tempPrice);
+                System.out.println("Offer price and Vol:  " + tempFiveHunderedRound + "   " + tempVarieVolume + "  " + tempVarieRound);
 
                 //myGUI.displayUI("Price setting up from Seller: " + farmerInfo.waterPriceFromSeller + " per MM" + "\n");
                 //myGUI.displayUI("Selling volume from seller:" + farmerInfo.waterVolumnFromSeller + "\n");
