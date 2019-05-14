@@ -3,7 +3,6 @@ package Agent;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
-import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -11,7 +10,6 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.tools.introspector.gui.MyDialog;
 
 import java.text.DecimalFormat;
 import java.util.*;
@@ -22,16 +20,18 @@ public class randValSealVariesSeller extends Agent {
     //General papameter information
     DecimalFormat df = new DecimalFormat("#.##");
     randValue randValue = new randValue();
-    agentInfo sellerInfo = new agentInfo("", "seller", randValue.getRandDoubleRange(10,12), randValue.getRandDoubleRange(1300,1500), 0, 0.0, "", "looking");
+    agentInfo sellerInfo = new agentInfo("", "seller", randValue.getRandDoubleRange(10,12), randValue.getRandDoubleRange(1300,1500), 0, 0.0, "",0, 0, "", "looking");
     double minSellingValue = 0;
-    LinkedList<agentInfo> totalSellerRound = new LinkedList<agentInfo>();
+    LinkedList<agentInfo> totalSellerFreq = new LinkedList<agentInfo>();
     double MaxSellingVolumn = sellerInfo.sellingVolumn;
     String log = "";
-    int roundCnt = 2;
+    int FreqCnt = 2;
 
-    int fiveHundredVolRound;
+    double maxWaterValue;
+    double fiveHundredVol;
+    int fiveHundredVolFreq;
     double varieVol;
-    int varieVolRound;
+    int varieVolFreq;
 
     protected void setup(){
         // Create and show the GUI
@@ -41,9 +41,10 @@ public class randValSealVariesSeller extends Agent {
 
         //Selling volume splited by conditions (each grounp is not over 500 mm^3).
         if(sellerInfo.sellingVolumn > 1000 && sellerInfo.sellingVolumn <= 1500){
-            fiveHundredVolRound = 2;
+            fiveHundredVol = 500;
+            fiveHundredVolFreq = 2;
             varieVol = sellerInfo.sellingVolumn - 1000;
-            varieVolRound = 1;
+            varieVolFreq = 1;
         }
 
         //Start agent
@@ -93,12 +94,7 @@ public class randValSealVariesSeller extends Agent {
         Dictionary<String, Double> volumnDict = new Hashtable<String, Double>();
         Dictionary<String, Double> priceDict = new Hashtable<String, Double>();
         Object[] maxEuObj;
-        Double maxEuValue = 0.0;
-        ArrayList<String> maxEuList = new ArrayList<String>();
-        private double waterVolFromBidder;
-        private double biddedPriceFromBidder;
-        private String acceptedName;
-        private double acceptedValue;
+
         int countTick;
         int decisionRules = 0;
 
@@ -135,7 +131,7 @@ public class randValSealVariesSeller extends Agent {
                         }
                     }
                     //cfp.setContent(String.valueOf(Double.toString(sellerInfo.sellingVolumn) + "-" + Double.toString((sellerInfo.sellingPrice))));
-                    cfp.setContent("500" + "-" + fiveHundredVolRound + "-" + varieVol + "-" + varieVolRound);
+                    cfp.setContent(fiveHundredVol + "-" + fiveHundredVolFreq + "-" + varieVol + "-" + varieVolFreq);
                     cfp.setConversationId("bidding");
                     cfp.setReplyWith("cfp"+System.currentTimeMillis()); // Unique value
                     myAgent.send(cfp);
@@ -159,14 +155,22 @@ public class randValSealVariesSeller extends Agent {
                             // This is an offer
                             String biddedFromAcutioneer = reply.getContent();
                             String[] arrOfStr = biddedFromAcutioneer.split("-");
-                            waterVolFromBidder = Double.parseDouble(arrOfStr[0]);
-                            biddedPriceFromBidder = Double.parseDouble(arrOfStr[1]);
+                            double tempFiveHundredVol = Double.parseDouble(arrOfStr[0]);
+                            double tempFiveHundredFreq = Double.parseDouble(arrOfStr[1]);
+                            double tempVarieVol = Double.parseDouble(arrOfStr[2]);
+                            double tempVarieFreq = Double.parseDouble(arrOfStr[3]);
+                            double tempPrice = Double.parseDouble(arrOfStr[4]);
+                            double tempValue = tempVarieVol*tempPrice;
+
                             //adding data to dictionary
-                            if(sellerInfo.sellingVolumn >= waterVolFromBidder && (waterVolFromBidder * biddedPriceFromBidder) > acceptedValue){
-                                sellerInfo.acceptedVolumn = waterVolFromBidder;
-                                sellerInfo.acceptedPrice = biddedPriceFromBidder;
-                                acceptedName = reply.getSender().getLocalName();
-                                acceptedValue  = waterVolFromBidder * biddedPriceFromBidder;
+                            if((tempFiveHundredVol == 500 && tempFiveHundredFreq == 2) &&(maxWaterValue == 0 || tempValue > maxWaterValue)){
+                                sellerInfo.acceptedFiveHundredVol = tempFiveHundredVol;
+                                sellerInfo.acceptedFiveHundredPrice = tempPrice;
+                                sellerInfo.acceptedFiveHundredName = reply.getSender().getLocalName();
+                                sellerInfo.acceptedVarieVol = tempVarieVol;
+                                sellerInfo.acceptedVariePrice = tempPrice;
+                                sellerInfo.acceptedVarieName = reply.getSender().getLocalName();
+                                maxWaterValue = tempValue;
                             }
                         }
 
@@ -186,7 +190,7 @@ public class randValSealVariesSeller extends Agent {
                      * accepted water volumn to sell.
                      */
                     if(decisionRules == 0){
-                        myGui.displayUI("\n" + "Best value is from :"+ acceptedName + "\n" + "Volumn to sell: " + sellerInfo.acceptedVolumn + "\n" + "Price per mm^3: " + sellerInfo.acceptedPrice);
+                        myGui.displayUI("\n" + "Best value is from :"+ sellerInfo.acceptedFiveHundredName + "\n" + "Volumn to sell: " + sellerInfo.acceptedVarieVol + "\n" + "Price per mm^3: " + sellerInfo.acceptedVariePrice);
                     }else if(decisionRules == 1) {
                         myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"Max volumn selling:  " + Arrays.toString(maxEuObj)+ "\n");
                     }else if(decisionRules == 2){
@@ -197,7 +201,7 @@ public class randValSealVariesSeller extends Agent {
                     System.out.println("\n" + "Best solution for each case:"+"\n"+"Max price selling:  " + Arrays.toString(maxEuObj) + "\n");
 
                     for(int i=0; i < bidderAgent.length; ++i){
-                        if(bidderAgent[i].getLocalName().equals(acceptedName)){
+                        if(bidderAgent[i].getLocalName().equals(sellerInfo.acceptedVarieName)){
                             // Send the purchase order to the seller that provided the best offer
                             ACLMessage acceptedRequest = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
                             acceptedRequest.addReceiver(bidderAgent[i]);
@@ -232,14 +236,17 @@ public class randValSealVariesSeller extends Agent {
                         if (reply.getPerformative() == ACLMessage.INFORM) {
                             MaxSellingVolumn = MaxSellingVolumn - sellerInfo.sellingVolumn;
                             if(MaxSellingVolumn > 0){
-                                String tempRound = "First round: " + getAID().getLocalName() + "  Selling water to  " + reply.getSender().getLocalName() +"\n";
-                                log = log + tempRound;
-                                sellerInfo.acceptedName = "";
-                                sellerInfo.acceptedVolumn = 0.0;
-                                sellerInfo.acceptedPrice = 0.0;
+                                String tempFreq = "First Freq: " + getAID().getLocalName() + "  Selling water to  " + reply.getSender().getLocalName() +"\n";
+                                log = log + tempFreq;
+                                sellerInfo.acceptedFiveHundredName = "";
+                                sellerInfo.acceptedFiveHundredVol = 0.0;
+                                sellerInfo.acceptedFiveHundredPrice = 0.0;
+                                sellerInfo.acceptedVarieName = "";
+                                sellerInfo.acceptedVarieVol = 0.0;
+                                sellerInfo.acceptedVariePrice = 0.0;
                             }else {
-                                String tempRound = "Second round: " + getAID().getLocalName() + "  Selling water to  " + reply.getSender().getLocalName() +"\n";
-                                log = log + tempRound;
+                                String tempFreq = "Second Freq: " + getAID().getLocalName() + "  Selling water to  " + reply.getSender().getLocalName() +"\n";
+                                log = log + tempFreq;
                                 myGui.displayUI("\n");
                                 myGui.displayUI(log);
                                 myAgent.doSuspend();
@@ -269,7 +276,7 @@ public class randValSealVariesSeller extends Agent {
             }
         }
         public boolean done() {
-            if (step == 2 && acceptedName == null) {
+            if (step == 2 && sellerInfo.acceptedVarieName == null) {
                 myGui.displayUI("Do not buyer who provide the matching price.");
                 //myAgent.doSuspend();
 
@@ -298,19 +305,25 @@ public class randValSealVariesSeller extends Agent {
         String agentType;
         Double sellingPrice;
         Double sellingVolumn;
-        Double acceptedPrice;
-        Double acceptedVolumn;
-        String acceptedName;
+        Double acceptedFiveHundredPrice;
+        Double acceptedFiveHundredVol;
+        String acceptedFiveHundredName;
+        Double acceptedVariePrice;
+        Double acceptedVarieVol;
+        String acceptedVarieName;
         String sellingStatus;
 
-        agentInfo(String farmerName, String agentType, double sellingPrice, double sellingVolumn, double acceptedPrice, double acceptedVolumn, String acceptedName, String sellingStatus){
+        agentInfo(String farmerName, String agentType, double sellingPrice, double sellingVolumn, double acceptedFiveHundredPrice, double acceptedFiveHundredVol, String acceptedFiveHundredName, double acceptedVariePrice, double acceptedVarieVol, String acceptedVarieName, String sellingStatus){
             this.farmerName = farmerName;
             this.agentType = agentType;
             this.sellingPrice = sellingPrice;
             this.sellingVolumn = sellingVolumn;
-            this.acceptedPrice = acceptedPrice;
-            this.acceptedVolumn = acceptedVolumn;
-            this.acceptedName = acceptedName;
+            this.acceptedFiveHundredPrice = acceptedFiveHundredPrice;
+            this.acceptedFiveHundredVol = acceptedFiveHundredVol;
+            this.acceptedFiveHundredName = acceptedFiveHundredName;
+            this.acceptedVariePrice = acceptedVariePrice;
+            this.acceptedVarieVol = acceptedVarieVol;
+            this.acceptedVarieName = acceptedVarieName;
             this.sellingStatus = sellingStatus;
 
         }

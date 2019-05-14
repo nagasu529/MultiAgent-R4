@@ -1,39 +1,39 @@
 package Agent;
 
-import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.*;
-import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
-import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.domain.FIPAException;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 
 import java.text.DecimalFormat;
-import java.util.*;
 
 public class randValSealVariesBidder extends Agent {
     randValue randValue = new randValue();
     DecimalFormat df = new DecimalFormat("#.##");
 
-    agentInfo bidderInfo = new agentInfo("","bidder", randValue.getRandDoubleRange(10,16), randValue.getRandDoubleRange(300,2000),0.0, 0.0, "");
+    agentInfo bidderInfo = new agentInfo("","bidder", randValue.getRandDoubleRange(10,16), randValue.getRandDoubleRange(300,2000),0.0, 0.0, "", 0, 0, "");
 
     //Instant best seller for the ACCEPT_PROPOSAL message.
     int cnt = 0;
 
-    int fiveHundredVolRound;
+    double fiveHundredVol;
+    int fiveHundredVolFreq;
     double varieVol;
-    int varieVolRound;
+    int varieVolFreq;
 
     protected void setup() {
         System.out.println(getAID().getLocalName()+"  is ready" );
 
         //Selling volume splited by conditions (each grounp is not over 500 mm^3).
-        if(bidderInfo.buyingVolumn > 1000 && bidderInfo.buyingVolumn <= 1500){
-            fiveHundredVolRound = 2;
-            varieVol = bidderInfo.buyingVolumn - 1000;
-            varieVolRound = 1;
+        if(bidderInfo.buyingVol > 1000 && bidderInfo.buyingVol <= 1500){
+            fiveHundredVol = 500;
+            fiveHundredVolFreq = 2;
+            varieVol = bidderInfo.buyingVol - 1000;
+            varieVolFreq = 1;
         }
 
         //Start Agent
@@ -86,36 +86,27 @@ public class randValSealVariesBidder extends Agent {
                 String currentOffer = msg.getContent();
                 String[] arrOfstr = currentOffer.split("-");
 
-                double tempFiveHundred = Double.parseDouble(arrOfstr[0]);
-                double tempFiveHunderedRound = Double.parseDouble(arrOfstr[1]);
-                double tempVarieVolume = Double.parseDouble(arrOfstr[2]);
-                double tempVarieRound = Double.parseDouble(arrOfstr[3]);
+                double tempFiveHundredVol = Double.parseDouble(arrOfstr[0]);
+                double tempFiveHunderedFreq = Double.parseDouble(arrOfstr[1]);
+                double tempVarieVol = Double.parseDouble(arrOfstr[2]);
+                double tempVarieFreq = Double.parseDouble(arrOfstr[3]);
 
-                System.out.println("Offer price and Vol:  " + tempFiveHunderedRound + "   " + tempVarieVolume + "  " + tempVarieRound);
+                System.out.println("Offer price and Vol:  " + tempFiveHundredVol + "  " + tempFiveHunderedFreq + "   " + tempVarieVol + "  " + tempVarieFreq + "  " + bidderInfo.buyingPrice);
 
                 //myGUI.displayUI("Price setting up from Seller: " + farmerInfo.waterPriceFromSeller + " per MM" + "\n");
                 //myGUI.displayUI("Selling volume from seller:" + farmerInfo.waterVolumnFromSeller + "\n");
 
                 //Auction Process
-                if (tempVol >= bidderInfo.buyingVolumn && tempPrice <= bidderInfo.buyingPrice) {
+                if((tempFiveHundredVol == 500 && tempFiveHunderedFreq == 2)&& tempVarieVol > varieVol){
                     reply.setPerformative(ACLMessage.PROPOSE);
-                    String sendingOffer = tempVol + "-" + tempPrice;
-                    reply.setContent(sendingOffer);
-                    double tempValue = tempPrice * tempVol;
-                    double tempMax = bidderInfo.offeredPrice * bidderInfo.offeredVolumn;
-
-                    //setting up the best offer from seller.
-                    if(tempMax == 0 || tempValue < tempMax ){
-                        bidderInfo.offeredVolumn = tempVol;
-                        bidderInfo.offeredPrice = tempPrice;
-                        bidderInfo.offeredName = msg.getSender().getLocalName();
+                    reply.setContent(fiveHundredVol + "-" + fiveHundredVolFreq + "-" + varieVol + "-" + varieVolFreq + bidderInfo.buyingPrice);
+                    if(bidderInfo.offeredVarieVol == 0 || bidderInfo.offeredVarieVol > tempVarieVol){
+                        bidderInfo.offeredVarieVol = tempVarieVol;
+                        bidderInfo.offeredVarieName = msg.getSender().getLocalName();
+                        System.out.println("the best option is changed  " + bidderInfo.offeredVarieName + "  " + bidderInfo.offeredVarieVol);
                     }
-
-                    System.out.print(getAID().getLocalName() + "the best seller option is   " + bidderInfo.offeredName + " " + bidderInfo.offeredPrice + "  " + bidderInfo.offeredVolumn);
-
                     myAgent.send(reply);
-                    System.out.println(reply.toString());
-                } else {
+                }else {
                     reply.setPerformative(ACLMessage.REFUSE);
                     myAgent.send(reply);
                     System.out.println(reply.toString());
@@ -132,10 +123,10 @@ public class randValSealVariesBidder extends Agent {
             MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REFUSE);
             ACLMessage msg = myAgent.receive(mt);
             if(msg != null){
-                if(msg.getSender().getLocalName().equals(bidderInfo.offeredName)){
-                    bidderInfo.offeredName = "";
-                    bidderInfo.offeredPrice = 0.0;
-                    bidderInfo.offeredVolumn = 0.0;
+                if(msg.getSender().getLocalName().equals(bidderInfo.offeredVarieName)){
+                    bidderInfo.offeredVarieName = "";
+                    bidderInfo.offeredVariePrice = 0.0;
+                    bidderInfo.offeredVarieVol = 0.0;
                 }
             }else {
                 block();
@@ -149,7 +140,7 @@ public class randValSealVariesBidder extends Agent {
             ACLMessage msg = myAgent.receive(mt);
             if (msg != null) {
                 ACLMessage reply = msg.createReply();
-                if(msg.getSender().getLocalName().equals(bidderInfo.offeredName) && bidderInfo.offeredName != null){
+                if(msg.getSender().getLocalName().equals(bidderInfo.offeredVarieName) && bidderInfo.offeredVarieName != null){
                     reply.setPerformative(ACLMessage.INFORM);
                     System.out.println("");
                     System.out.println("\n" + getAID().getLocalName() + "accpted to buy water from" + msg.getSender().getLocalName());
@@ -172,19 +163,26 @@ public class randValSealVariesBidder extends Agent {
         String farmerName;
         String agentType;
         Double buyingPrice;
-        Double buyingVolumn;
-        Double offeredPrice;
-        Double offeredVolumn;
-        String offeredName;
+        Double buyingVol;
+        Double offeredPriceFiveHundred;
+        Double offeredVolFiveHundred;
+        String offeredNameFiveHundred;
+        Double offeredVariePrice;
+        Double offeredVarieVol;
+        String offeredVarieName;
 
-        agentInfo(String farmerName, String agentType, double buyingPrice, double buyingVolumn, double offeredPrice, double offeredVolumn, String offeredName){
+
+        agentInfo(String farmerName, String agentType, double buyingPrice, double buyingVol, double offeredPriceFiveHundred, double offeredVolFiveHundred, String offerNameFiveHundred, double offeredVariePrice, double offeredVarieVol, String offeredVarieName){
             this.farmerName = farmerName;
             this.agentType = agentType;
             this.buyingPrice = buyingPrice;
-            this.buyingVolumn = buyingVolumn;
-            this.offeredPrice = offeredPrice;
-            this.offeredVolumn = offeredVolumn;
-            this.offeredName = offeredName;
+            this.buyingVol = buyingVol;
+            this.offeredPriceFiveHundred = offeredPriceFiveHundred;
+            this.offeredVolFiveHundred = offeredVolFiveHundred;
+            this.offeredNameFiveHundred = offerNameFiveHundred;
+            this.offeredVariePrice = offeredVariePrice;
+            this.offeredVarieVol = offeredVarieVol;
+            this.offeredVarieName = offeredVarieName;
         }
     }
 }
