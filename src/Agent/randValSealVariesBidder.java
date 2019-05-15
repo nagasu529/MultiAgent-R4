@@ -27,14 +27,12 @@ public class randValSealVariesBidder extends Agent {
 
     protected void setup() {
         System.out.println(getAID().getLocalName()+"  is ready" );
-
         //Selling volume splited by conditions (each grounp is not over 500 mm^3).
-        if(bidderInfo.buyingVol > 1000 && bidderInfo.buyingVol <= 1500){
-            fiveHundredVol = 500;
-            fiveHundredVolFreq = 2;
-            varieVol = bidderInfo.buyingVol - 1000;
-            varieVolFreq = 1;
-        }
+        double volBeforeSplit = bidderInfo.buyingVol/500;
+        fiveHundredVol = 500;
+        fiveHundredVolFreq = (int)(bidderInfo.buyingVol/500);
+        varieVol = ((bidderInfo.buyingVol/500) - fiveHundredVolFreq) * 500;
+        varieVolFreq =1;
 
         //Start Agent
         // Register the book-selling service in the yellow pages
@@ -42,6 +40,7 @@ public class randValSealVariesBidder extends Agent {
         dfd.setName(getAID());
         ServiceDescription sd = new ServiceDescription();
         bidderInfo.farmerName = getAID().getLocalName();
+        System.out.println(bidderInfo.farmerName + "  " + bidderInfo.buyingVol + "  " + bidderInfo.buyingPrice);
         sd.setType("bidder");
 
         sd.setName(getAID().getName());
@@ -87,19 +86,37 @@ public class randValSealVariesBidder extends Agent {
                 String[] arrOfstr = currentOffer.split("-");
 
                 double tempFiveHundredVol = Double.parseDouble(arrOfstr[0]);
-                double tempFiveHunderedFreq = Double.parseDouble(arrOfstr[1]);
+                int tempFiveHunderedFreq = Integer.parseInt(arrOfstr[1]);
                 double tempVarieVol = Double.parseDouble(arrOfstr[2]);
-                double tempVarieFreq = Double.parseDouble(arrOfstr[3]);
+                int tempVarieFreq = Integer.parseInt(arrOfstr[3]);
 
                 System.out.println("Offer price and Vol:  " + tempFiveHundredVol + "  " + tempFiveHunderedFreq + "   " + tempVarieVol + "  " + tempVarieFreq + "  " + bidderInfo.buyingPrice);
 
                 //myGUI.displayUI("Price setting up from Seller: " + farmerInfo.waterPriceFromSeller + " per MM" + "\n");
                 //myGUI.displayUI("Selling volume from seller:" + farmerInfo.waterVolumnFromSeller + "\n");
 
-                //Auction Process
+                //Reply bidding information to sellers
+                reply.setPerformative(ACLMessage.PROPOSE);
+                reply.setContent(fiveHundredVol + "-" + fiveHundredVolFreq + "-" + varieVol + "-" + varieVolFreq + "-" + bidderInfo.buyingPrice);
+                myAgent.send(reply);
+
+                //Auction process.
+                if(tempVarieVol >= varieVol && bidderInfo.offeredVarieVol < tempVarieVol){
+                    bidderInfo.offeredVarieVol = tempVarieVol;
+                    bidderInfo.offeredVarieName = msg.getSender().getLocalName();
+                    if(tempFiveHunderedFreq == fiveHundredVolFreq){
+                        bidderInfo.offeredVolFiveHundred = tempFiveHundredVol;
+                        bidderInfo.offeredNameFiveHundred = msg.getSender().getName();
+                    }
+                }
+                if(bidderInfo.offeredVarieName == null && tempFiveHunderedFreq == fiveHundredVolFreq){
+                    bidderInfo.offeredVolFiveHundred = tempFiveHundredVol;
+                    bidderInfo.offeredVarieName = msg.getSender().getLocalName();
+                }
+                /***
                 if((tempFiveHundredVol == 500 && tempFiveHunderedFreq == 2)&& tempVarieVol > varieVol){
                     reply.setPerformative(ACLMessage.PROPOSE);
-                    reply.setContent(fiveHundredVol + "-" + fiveHundredVolFreq + "-" + varieVol + "-" + varieVolFreq + bidderInfo.buyingPrice);
+                    reply.setContent(fiveHundredVol + "-" + fiveHundredVolFreq + "-" + varieVol + "-" + varieVolFreq + "-" + bidderInfo.buyingPrice);
                     if(bidderInfo.offeredVarieVol == 0 || bidderInfo.offeredVarieVol > tempVarieVol){
                         bidderInfo.offeredVarieVol = tempVarieVol;
                         bidderInfo.offeredVarieName = msg.getSender().getLocalName();
@@ -112,6 +129,7 @@ public class randValSealVariesBidder extends Agent {
                     System.out.println(reply.toString());
                     System.out.println(getAID().getName() + " is surrender");
                 }
+                ***/
             } else {
                 block();
             }

@@ -40,12 +40,11 @@ public class randValSealVariesSeller extends Agent {
         //sellerInfo.sellingVolumn = sellerInfo.sellingVolumn/2;
 
         //Selling volume splited by conditions (each grounp is not over 500 mm^3).
-        if(sellerInfo.sellingVolumn > 1000 && sellerInfo.sellingVolumn <= 1500){
-            fiveHundredVol = 500;
-            fiveHundredVolFreq = 2;
-            varieVol = sellerInfo.sellingVolumn - 1000;
-            varieVolFreq = 1;
-        }
+        double volBeforeSplit = sellerInfo.sellingVolumn/500;
+        fiveHundredVol = 500;
+        fiveHundredVolFreq = (int)(sellerInfo.sellingVolumn/500);
+        varieVol = ((sellerInfo.sellingVolumn/500) - fiveHundredVolFreq) * 500;
+        varieVolFreq =1;
 
         //Start agent
         DFAgentDescription dfd = new DFAgentDescription();
@@ -233,7 +232,13 @@ public class randValSealVariesSeller extends Agent {
                         //myGui.displayUI("\n" + "Reply message:" + reply.toString());
                         // Purchase order reply received
 
-                        if (reply.getPerformative() == ACLMessage.INFORM) {
+                        if (reply.getPerformative() == ACLMessage.INFORM && reply.getSender().getLocalName().equals(sellerInfo.acceptedVarieName)) {
+                            String tempFreq = "First Freq: " + getAID().getLocalName() + "  Selling water to  " + reply.getSender().getLocalName() +"\n";
+                            log = log + tempFreq;
+                            myGui.displayUI("\n");
+                            myGui.displayUI(log);
+                            myAgent.doSuspend();
+                            /***
                             MaxSellingVolumn = MaxSellingVolumn - sellerInfo.sellingVolumn;
                             if(MaxSellingVolumn > 0){
                                 String tempFreq = "First Freq: " + getAID().getLocalName() + "  Selling water to  " + reply.getSender().getLocalName() +"\n";
@@ -251,15 +256,7 @@ public class randValSealVariesSeller extends Agent {
                                 myGui.displayUI(log);
                                 myAgent.doSuspend();
                             }
-                            //System.out.println("Water volumn left :  " + sellerInfo.sellingVolumn);
-                            // Purchase successful. We can terminate
-                            //System.out.println(farmerInfo.farmerName +" successfully purchased from agent "+reply.getSender().getName() + "\n");
-                            //System.out.println("Price = "+farmerInfo.currentPricePerMM);
-                            //myGui.displayUI("\n" + farmerInfo.farmerName +" successfully purchased from agent "+reply.getSender().getName() +"\n");
-                            //myGui.displayUI("Price = " + farmerInfo.currentPricePerMM);
-                            //myAgent.doSuspend();
-                            //myAgent.doDelete();
-                            //myGui.dispose();
+                             ***/
                         }
                         else {
                             System.out.println("Attempt failed: requested water volumn already sold." + "\n");
