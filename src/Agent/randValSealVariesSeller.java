@@ -32,6 +32,8 @@ public class randValSealVariesSeller extends Agent {
     int fiveHundredVolFreq;
     double varieVol;
     int varieVolFreq;
+    double fiveHundredValue;
+    double varieValue;
 
     protected void setup(){
         // Create and show the GUI
@@ -45,6 +47,8 @@ public class randValSealVariesSeller extends Agent {
         fiveHundredVolFreq = (int)(sellerInfo.sellingVolumn/500);
         varieVol = ((sellerInfo.sellingVolumn/500) - fiveHundredVolFreq) * 500;
         varieVolFreq =1;
+        fiveHundredValue = fiveHundredVol * (fiveHundredVolFreq * sellerInfo.sellingPrice);
+        varieVol = varieVolFreq * sellerInfo.sellingPrice;
 
         //Start agent
         DFAgentDescription dfd = new DFAgentDescription();
@@ -96,6 +100,8 @@ public class randValSealVariesSeller extends Agent {
 
         int countTick;
         int decisionRules = 0;
+        LinkedList<String> bidderName;
+        LinkedList<Double> bidderPrice;
 
         private int step = 0;
 
@@ -161,7 +167,19 @@ public class randValSealVariesSeller extends Agent {
                             double tempPrice = Double.parseDouble(arrOfStr[4]);
                             double tempValue = tempVarieVol*tempPrice;
 
-                            //adding data to dictionary
+                            //adding data to dictionary, compairing and storing data.
+                            //FiveHundred condition.
+
+
+                            //Varie Value condition.
+                            if(tempVarieVol <= varieVol && (tempVarieVol * tempPrice) > (sellerInfo.acceptedVarieVol * sellerInfo.acceptedVariePrice){
+                                sellerInfo.acceptedVariePrice = tempPrice;
+                                sellerInfo.acceptedVarieVol = tempVarieVol;
+                                sellerInfo.acceptedFiveHundredName = reply.getSender().getLocalName();
+                            }
+
+
+                            /***
                             if((tempFiveHundredVol == 500 && tempFiveHundredFreq == 2) &&(maxWaterValue == 0 || tempValue > maxWaterValue)){
                                 sellerInfo.acceptedFiveHundredVol = tempFiveHundredVol;
                                 sellerInfo.acceptedFiveHundredPrice = tempPrice;
@@ -171,6 +189,7 @@ public class randValSealVariesSeller extends Agent {
                                 sellerInfo.acceptedVarieName = reply.getSender().getLocalName();
                                 maxWaterValue = tempValue;
                             }
+                             ***/
                         }
 
                         if (repliesCnt >= bidderAgent.length) {
@@ -189,7 +208,7 @@ public class randValSealVariesSeller extends Agent {
                      * accepted water volumn to sell.
                      */
                     if(decisionRules == 0){
-                        myGui.displayUI("\n" + "Best value is from :"+ sellerInfo.acceptedFiveHundredName + "\n" + "Volumn to sell: " + sellerInfo.acceptedVarieVol + "\n" + "Price per mm^3: " + sellerInfo.acceptedVariePrice);
+                        myGui.displayUI("\n" + "Best value is from :"+ sellerInfo.acceptedVariePrice + "\n" + "Volumn to sell: " + sellerInfo.acceptedVarieVol + "\n" + "Price per mm^3: " + sellerInfo.acceptedVariePrice);
                     }else if(decisionRules == 1) {
                         myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"Max volumn selling:  " + Arrays.toString(maxEuObj)+ "\n");
                     }else if(decisionRules == 2){
