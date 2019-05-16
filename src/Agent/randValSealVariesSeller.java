@@ -161,9 +161,9 @@ public class randValSealVariesSeller extends Agent {
                             String biddedFromAcutioneer = reply.getContent();
                             String[] arrOfStr = biddedFromAcutioneer.split("-");
                             double tempFiveHundredVol = Double.parseDouble(arrOfStr[0]);
-                            double tempFiveHundredFreq = Double.parseDouble(arrOfStr[1]);
+                            int tempFiveHundredFreq = Integer.parseInt(arrOfStr[1]);
                             double tempVarieVol = Double.parseDouble(arrOfStr[2]);
-                            double tempVarieFreq = Double.parseDouble(arrOfStr[3]);
+                            int tempVarieFreq = Integer.parseInt(arrOfStr[3]);
                             double tempPrice = Double.parseDouble(arrOfStr[4]);
                             double tempValue = tempVarieVol*tempPrice;
 
@@ -172,11 +172,18 @@ public class randValSealVariesSeller extends Agent {
 
 
                             //Varie Value condition.
-                            if(tempVarieVol <= varieVol && (tempVarieVol * tempPrice) > (sellerInfo.acceptedVarieVol * sellerInfo.acceptedVariePrice){
+                            if((tempVarieVol <= varieVol) && (tempVarieVol * tempPrice) > (sellerInfo.acceptedVarieVol * sellerInfo.acceptedVariePrice)){
                                 sellerInfo.acceptedVariePrice = tempPrice;
                                 sellerInfo.acceptedVarieVol = tempVarieVol;
                                 sellerInfo.acceptedFiveHundredName = reply.getSender().getLocalName();
                             }
+                            if(fiveHundredVolFreq > 0 && tempPrice > sellerInfo.sellingPrice){
+                                fiveHundredVolFreq = fiveHundredVolFreq - tempFiveHundredFreq;
+                                sellerInfo.acceptedFiveHundredPrice = tempPrice;
+                                sellerInfo.acceptedFiveHundredVol = (double)tempFiveHundredFreq * 500;
+                                sellerInfo.acceptedVarieName = reply.getSender().getLocalName();
+                            }
+
 
 
                             /***
