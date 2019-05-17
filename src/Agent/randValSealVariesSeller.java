@@ -44,11 +44,11 @@ public class randValSealVariesSeller extends Agent {
         //Selling volume splited by conditions (each grounp is not over 500 mm^3).
         double volBeforeSplit = sellerInfo.sellingVolumn/500;
         fiveHundredVol = 500;
-        fiveHundredVolFreq = (int)(sellerInfo.sellingVolumn/500);
-        varieVol = ((sellerInfo.sellingVolumn/500) - fiveHundredVolFreq) * 500;
+        fiveHundredVolFreq = (int)(volBeforeSplit);
+        varieVol = (volBeforeSplit - fiveHundredVolFreq) * 500;
         varieVolFreq =1;
         fiveHundredValue = fiveHundredVol * (fiveHundredVolFreq * sellerInfo.sellingPrice);
-        varieVol = varieVolFreq * sellerInfo.sellingPrice;
+        varieValue = varieVolFreq * sellerInfo.sellingPrice;
 
         //Start agent
         DFAgentDescription dfd = new DFAgentDescription();
@@ -214,16 +214,41 @@ public class randValSealVariesSeller extends Agent {
                      * Sendding message to bidders wiht two types (Accept proposal or Refuse) based on
                      * accepted water volumn to sell.
                      */
-                    if(decisionRules == 0){
-                        myGui.displayUI("\n" + "Best value is from :"+ sellerInfo.acceptedVariePrice + "\n" + "Volumn to sell: " + sellerInfo.acceptedVarieVol + "\n" + "Price per mm^3: " + sellerInfo.acceptedVariePrice);
-                    }else if(decisionRules == 1) {
-                        myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"Max volumn selling:  " + Arrays.toString(maxEuObj)+ "\n");
-                    }else if(decisionRules == 2){
-                        myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"Max profit loss protection:  " + Arrays.toString(maxEuObj)+ "\n");
-                    }else{
-                        myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"balancing between volumn and price:  " + Arrays.toString(maxEuObj)+ "\n");
+                    for(int i = 0; i < bidderAgent.length; i++){
+                        if((bidderAgent[i].getLocalName().equals(sellerInfo.acceptedVarieName)) || (bidderAgent[i].getLocalName().equals(sellerInfo.acceptedFiveHundredName))){
+                            // Send the purchase order to the seller that provided the best offer
+                            ACLMessage acceptedRequest = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
+                            acceptedRequest.addReceiver(bidderAgent[i]);
+                            acceptedRequest.setConversationId("bidding");
+                            acceptedRequest.setReplyWith("acceptedRequest" + System.currentTimeMillis());
+                            //myGui.displayUI(acceptedRequest.toString());
+                            myAgent.send(acceptedRequest);
+                            //myGui.displayUI("\n" + acceptedRequest.toString() + "\n");
+                            mt = MessageTemplate.and(MessageTemplate.MatchConversationId("bidding"),MessageTemplate.MatchInReplyTo
+                                    (acceptedRequest.getReplyWith()));
+                        }
+                        else{
+                            //Refuse message prepairing
+                            ACLMessage rejectedRequest = new ACLMessage(ACLMessage.REFUSE);
+                            rejectedRequest.addReceiver(bidderAgent[i]);
+                            //myGui.displayUI(rejectedRequest.toString());
+                            myAgent.send(rejectedRequest);
+                            //myGui.displayUI("\n" + rejectedRequest.toString() + "\n");
+                        }
                     }
-                    System.out.println("\n" + "Best solution for each case:"+"\n"+"Max price selling:  " + Arrays.toString(maxEuObj) + "\n");
+
+                    /***
+
+                     if(decisionRules == 0){
+                     myGui.displayUI("\n" + "Best value is from :"+ sellerInfo.acceptedVariePrice + "\n" + "Volumn to sell: " + sellerInfo.acceptedVarieVol + "\n" + "Price per mm^3: " + sellerInfo.acceptedVariePrice);
+                     }else if(decisionRules == 1) {
+                     myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"Max volumn selling:  " + Arrays.toString(maxEuObj)+ "\n");
+                     }else if(decisionRules == 2){
+                     myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"Max profit loss protection:  " + Arrays.toString(maxEuObj)+ "\n");
+                     }else{
+                     myGui.displayUI("\n" + "Best solution for each case:"+"\n"+"balancing between volumn and price:  " + Arrays.toString(maxEuObj)+ "\n");
+                     }
+                     System.out.println("\n" + "Best solution for each case:"+"\n"+"Max price selling:  " + Arrays.toString(maxEuObj) + "\n");
 
                     for(int i=0; i < bidderAgent.length; ++i){
                         if(bidderAgent[i].getLocalName().equals(sellerInfo.acceptedVarieName)){
@@ -246,6 +271,7 @@ public class randValSealVariesSeller extends Agent {
                             //myGui.displayUI("\n" + rejectedRequest.toString() + "\n");
                         }
                     }
+                    ***/
 
                     step = 3;
                     break;
@@ -259,11 +285,20 @@ public class randValSealVariesSeller extends Agent {
                         // Purchase order reply received
 
                         if (reply.getPerformative() == ACLMessage.INFORM && reply.getSender().getLocalName().equals(sellerInfo.acceptedVarieName)) {
-                            String tempFreq = "First Freq: " + getAID().getLocalName() + "  Selling water to  " + reply.getSender().getLocalName() +"\n";
+                            String tempFreq = getAID().getLocalName() + "  Selling water to  " + reply.getSender().getLocalName() + "  " + sellerInfo.acceptedVarieVol + "\n";
                             log = log + tempFreq;
+                            sellerInfo.sellingVolumn = sellerInfo.sellingVolumn - (sellerInfo.acceptedVarieVol * 500);
+                        } else if(reply.getPerformative() == ACLMessage.INFORM && reply.getSender().getLocalName().equals(sellerInfo.acceptedFiveHundredName)) {
+                            String tempFreq = getAID().getLocalName() + "  Selling water to  " + reply.getSender().getLocalName() + "  " + sellerInfo.acceptedFiveHundredVol + "\n";
+                            log = log + tempFreq;
+                            sellerInfo.sellingVolumn = sellerInfo.sellingVolumn - (sellerInfo.acceptedFiveHundredVol * 500);
+                        } else if(sellerInfo.sellingVolumn <= 0) {
                             myGui.displayUI("\n");
                             myGui.displayUI(log);
                             myAgent.doSuspend();
+
+
+
                             /***
                             MaxSellingVolumn = MaxSellingVolumn - sellerInfo.sellingVolumn;
                             if(MaxSellingVolumn > 0){
@@ -306,7 +341,7 @@ public class randValSealVariesSeller extends Agent {
                 //myGui.dispose();
                 //myGui.displayUI("Attempt failed: do not have bidder now" + "\n");
             }
-            return step ==0;
+            return step == 0;
             //return ((step == 2 && acceptedName == null) || step == 4) ;
         }
     }

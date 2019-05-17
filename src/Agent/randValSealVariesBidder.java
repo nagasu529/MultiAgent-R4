@@ -84,7 +84,7 @@ public class randValSealVariesBidder extends Agent {
                 //Price Per MM. and the number of volumn to sell from Seller.
                 String currentOffer = msg.getContent();
                 String[] arrOfstr = currentOffer.split("-");
-
+                System.out.println(msg.toString());
                 double tempFiveHundredVol = Double.parseDouble(arrOfstr[0]);
                 int tempFiveHunderedFreq = Integer.parseInt(arrOfstr[1]);
                 double tempVarieVol = Double.parseDouble(arrOfstr[2]);
