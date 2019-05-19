@@ -90,19 +90,7 @@ public class randValSealVariesSeller extends Agent {
         private AID[] bidderAgent;
         private int repliesCnt; // The counter of replies from seller agents
         private MessageTemplate mt; // The template to receive replies
-        ArrayList<String> bidderList = new ArrayList<String>();  //sorted list follows maximumprice factor.
-        //ArrayList<combinatorialList> buyerList = new ArrayList<combinatorialList>();    //result list for selling process reference.
-
-        //Creating dictionary for buyer volume and pricing
-        Dictionary<String, Double> volumnDict = new Hashtable<String, Double>();
-        Dictionary<String, Double> priceDict = new Hashtable<String, Double>();
-        Object[] maxEuObj;
-
         int countTick;
-        int decisionRules = 0;
-        LinkedList<String> bidderName;
-        LinkedList<Double> bidderPrice;
-
         private int step = 0;
 
         public void action() {
@@ -170,7 +158,6 @@ public class randValSealVariesSeller extends Agent {
                             //adding data to dictionary, compairing and storing data.
                             //FiveHundred condition.
 
-
                             //Varie Value condition.
                             if((tempVarieVol <= varieVol) && (tempVarieVol * tempPrice) > (sellerInfo.acceptedVarieVol * sellerInfo.acceptedVariePrice)){
                                 sellerInfo.acceptedVariePrice = tempPrice;
@@ -178,10 +165,18 @@ public class randValSealVariesSeller extends Agent {
                                 sellerInfo.acceptedFiveHundredName = reply.getSender().getLocalName();
                             }
                             if(fiveHundredVolFreq > 0 && tempPrice > sellerInfo.sellingPrice){
-                                fiveHundredVolFreq = fiveHundredVolFreq - tempFiveHundredFreq;
-                                sellerInfo.acceptedFiveHundredPrice = tempPrice;
-                                sellerInfo.acceptedFiveHundredVol = (double)tempFiveHundredFreq * 500;
-                                sellerInfo.acceptedVarieName = reply.getSender().getLocalName();
+                                if(fiveHundredVolFreq < tempFiveHundredFreq){
+                                    sellerInfo.acceptedFiveHundredPrice = tempPrice;
+                                    sellerInfo.acceptedFiveHundredVol = (double)fiveHundredVolFreq * 500;
+                                    sellerInfo.acceptedVarieName = reply.getSender().getLocalName();
+                                    fiveHundredVolFreq = 0;
+                                }else {
+                                    fiveHundredVolFreq = fiveHundredVolFreq - tempFiveHundredFreq;
+                                    sellerInfo.acceptedFiveHundredPrice = tempPrice;
+                                    sellerInfo.acceptedFiveHundredVol = (double)tempFiveHundredFreq * 500;
+                                    sellerInfo.acceptedVarieName = reply.getSender().getLocalName();
+                                }
+
                             }
 
 
@@ -236,7 +231,7 @@ public class randValSealVariesSeller extends Agent {
                             //myGui.displayUI("\n" + rejectedRequest.toString() + "\n");
                         }
                     }
-
+                    myGui.displayUI(sellerInfo.acceptedFiveHundredName + "  " + sellerInfo.acceptedFiveHundredVol + "  " + sellerInfo.acceptedVarieName + "  " + sellerInfo.acceptedVarieVol);
                     /***
 
                      if(decisionRules == 0){
@@ -287,12 +282,24 @@ public class randValSealVariesSeller extends Agent {
                         if (reply.getPerformative() == ACLMessage.INFORM && reply.getSender().getLocalName().equals(sellerInfo.acceptedVarieName)) {
                             String tempFreq = getAID().getLocalName() + "  Selling water to  " + reply.getSender().getLocalName() + "  " + sellerInfo.acceptedVarieVol + "\n";
                             log = log + tempFreq;
-                            sellerInfo.sellingVolumn = sellerInfo.sellingVolumn - (sellerInfo.acceptedVarieVol * 500);
-                        } else if(reply.getPerformative() == ACLMessage.INFORM && reply.getSender().getLocalName().equals(sellerInfo.acceptedFiveHundredName)) {
+                            sellerInfo.sellingVolumn = sellerInfo.sellingVolumn - sellerInfo.acceptedVarieVol;
+                        }
+                        if(reply.getPerformative() == ACLMessage.INFORM && reply.getSender().getLocalName().equals(sellerInfo.acceptedFiveHundredName)) {
                             String tempFreq = getAID().getLocalName() + "  Selling water to  " + reply.getSender().getLocalName() + "  " + sellerInfo.acceptedFiveHundredVol + "\n";
                             log = log + tempFreq;
-                            sellerInfo.sellingVolumn = sellerInfo.sellingVolumn - (sellerInfo.acceptedFiveHundredVol * 500);
-                        } else if(sellerInfo.sellingVolumn <= 0) {
+                            sellerInfo.sellingVolumn = sellerInfo.sellingVolumn - sellerInfo.acceptedFiveHundredVol;
+                        }
+
+                        if (reply.getPerformative() == ACLMessage.REFUSE && reply.getSender().getLocalName().equals(sellerInfo.acceptedVarieName)) {
+                            sellerInfo.acceptedVarieName = "";
+                            sellerInfo.acceptedVariePrice = 0.0;
+                        }
+                        if(reply.getPerformative() == ACLMessage.REFUSE && reply.getSender().getLocalName().equals(sellerInfo.acceptedFiveHundredName)) {
+                            sellerInfo.acceptedFiveHundredName = "";
+                            sellerInfo.acceptedFiveHundredPrice = 0.0;
+                        }
+                        myGui.displayUI("xxxxxxxxxxxxxxxxxxxxx" + sellerInfo.sellingVolumn);
+                        if(sellerInfo.sellingVolumn <= 0) {
                             myGui.displayUI("\n");
                             myGui.displayUI(log);
                             myAgent.doSuspend();
@@ -323,6 +330,15 @@ public class randValSealVariesSeller extends Agent {
                             System.out.println("Attempt failed: requested water volumn already sold." + "\n");
                             //myGui.displayUI("Attempt failed: requested water volumn already sold." + "\n");
                         }
+                        /***
+                        sellerInfo.acceptedVarieVol = 0.0;
+                        sellerInfo.acceptedVariePrice = 0.0;
+                        sellerInfo.acceptedVarieName = "";
+                        sellerInfo.acceptedFiveHundredVol = 0.0;
+                        sellerInfo.acceptedFiveHundredPrice = 0.0;
+                        sellerInfo.acceptedFiveHundredName = "";
+                        ***/
+
                         step = 4;
 
                     }

@@ -84,35 +84,40 @@ public class randValSealVariesBidder extends Agent {
                 //Price Per MM. and the number of volumn to sell from Seller.
                 String currentOffer = msg.getContent();
                 String[] arrOfstr = currentOffer.split("-");
-                System.out.println(msg.toString());
                 double tempFiveHundredVol = Double.parseDouble(arrOfstr[0]);
                 int tempFiveHunderedFreq = Integer.parseInt(arrOfstr[1]);
                 double tempVarieVol = Double.parseDouble(arrOfstr[2]);
                 int tempVarieFreq = Integer.parseInt(arrOfstr[3]);
 
-                System.out.println("Offer price and Vol:  " + tempFiveHundredVol + "  " + tempFiveHunderedFreq + "   " + tempVarieVol + "  " + tempVarieFreq + "  " + bidderInfo.buyingPrice);
-
-                //myGUI.displayUI("Price setting up from Seller: " + farmerInfo.waterPriceFromSeller + " per MM" + "\n");
-                //myGUI.displayUI("Selling volume from seller:" + farmerInfo.waterVolumnFromSeller + "\n");
+                System.out.println(msg.getSender().getLocalName() + " Offer price and Vol:  " + tempFiveHundredVol + "  " + tempFiveHunderedFreq + "   " + tempVarieVol + "  " + tempVarieFreq + "  " + bidderInfo.buyingPrice);
 
                 //Reply bidding information to sellers
                 reply.setPerformative(ACLMessage.PROPOSE);
-                reply.setContent(fiveHundredVol + "-" + fiveHundredVolFreq + "-" + varieVol + "-" + varieVolFreq + "-" + bidderInfo.buyingPrice);
-                myAgent.send(reply);
+                //reply.setContent(fiveHundredVol + "-" + fiveHundredVolFreq + "-" + varieVol + "-" + varieVolFreq + "-" + bidderInfo.buyingPrice);
+                //myAgent.send(reply);
 
                 //Auction process.
-                if(tempVarieVol >= varieVol && bidderInfo.offeredVarieVol < tempVarieVol){
+                if(tempVarieVol >= varieVol && ((bidderInfo.offeredVarieVol > tempVarieVol) || (bidderInfo.offeredVarieVol == 0))){
                     bidderInfo.offeredVarieVol = tempVarieVol;
                     bidderInfo.offeredVarieName = msg.getSender().getLocalName();
                     if(tempFiveHunderedFreq == fiveHundredVolFreq){
                         bidderInfo.offeredVolFiveHundred = tempFiveHundredVol;
                         bidderInfo.offeredNameFiveHundred = msg.getSender().getName();
+                        fiveHundredVolFreq = 0;
                     }
                 }
-                if(bidderInfo.offeredVarieName == null && tempFiveHunderedFreq == fiveHundredVolFreq){
-                    bidderInfo.offeredVolFiveHundred = tempFiveHundredVol;
-                    bidderInfo.offeredVarieName = msg.getSender().getLocalName();
+                if(fiveHundredVolFreq > 0){
+                    if (tempFiveHunderedFreq > fiveHundredVolFreq){
+                        bidderInfo.offeredVolFiveHundred = fiveHundredVol;
+                        bidderInfo.offeredNameFiveHundred = msg.getSender().getLocalName();
+                    }else {
+                        bidderInfo.offeredPriceFiveHundred = tempFiveHundredVol;
+                        bidderInfo.offeredNameFiveHundred = msg.getSender().getLocalName();
+                    }
                 }
+
+                reply.setContent(fiveHundredVol + "-" + fiveHundredVolFreq + "-" + bidderInfo.offeredVarieVol + "-" + varieVolFreq + "-" + bidderInfo.buyingPrice);
+                myAgent.send(reply);
                 /***
                 if((tempFiveHundredVol == 500 && tempFiveHunderedFreq == 2)&& tempVarieVol > varieVol){
                     reply.setPerformative(ACLMessage.PROPOSE);
@@ -141,11 +146,9 @@ public class randValSealVariesBidder extends Agent {
             MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REFUSE);
             ACLMessage msg = myAgent.receive(mt);
             if(msg != null){
-                if(msg.getSender().getLocalName().equals(bidderInfo.offeredVarieName)){
-                    bidderInfo.offeredVarieName = "";
-                    bidderInfo.offeredVariePrice = 0.0;
-                    bidderInfo.offeredVarieVol = 0.0;
-                }
+                bidderInfo.offeredVarieName = "";
+                bidderInfo.offeredVariePrice = 0.0;
+                bidderInfo.offeredVarieVol = 0.0;
             }else {
                 block();
             }
@@ -158,21 +161,33 @@ public class randValSealVariesBidder extends Agent {
             ACLMessage msg = myAgent.receive(mt);
             if (msg != null) {
                 ACLMessage reply = msg.createReply();
-                if(msg.getSender().getLocalName().equals(bidderInfo.offeredVarieName) && bidderInfo.offeredVarieName != null){
+                if(msg.getSender().getLocalName().equals(bidderInfo.offeredVarieName) && bidderInfo.offeredVarieName != null) {
                     reply.setPerformative(ACLMessage.INFORM);
                     System.out.println("");
                     System.out.println("\n" + getAID().getLocalName() + "accpted to buy water from" + msg.getSender().getLocalName());
-                    myAgent.doDelete();
-                    //myGUI.dispose();
-                    System.out.println(getAID().getName() + " terminating.");
-                }else {
+                    bidderInfo.offeredVarieName = null;
+                    myAgent.send(reply);
+                    System.out.println(reply);
+                }
+                if(msg.getSender().getLocalName().equals(bidderInfo.offeredNameFiveHundred) && bidderInfo.offeredNameFiveHundred != null) {
+                    reply.setPerformative(ACLMessage.INFORM);
+                    System.out.println("");
+                    System.out.println("\n" + getAID().getLocalName() + "accpted to buy water from" + msg.getSender().getLocalName());
+                    bidderInfo.offeredNameFiveHundred = null;
+                    myAgent.send(reply);
+                    System.out.println(reply);
+                } else{
                     reply.setPerformative(ACLMessage.FAILURE);
                     myAgent.send(reply);
+                    System.out.println(reply);
                 }
-                myAgent.send(reply);
-
             } else {
                 block();
+            }
+            if(bidderInfo.offeredNameFiveHundred == null && bidderInfo.offeredVarieName == null) {
+                myAgent.doDelete();
+                //myGUI.dispose();
+                System.out.println(getAID().getName() + " terminating.");
             }
         }
     }
