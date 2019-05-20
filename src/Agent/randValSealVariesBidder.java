@@ -10,10 +10,13 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Comparator;
 
 public class randValSealVariesBidder extends Agent {
     randValue randValue = new randValue();
     DecimalFormat df = new DecimalFormat("#.##");
+    ArrayList<Agent> sortedListAgent = new ArrayList<Agent>();
 
     agentInfo bidderInfo = new agentInfo("","bidder", randValue.getRandDoubleRange(10,16), randValue.getRandDoubleRange(300,2000),0.0, 0.0, "", 0, 0, "");
 
@@ -95,46 +98,51 @@ public class randValSealVariesBidder extends Agent {
                 reply.setPerformative(ACLMessage.PROPOSE);
                 //reply.setContent(fiveHundredVol + "-" + fiveHundredVolFreq + "-" + varieVol + "-" + varieVolFreq + "-" + bidderInfo.buyingPrice);
                 //myAgent.send(reply);
-
-                //Auction process.
-                if(tempVarieVol >= varieVol && ((bidderInfo.offeredVarieVol > tempVarieVol) || (bidderInfo.offeredVarieVol == 0))){
-                    bidderInfo.offeredVarieVol = tempVarieVol;
-                    bidderInfo.offeredVarieName = msg.getSender().getLocalName();
-                    if(tempFiveHunderedFreq == fiveHundredVolFreq){
-                        bidderInfo.offeredVolFiveHundred = tempFiveHundredVol;
-                        bidderInfo.offeredNameFiveHundred = msg.getSender().getName();
-                        fiveHundredVolFreq = 0;
-                    }
+                for(int i = 1; i <= tempFiveHunderedFreq; i++){
+                    sortedListAgent.add(new Agent(500,msg.getSender().getLocalName()));
                 }
-                if(fiveHundredVolFreq > 0){
-                    if (tempFiveHunderedFreq > fiveHundredVolFreq){
-                        bidderInfo.offeredVolFiveHundred = fiveHundredVol;
-                        bidderInfo.offeredNameFiveHundred = msg.getSender().getLocalName();
-                    }else {
-                        bidderInfo.offeredPriceFiveHundred = tempFiveHundredVol;
-                        bidderInfo.offeredNameFiveHundred = msg.getSender().getLocalName();
-                    }
-                }
+                sortedListAgent.add(new Agent(tempVarieVol, msg.getSender().getLocalName()));
 
-                reply.setContent(fiveHundredVol + "-" + fiveHundredVolFreq + "-" + bidderInfo.offeredVarieVol + "-" + varieVolFreq + "-" + bidderInfo.buyingPrice);
-                myAgent.send(reply);
                 /***
-                if((tempFiveHundredVol == 500 && tempFiveHunderedFreq == 2)&& tempVarieVol > varieVol){
-                    reply.setPerformative(ACLMessage.PROPOSE);
-                    reply.setContent(fiveHundredVol + "-" + fiveHundredVolFreq + "-" + varieVol + "-" + varieVolFreq + "-" + bidderInfo.buyingPrice);
-                    if(bidderInfo.offeredVarieVol == 0 || bidderInfo.offeredVarieVol > tempVarieVol){
-                        bidderInfo.offeredVarieVol = tempVarieVol;
-                        bidderInfo.offeredVarieName = msg.getSender().getLocalName();
-                        System.out.println("the best option is changed  " + bidderInfo.offeredVarieName + "  " + bidderInfo.offeredVarieVol);
-                    }
-                    myAgent.send(reply);
-                }else {
-                    reply.setPerformative(ACLMessage.REFUSE);
-                    myAgent.send(reply);
-                    System.out.println(reply.toString());
-                    System.out.println(getAID().getName() + " is surrender");
-                }
-                ***/
+                 //Auction process.
+                 if(tempVarieVol >= varieVol && ((bidderInfo.offeredVarieVol > tempVarieVol) || (bidderInfo.offeredVarieVol == 0))){
+                 bidderInfo.offeredVarieVol = tempVarieVol;
+                 bidderInfo.offeredVarieName = msg.getSender().getLocalName();
+                 if(tempFiveHunderedFreq == fiveHundredVolFreq){
+                 bidderInfo.offeredVolFiveHundred = tempFiveHundredVol;
+                 bidderInfo.offeredNameFiveHundred = msg.getSender().getName();
+                 fiveHundredVolFreq = 0;
+                 }
+                 }
+                 if(fiveHundredVolFreq > 0){
+                 if (tempFiveHunderedFreq > fiveHundredVolFreq){
+                 bidderInfo.offeredVolFiveHundred = fiveHundredVol;
+                 bidderInfo.offeredNameFiveHundred = msg.getSender().getLocalName();
+                 }else {
+                 bidderInfo.offeredPriceFiveHundred = tempFiveHundredVol;
+                 bidderInfo.offeredNameFiveHundred = msg.getSender().getLocalName();
+                 }
+                 }
+
+                 reply.setContent(fiveHundredVol + "-" + fiveHundredVolFreq + "-" + bidderInfo.offeredVarieVol + "-" + varieVolFreq + "-" + bidderInfo.buyingPrice);
+                 myAgent.send(reply);
+                 /***
+                 if((tempFiveHundredVol == 500 && tempFiveHunderedFreq == 2)&& tempVarieVol > varieVol){
+                 reply.setPerformative(ACLMessage.PROPOSE);
+                 reply.setContent(fiveHundredVol + "-" + fiveHundredVolFreq + "-" + varieVol + "-" + varieVolFreq + "-" + bidderInfo.buyingPrice);
+                 if(bidderInfo.offeredVarieVol == 0 || bidderInfo.offeredVarieVol > tempVarieVol){
+                 bidderInfo.offeredVarieVol = tempVarieVol;
+                 bidderInfo.offeredVarieName = msg.getSender().getLocalName();
+                 System.out.println("the best option is changed  " + bidderInfo.offeredVarieName + "  " + bidderInfo.offeredVarieVol);
+                 }
+                 myAgent.send(reply);
+                 }else {
+                 reply.setPerformative(ACLMessage.REFUSE);
+                 myAgent.send(reply);
+                 System.out.println(reply.toString());
+                 System.out.println(getAID().getName() + " is surrender");
+                 }
+                 ***/
             } else {
                 block();
             }
@@ -192,7 +200,7 @@ public class randValSealVariesBidder extends Agent {
         }
     }
 
-    public class agentInfo{
+    class agentInfo{
         String farmerName;
         String agentType;
         Double buyingPrice;
@@ -205,7 +213,7 @@ public class randValSealVariesBidder extends Agent {
         String offeredVarieName;
 
 
-        agentInfo(String farmerName, String agentType, double buyingPrice, double buyingVol, double offeredPriceFiveHundred, double offeredVolFiveHundred, String offerNameFiveHundred, double offeredVariePrice, double offeredVarieVol, String offeredVarieName){
+        public agentInfo(String farmerName, String agentType, double buyingPrice, double buyingVol, double offeredPriceFiveHundred, double offeredVolFiveHundred, String offerNameFiveHundred, double offeredVariePrice, double offeredVarieVol, String offeredVarieName){
             this.farmerName = farmerName;
             this.agentType = agentType;
             this.buyingPrice = buyingPrice;
@@ -216,6 +224,34 @@ public class randValSealVariesBidder extends Agent {
             this.offeredVariePrice = offeredVariePrice;
             this.offeredVarieVol = offeredVarieVol;
             this.offeredVarieName = offeredVarieName;
+        }
+
+        public String toString(){
+            return this.farmerName + " Buying Volume: " + this.buyingVol + " Buying Price: " + this.buyingPrice + "\n" +
+                    "Best offer For 500 Vol : " + this.offeredNameFiveHundred + "\n" +
+                    "Best offer For varies :" + this.offeredVarieName;
+        }
+    }
+
+    //Sorted by volumn.
+    class SortbyVolume implements Comparator<Agent>{
+        //Used for sorting in ascending order of the volumn.
+        public int compare(Agent a, Agent b){
+            return Double.compare(a.volume, b.volume);
+        }
+    }
+
+    //adding new class for sorted seller agent data.
+    class Agent{
+        double volume;
+        String name;
+        //Constructor
+        public Agent(double volume, String name){
+            this.volume = volume;
+            this.name = name;
+        }
+        public String toString(){
+            return this.volume + " " + this.name;
         }
     }
 }
