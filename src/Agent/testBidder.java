@@ -63,7 +63,7 @@ public class testBidder extends Agent {
         //Add the behaviour serving purhase orders from water provider agent.
         addBehaviour(new PurchaseOrdersServer());
 
-        addBehaviour(new RejectandReset());
+        //addBehaviour(new RejectandReset());
     }
 
     // Put agent clean-up operations here
@@ -135,30 +135,26 @@ public class testBidder extends Agent {
                         //Prepairing reply message.
                         if(replyCnt >= sellerList.length){
                             Collections.sort(sortedListSeller, new SortbyVolume());
+                            double tempVarie = sortedListSeller.get(0).varieVolume;
+                            int tempFiveHundredFirst = sortedListSeller.get(0).fivehundredFeq;
+                            fiveHundredVolFreq = fiveHundredVolFreq - tempFiveHundredFirst;
+                            sortedListSeller.remove(0);
+                            proposeSortedList.add(sortedListSeller.get(0));
 
-                            //
-                            for(int i = 0; i < sortedListSeller.size(); i++){
-                                while (varieVol >0 || fiveHundredVolFreq > 0){
-                                    double tempVarieSorted = sortedListSeller.get(i).varieVolume;
-                                    int tempFiveHundredSorted = sortedListSeller.get(i).fivehundredFeq;
-                                    if(tempVarieSorted > varieVol && tempFiveHundredSorted <= fiveHundredVolFreq){
-                                        proposeSortedList.add(sortedListSeller.get(i));
-                                    }else {
-                                        proposeSortedList.add(new Agents(sortedListSeller.get(i).varieVolume, fiveHundredVolFreq, sortedListSeller.get(i).name));
-                                    }
-                                    varieVol = varieVol - tempVarieSorted;
-                                    fiveHundredVolFreq = fiveHundredVolFreq - tempFiveHundredSorted;
-                                    if(fiveHundredVolFreq < 0){
-                                        fiveHundredVolFreq =0;
-                                    }
-                                    varieVol = varieVol - sortedListSeller.get(i).varieVolume;
-                                    if(varieVol < 0){
-                                        varieVol = 0;
-                                    }
+                            //Finding to fill the FivehundredFrequency.
+                            while (fiveHundredVolFreq >0){
+                                if(sortedListSeller.get(0).fivehundredFeq >= fiveHundredVolFreq){
+                                    proposeSortedList.add(new Agents(0,sortedListSeller.get(0).fivehundredFeq, sortedListSeller.get(0).name));
+                                    fiveHundredVolFreq = fiveHundredVolFreq - sortedListSeller.get(0).fivehundredFeq;
+                                }else if(fiveHundredVolFreq < sortedListSeller.get(0).fivehundredFeq){
+                                    proposeSortedList.add(new Agents(0,fiveHundredVolFreq, sortedListSeller.get(0).name));
+                                    fiveHundredVolFreq = fiveHundredVolFreq - sortedListSeller.get(0).fivehundredFeq;
                                 }
-
+                                if(fiveHundredVolFreq < 0){
+                                    fiveHundredVolFreq =0;
+                                }
+                                sortedListSeller.remove(0);
                             }
-
                             step =1;
                         }
 
@@ -168,76 +164,26 @@ public class testBidder extends Agent {
                     break;
 
                 case 1:
-                    //
-                    ACLMessage reply  = new ACLMessage(ACLMessage.PROPOSE);
-                    while (fiveHundredVolFreq > 0){
+                    //Sending PROPOSE message to Seller (only the best option for volume requirement)
 
-
-                        reply.setContent(fiveHundredVol + "-" + fiveHundredVolFreq + "-" + varieVol + "-" + varieVolFreq + "-" + bidderInfo.buyingPrice);
-                    }
-                    /***
-                    for(int i=0; i < sellerList.length; ++i){
-                        if(sellerList[i].getLocalName().equals(sortedListVaries.get(0).name) && (sortedListVaries.get(0).fivehundredFeq == fiveHundredVolFreq)){
-                            // Send the purchase order to the seller that provided the best offer
-                            ACLMessage acceptedRequest = new ACLMessage(ACLMessage.PROPOSE);
-                            acceptedRequest.addReceiver(sellerList[i]);
-                            acceptedRequest.setConversationId("bidding");
-                            acceptedRequest.setReplyWith("acceptedRequest" + System.currentTimeMillis());
-                            myAgent.send(acceptedRequest);
-                            System.out.println("\n" + acceptedRequest.toString() + "\n");
-                            mt = MessageTemplate.and(MessageTemplate.MatchConversationId("bidding"),MessageTemplate.MatchInReplyTo
-                                    (acceptedRequest.getReplyWith()));
-                        }
-                    }
-
-                    /***
-                case 1:
-                    //receive CFP
-                    //MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
-                    ACLMessage msg = myAgent.receive(mt);
-                    if (msg != null) {
-                        if(msg.getPerformative() == ACLMessage.CFP){
-                            replyCnt++;
-                            ACLMessage reply = msg.createReply();
-
-                            //Price Per MM. and the number of volumn to sell from Seller.
-                            String currentOffer = msg.getContent();
-                            String[] arrOfstr = currentOffer.split("-");
-                            double tempFiveHundredVol = Double.parseDouble(arrOfstr[0]);
-                            int tempFiveHunderedFreq = Integer.parseInt(arrOfstr[1]);
-                            double tempVarieVol = Double.parseDouble(arrOfstr[2]);
-                            int tempVarieFreq = Integer.parseInt(arrOfstr[3]);
-
-                            System.out.println(msg.getSender().getLocalName() + " Offer price and Vol:  " + tempFiveHundredVol + "  " + tempFiveHunderedFreq + "   " + tempVarieVol + "  " + tempVarieFreq + "  " + bidderInfo.buyingPrice);
-
-                            //Reply bidding information to sellers
-                            reply.setPerformative(ACLMessage.PROPOSE);
-                            //reply.setContent(fiveHundredVol + "-" + fiveHundredVolFreq + "-" + varieVol + "-" + varieVolFreq + "-" + bidderInfo.buyingPrice);
-                            //myAgent.send(reply);
-                            for(int i = 1; i <= tempFiveHunderedFreq; i++){
-                                sortedListAgent.add(new Agents(500,msg.getSender().getLocalName()));
+                    for(int i = 0; i < sellerList.length; i++){
+                        for(int j = 0; j < proposeSortedList.size(); j++){
+                            if(sellerList[i].getLocalName().equals(proposeSortedList.get(j).name)){
+                                ACLMessage reply  = new ACLMessage(ACLMessage.PROPOSE);
+                                reply.setContent("500" + "-" + proposeSortedList.get(j).fivehundredFeq + "-" + proposeSortedList.get(j).varieVolume + "-" + "1");
+                                reply.setConversationId("bidding");
+                                reply.setReplyWith("reply" + System.currentTimeMillis());
+                                myAgent.send(reply);
+                            }else {
+                                ACLMessage reply = new ACLMessage(ACLMessage.REFUSE);
+                                myAgent.send(reply);
                             }
-                            sortedListAgent.add(new Agents(tempVarieVol,msg.getSender().getLocalName()));
                         }
-
-                        if(replyCnt >= sellerList.length){
-                            Collections.sort(sortedListAgent, new SortbyVolume());
-                            step =2;
-                        }
-                    } else {
-                        block();
                     }
-                    break;
-                case 2:
-                    System.out.println("result sort: \n");
-                    for(int i=0; i < sortedListAgent.size();i++){
-                        System.out.println(sortedListAgent.get(i));
-                    }
-                     ***/
             }
         }
         public boolean done(){
-            return step ==2;
+            return step == 2;
         }
     }
 
@@ -247,37 +193,22 @@ public class testBidder extends Agent {
             ACLMessage msg = myAgent.receive(mt);
             if (msg != null) {
                 ACLMessage reply = msg.createReply();
-                if(msg.getSender().getLocalName().equals(bidderInfo.offeredVarieName) && bidderInfo.offeredVarieName != null) {
                     reply.setPerformative(ACLMessage.INFORM);
                     System.out.println("");
                     System.out.println("\n" + getAID().getLocalName() + "accpted to buy water from" + msg.getSender().getLocalName());
-                    bidderInfo.offeredVarieName = null;
                     myAgent.send(reply);
                     System.out.println(reply);
-                }
-                if(msg.getSender().getLocalName().equals(bidderInfo.offeredNameFiveHundred) && bidderInfo.offeredNameFiveHundred != null) {
-                    reply.setPerformative(ACLMessage.INFORM);
-                    System.out.println("");
-                    System.out.println("\n" + getAID().getLocalName() + "accpted to buy water from" + msg.getSender().getLocalName());
-                    bidderInfo.offeredNameFiveHundred = null;
-                    myAgent.send(reply);
-                    System.out.println(reply);
-                } else{
-                    reply.setPerformative(ACLMessage.FAILURE);
-                    myAgent.send(reply);
-                    System.out.println(reply);
-                }
+
             } else {
                 block();
             }
-            if(bidderInfo.offeredNameFiveHundred == null && bidderInfo.offeredVarieName == null) {
                 myAgent.doDelete();
                 //myGUI.dispose();
                 System.out.println(getAID().getName() + " terminating.");
             }
-        }
     }
-
+}
+/***
     private class RejectandReset extends CyclicBehaviour{
         public void action(){
             MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REFUSE);
@@ -289,7 +220,7 @@ public class testBidder extends Agent {
             }
         }
     }
-
+**/
     class agentInfo{
         String farmerName;
         String agentType;
@@ -329,4 +260,3 @@ public class testBidder extends Agent {
             return this.name + " " + this.varieVolume + " " + this.fivehundredFeq;
         }
     }
-}
