@@ -19,8 +19,9 @@ import java.util.Comparator;
 public class testBidder extends Agent {
     randValue randValue = new randValue();
     DecimalFormat df = new DecimalFormat("#.##");
-    ArrayList<Agents> sortedListFiveHundred = new ArrayList<Agents>();
-    ArrayList<Agents> sortedListVaries = new ArrayList<Agents>();
+    ArrayList<Agents> sortedListSeller = new ArrayList<Agents>();
+    ArrayList<Agents> proposeSortedList = new ArrayList<Agents>();
+
 
     agentInfo bidderInfo = new agentInfo("","bidder", randValue.getRandDoubleRange(10,16), randValue.getRandDoubleRange(300,2000));
 
@@ -125,18 +126,39 @@ public class testBidder extends Agent {
                             //reply.setContent(fiveHundredVol + "-" + fiveHundredVolFreq + "-" + varieVol + "-" + varieVolFreq + "-" + bidderInfo.buyingPrice);
                             //myAgent.send(reply);
                             if(tempVarieVol > varieVol){
-                                sortedListVaries.add(new Agents(tempVarieVol, tempFiveHunderedFreq, msg.getSender().getLocalName()));
+                                sortedListSeller.add(new Agents(tempVarieVol, tempFiveHunderedFreq, msg.getSender().getLocalName()));
                             }else {
-                                sortedListVaries.add(new Agents(0,tempFiveHunderedFreq,msg.getSender().getLocalName()));
+                                sortedListSeller.add(new Agents(0,tempFiveHunderedFreq,msg.getSender().getLocalName()));
                             }
 
                         }
                         //Prepairing reply message.
                         if(replyCnt >= sellerList.length){
-                            Collections.sort(sortedListVaries, new SortbyVolume());
-                            for(int i = 0; i < sortedListVaries.size();i++){
-                                System.out.println(sortedListVaries.get(i));
+                            Collections.sort(sortedListSeller, new SortbyVolume());
+
+                            //
+                            for(int i = 0; i < sortedListSeller.size(); i++){
+                                while (varieVol >0 || fiveHundredVolFreq > 0){
+                                    double tempVarieSorted = sortedListSeller.get(i).varieVolume;
+                                    int tempFiveHundredSorted = sortedListSeller.get(i).fivehundredFeq;
+                                    if(tempVarieSorted > varieVol && tempFiveHundredSorted <= fiveHundredVolFreq){
+                                        proposeSortedList.add(sortedListSeller.get(i));
+                                    }else {
+                                        proposeSortedList.add(new Agents(sortedListSeller.get(i).varieVolume, fiveHundredVolFreq, sortedListSeller.get(i).name));
+                                    }
+                                    varieVol = varieVol - tempVarieSorted;
+                                    fiveHundredVolFreq = fiveHundredVolFreq - tempFiveHundredSorted;
+                                    if(fiveHundredVolFreq < 0){
+                                        fiveHundredVolFreq =0;
+                                    }
+                                    varieVol = varieVol - sortedListSeller.get(i).varieVolume;
+                                    if(varieVol < 0){
+                                        varieVol = 0;
+                                    }
+                                }
+
                             }
+
                             step =1;
                         }
 
@@ -149,6 +171,8 @@ public class testBidder extends Agent {
                     //
                     ACLMessage reply  = new ACLMessage(ACLMessage.PROPOSE);
                     while (fiveHundredVolFreq > 0){
+
+
                         reply.setContent(fiveHundredVol + "-" + fiveHundredVolFreq + "-" + varieVol + "-" + varieVolFreq + "-" + bidderInfo.buyingPrice);
                     }
                     /***
