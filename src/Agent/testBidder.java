@@ -125,13 +125,14 @@ public class testBidder extends Agent {
                             //reply.setPerformative(ACLMessage.PROPOSE);
                             //reply.setContent(fiveHundredVol + "-" + fiveHundredVolFreq + "-" + varieVol + "-" + varieVolFreq + "-" + bidderInfo.buyingPrice);
                             //myAgent.send(reply);
-
+                            /***
                             if(tempVarieVol > varieVol){
                                 sortedListSeller.add(new Agents(tempVarieVol, tempFiveHunderedFreq, totalSelling, msg.getSender().getLocalName()));
                             }else {
-                                sortedListSeller.add(new Agents(0,tempFiveHunderedFreq,totalSelling, msg.getSender().getLocalName()));
+                                sortedListSeller.add(new Agents(0,tempFiveHunderedFreq,totalSelling - tempVarieVol, msg.getSender().getLocalName()));
                             }
-                            //sortedListSeller.add(new Agents(tempVarieVol, tempFiveHunderedFreq, totalSelling, msg.getSender().getLocalName()));
+                             ***/
+                            sortedListSeller.add(new Agents(tempVarieVol, tempFiveHunderedFreq, totalSelling, msg.getSender().getLocalName()));
 
                         }
                         //Prepairing reply message.
@@ -145,7 +146,7 @@ public class testBidder extends Agent {
                             System.out.println("\n");
 
                             //very specific case for not over 500 and do not have match for any varies value.
-
+                            double buyingVolumeTotal = bidderInfo.buyingVol;
 
                             while (fiveHundredVolFreq > 0 || varieVol > 0){
                                 double tempVarie = sortedListSeller.get(0).varieVolume;
@@ -168,8 +169,14 @@ public class testBidder extends Agent {
                                 if(fiveHundredVolFreq > 0 && fiveHundredVolFreq - tempFiveHundredFirst >= 0){
                                     tempInputFiveH = tempFiveHundredFirst;
                                 }else {
-                                    tempInputFiveH = fiveHundredVolFreq;
-                                    fiveHundredVolFreq = 0;
+                                    if(buyingVolumeTotal - tempInputVarie <=0){
+                                        tempInputFiveH = 0;
+                                        fiveHundredVolFreq = 0;
+                                    }else {
+                                        tempInputFiveH = fiveHundredVolFreq;
+                                        fiveHundredVolFreq = 0;
+                                    }
+
                                 }
                                 fiveHundredVolFreq = fiveHundredVolFreq - tempInputFiveH;
 
@@ -177,6 +184,8 @@ public class testBidder extends Agent {
                                 sortedListSeller.remove(0);
 
                                 proposeSortedList.add(new Agents(tempInputVarie, tempInputFiveH, (tempInputVarie + (tempInputFiveH * 500)), name));
+                                buyingVolumeTotal = buyingVolumeTotal - (tempInputVarie + (tempInputFiveH * 500));
+
                             }
 
                             /***
