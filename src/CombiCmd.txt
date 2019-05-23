@@ -24,4 +24,6 @@ Test envirounment.
 -local-port 1111 -gui Sniff:jade.tools.sniffer.Sniffer;Monitor:Agent.MornitoringVarieAgent;Seller1:Agent.randValSealVariesSeller;Bidder1:Agent.randValSealVariesBidder;Bidder2:Agent.randValSealVariesBidder;Bidder3:Agent.randValSealVariesBidder;Bidder4:Agent.randValSealVariesBidder;Bidder5:Agent.randValSealVariesBidder;
 -gui bidder1:Agent.testBidder;bidder2:Agent.testBidder;Seller1:Agent.randValSealVariesSeller;Seller2:Agent.randValSealVariesSeller;Seller3:Agent.randValSealVariesSeller;
 
--gui bidder1:Agent.testBidder;Seller1:Agent.randValSealVariesSeller;Seller2:Agent.randValSealVariesSeller;Seller3:Agent.randValSealVariesSeller;
+-gui -local-port 1111 Sniff:jade.tools.sniffer.Sniffer;bidder1:Agent.testBidder;Seller1:Agent.testSeller;Seller2:Agent.testSeller;Seller3:Agent.testSeller;
+
+-gui -local-port 1111 Sniff:jade.tools.sniffer.Sniffer;bidder1:Agent.testBidder;bidder2:Agent.testBidder;bidder3:Agent.testBidder;bidder4:Agent.testBidder;bidder5:Agent.testBidder;bidder6:Agent.testBidder;bidder7:Agent.testBidder;bidder8:Agent.testBidder;bidder9:Agent.testBidder;bidder10:Agent.testBidder;Seller1:Agent.testSeller;Seller2:Agent.testSeller;Seller3:Agent.testSeller;
