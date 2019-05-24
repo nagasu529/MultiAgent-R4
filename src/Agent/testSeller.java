@@ -108,7 +108,7 @@ public class testSeller extends Agent {
                         bidderAgent = new AID[result.length];
                         for (int i = 0; i < result.length; ++i) {
                             bidderAgent[i] = result[i].getName();
-                            myGui.displayUI(bidderAgent[i].getName()+ "\n");
+                            //myGui.displayUI(bidderAgent[i].getName()+ "\n");
                         }
                     }
                     catch (FIPAException fe) {
@@ -142,7 +142,7 @@ public class testSeller extends Agent {
                         repliesCnt++;
                         // Reply received
                         if (reply.getPerformative() == ACLMessage.PROPOSE) {
-                            myGui.displayUI("Receive message: \n" + reply + "\n");
+                            //myGui.displayUI("Receive message: \n" + reply + "\n");
                             //Count number of bidder that is propose message for water price bidding.
                             // This is an offer
                             String biddedFromAcutioneer = reply.getContent();
@@ -170,6 +170,7 @@ public class testSeller extends Agent {
                             for(int i = 0; i <= bidderReplyList.size() -1; i++){
                                 myGui.displayUI(bidderReplyList.get(i).toString() + "\n");
                             }
+                            myAgent.doSuspend();
 
                             step = 2;
                         }
@@ -184,22 +185,30 @@ public class testSeller extends Agent {
                      * accepted water volumn to sell.
                      */
 
-                    while ( fiveHundredVolFreq >= 0 || varieVol >= 0){
+
+                    /***
+                    while (fiveHundredVolFreq != 0 || varieVol != 0){
                         double tempInformVarie = bidderReplyList.get(0).varieVolume;
                         int temmpInformFiveFreq = bidderReplyList.get(0).fivehundredFeq;
 
                         fiveHundredVolFreq = fiveHundredVolFreq - temmpInformFiveFreq;
                         varieVol = varieVol - tempInformVarie;
-                        bidderReplyList.remove(0);
+                        if(fiveHundredVolFreq >= 0 && varieVol >= 0){
+                            informMessageList.add(bidderReplyList.get(0));
+                            bidderReplyList.remove(0);
+                        }else if (fiveHundredVolFreq < 0 || varieVol < 0){
+                            fiveHundredVolFreq = 0;
+                            varieVol = 0;
+                        }
                     }
+                    ***/
                     myGui.displayUI("All inform agent list contact:" +"\n");
                     if(fiveHundredVolFreq >0 || varieVol > 0){
                         myGui.displayUI("Next roundddddddddddddddddddddddddddddddddddddddddddddddddd");
                     }
-                    for (int i = 0; i <= informMessageList.size() -1; i++){
-                        myGui.displayUI(informMessageList.get(i).toString() + "\n");
+                    for (int i = 0; i < informMessageList.size() ; i++){
+                        myGui.displayUI(informMessageList.get(i) + "\n");
                     }
-
 
                     step = 3;
                     break;

@@ -126,61 +126,145 @@ public class testBidder extends Agent {
 
                         }
                         //Prepairing reply message.
-                        if(replyCnt >= sellerList.length){
-                            Collections.sort(sortedListSeller, new SortbyTotalVol());
-
-                            for(int i = 0; i <= sortedListSeller.size() - 1; i++){
-                                System.out.println(sortedListSeller.get(i));
-                            }
-
-                            System.out.println("\n");
-
+                        /***
                             //very specific case for not over 500 and do not have match for any varies value.
                             double buyingVolumeTotal = bidderInfo.buyingVol;
 
-                            while (fiveHundredVolFreq > 0 || varieVol > 0){
-                                double tempVarie = sortedListSeller.get(0).varieVolume;
-                                int tempFiveHundredFirst = sortedListSeller.get(0).fivehundredFeq;
-                                double tempTotalSelling = sortedListSeller.get(0).totalVolume;
-
-                                //Varie Decision.
-                                double tempInputVarie;
-                                if(varieVol < tempVarie){
-                                    tempInputVarie = tempVarie;
-                                    varieVol = 0;
-                                }else {
-                                    tempInputVarie = 0;
-                                }
-                                varieVol = varieVol - tempVarie;
-
-                                //FiveH decision.
-                                int tempInputFiveH;
-                                if(fiveHundredVolFreq > 0 && fiveHundredVolFreq - tempFiveHundredFirst >= 0){
-                                    tempInputFiveH = tempFiveHundredFirst;
-                                }else {
-                                    if(buyingVolumeTotal - tempInputVarie <=0){
-                                        tempInputFiveH = 0;
-                                        fiveHundredVolFreq = 0;
+                            //Buying volume <=500.
+                            for(int i = 0; i <= sortedListSeller.size() - 1; i++){
+                                if(buyingVolumeTotal <= 500){
+                                    Collections.sort(sortedListSeller, new SortbyFiveHundredFreq());
+                                    if(sortedListSeller.get(i).varieVolume > bidderInfo.buyingVol){
+                                        proposeSortedList.add(new Agents(sortedListSeller.get(0).varieVolume,0, sortedListSeller.get(0).varieVolume + 0, sortedListSeller.get(0).name));
+                                        buyingVolumeTotal = buyingVolumeTotal - sortedListSeller.get(0).varieVolume;
+                                        if(buyingVolumeTotal < 0){
+                                            buyingVolumeTotal = 0;
+                                        }
+                                        sortedListSeller.remove(0);
                                     }else {
-                                        tempInputFiveH = fiveHundredVolFreq;
-                                        fiveHundredVolFreq = 0;
+                                        proposeSortedList.add(new Agents(0,1,0 + (1*500),sortedListSeller.get(0).name));
+                                        buyingVolumeTotal = buyingVolumeTotal - 500;
+                                        if(buyingVolumeTotal < 0){
+                                            buyingVolumeTotal = 0;
+                                        }
+                                        sortedListSeller.remove(0);
+                                    }
+                                }
+                            }
+                         ***/
+                            System.out.println("\n");
+
+                        if(replyCnt >= sellerList.length){
+                            int calMethod;
+                            double buyingVolumeTotal = bidderInfo.buyingVol;
+
+                            if(bidderInfo.buyingVol <= 500){
+                                calMethod = 0;
+                            }else if(bidderInfo.buyingVol > 900 && bidderInfo.buyingVol <=1000){
+                                calMethod = 1;
+                            }else {
+                                calMethod = 2;
+                            }
+
+                            switch (calMethod){
+                                case 0:
+                                    Collections.sort(sortedListSeller, new SortbyVarieVolume());
+                                    for(int i = 0; i <= sortedListSeller.size() - 1; i++) {
+                                        if (sortedListSeller.get(i).varieVolume > buyingVolumeTotal) {
+                                            proposeSortedList.add(new Agents(sortedListSeller.get(i).varieVolume, 0, sortedListSeller.get(i).varieVolume + 0, sortedListSeller.get(i).name));
+                                            sortedListSeller.remove(i);
+                                            break;
+                                        }
+                                    }
+                                    if(proposeSortedList.size()==0){
+                                        Collections.sort(sortedListSeller, new SortbyTotalVol());
+                                        Collections.reverse(sortedListSeller);
+                                        proposeSortedList.add(new Agents(0,1,0 + (1*500),sortedListSeller.get(0).name));
+                                        sortedListSeller.remove(0);
+                                        break;
+                                    }
+                                    break;
+
+                                case 1:
+                                    Collections.sort(sortedListSeller, new SortbyTotalVol());
+                                    for(int i = 0; i <= sortedListSeller.size() -1; i++){
+                                        if(buyingVolumeTotal !=0){
+                                            if(sortedListSeller.get(i).totalVolume >= 1000){
+                                                proposeSortedList.add(new Agents(2, 0,2 * 500, sortedListSeller.get(i).name));
+                                                sortedListSeller.remove(i);
+                                                buyingVolumeTotal = 0;
+                                            }
+                                        }
                                     }
 
-                                }
-                                fiveHundredVolFreq = fiveHundredVolFreq - tempInputFiveH;
+                                    break;
 
-                                String name = sortedListSeller.get(0).name;
-                                sortedListSeller.remove(0);
+                                case 2:
+                                    Collections.sort(sortedListSeller, new SortbyVarieVolume());
+                                    for (int i = 0; i <= sortedListSeller.size() - 1; i++) {
+                                        if (sortedListSeller.get(i).varieVolume > varieVol) {
+                                            if (sortedListSeller.get(i).fivehundredFeq == fiveHundredVolFreq && proposeSortedList.size() == 0) {
+                                                proposeSortedList.add(sortedListSeller.get(i));
+                                                sortedListSeller.remove(sortedListSeller.get(i));
+                                                buyingVolumeTotal = 0;
+                                                fiveHundredVolFreq =0;
+                                                varieVol = 0;
+                                                break;
+                                            } else if ((sortedListSeller.get(i).fivehundredFeq < fiveHundredVolFreq) && proposeSortedList.size() == 0) {
+                                                proposeSortedList.add(new Agents(sortedListSeller.get(i).varieVolume, sortedListSeller.get(i).fivehundredFeq, sortedListSeller.get(i).varieVolume + (sortedListSeller.get(i).fivehundredFeq * 500), sortedListSeller.get(i).name));
+                                                fiveHundredVolFreq = fiveHundredVolFreq - sortedListSeller.get(i).fivehundredFeq;
+                                                buyingVolumeTotal = buyingVolumeTotal - sortedListSeller.get(i).varieVolume + (sortedListSeller.get(i).fivehundredFeq * 500);
+                                                varieVol = 0;
+                                                sortedListSeller.remove(i);
+                                            } else if((sortedListSeller.get(i).fivehundredFeq > fiveHundredVolFreq) && (proposeSortedList.size() == 0)){
+                                                proposeSortedList.add(new Agents(sortedListSeller.get(i).varieVolume, fiveHundredVolFreq, sortedListSeller.get(i).varieVolume + (sortedListSeller.get(i).fivehundredFeq * 500), sortedListSeller.get(i).name));
+                                                fiveHundredVolFreq = 0;
+                                                varieVol = 0;
+                                                buyingVolumeTotal = 0;
+                                                sortedListSeller.remove(i);
+                                            }
+                                        }
+                                    }
+                                    if(proposeSortedList.size()==0){
+                                        for(int i = 0; i <= sortedListSeller.size() -1; i++){
+                                            if(sortedListSeller.get(i).totalVolume > buyingVolumeTotal){
+                                                proposeSortedList.add(sortedListSeller.get(i));
+                                                sortedListSeller.remove(i);
+                                                buyingVolumeTotal = 0;
+                                            }
+                                        }
+                                    }
 
-                                proposeSortedList.add(new Agents(tempInputVarie, tempInputFiveH, (tempInputVarie + (tempInputFiveH * 500)), name));
-                                buyingVolumeTotal = buyingVolumeTotal - (tempInputVarie + (tempInputFiveH * 500));
+                                    if(buyingVolumeTotal > 0 && proposeSortedList.size() > 0){
+                                        Collections.sort(sortedListSeller, new SortbyTotalVol());
+                                        for(int i = 0; i <= sortedListSeller.size() -1; i++) {
+                                            if (sortedListSeller.get(0).varieVolume > buyingVolumeTotal) {
+                                                proposeSortedList.add(new Agents(sortedListSeller.get(i).varieVolume, 0, sortedListSeller.get(i).varieVolume + (0 * 500), sortedListSeller.get(i).name));
+                                                sortedListSeller.remove(i);
+                                                buyingVolumeTotal = 0;
+                                            }
+                                        }
+                                        if(buyingVolumeTotal > 0 && sortedListSeller.get(0).fivehundredFeq > 0){
+                                            proposeSortedList.add(new Agents(0,1,500,sortedListSeller.get(0).name));
+                                            sortedListSeller.remove(0);
+                                        }
 
+                                    }
+
+                                    break;
                             }
-
                             step =1;
+
+                            System.out.println("start +++++++++++++++++++++++++++++++++++++++++++" +"\n");
+                            double sumTotal = 0.0;
+
                             for(int i=0; i <= proposeSortedList.size() - 1;i++){
-                                System.out.println( getAID().getLocalName() + "  xxxx  " + proposeSortedList.get(i));
+                                System.out.println(getAID().getLocalName() + "  xxxx  " + proposeSortedList.get(i) + "\n");
+                                double x = proposeSortedList.get(i).varieVolume + (proposeSortedList.get(i).fivehundredFeq * 500);
+                                sumTotal = sumTotal + x;
                             }
+                            System.out.println(getAID().getLocalName() + "  sumTotal : " + sumTotal + "   num. in List: " + proposeSortedList.size() );
+                            System.out.println("end ++++++++++++++++++++++++++++++\n");
 
                             for(int i = 0; i <= sortedListSeller.size() -1; i++){
                                 System.out.println("yyyyy" + sortedListSeller.get(i));
@@ -286,7 +370,7 @@ public class testBidder extends Agent {
     }
 
     //Sorted by volumn (descending).
-    class SortbyVolume implements Comparator<Agents>{
+    class SortbyVarieVolume implements Comparator<Agents>{
         //Used for sorting in ascending order of the volumn.
         public int compare(Agents a, Agents b){
             return Double.compare(a.varieVolume, b.varieVolume);
@@ -298,6 +382,12 @@ public class testBidder extends Agent {
         public int compare(Agents a, Agents b){
         return Double.compare(a.totalVolume, b.totalVolume);
     }
+    }
+
+    class SortbyFiveHundredFreq implements Comparator<Agents>{
+        public int compare(Agents a, Agents b){
+            return  a.fivehundredFeq - b.fivehundredFeq;
+        }
     }
 
     //adding new class for sorted seller agent data.
@@ -314,6 +404,6 @@ public class testBidder extends Agent {
             this.name = name;
         }
         public String toString(){
-            return this.name + " " + this.varieVolume + " " + this.fivehundredFeq + "  total Volume: " + this.totalVolume;
+            return this.name + " " + this.varieVolume + " " + this.fivehundredFeq + "  total Volume: " + (this.varieVolume + (this.fivehundredFeq * 500));
         }
     }
