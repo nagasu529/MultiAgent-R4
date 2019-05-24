@@ -190,7 +190,7 @@ public class testBidder extends Agent {
                                     for(int i = 0; i <= sortedListSeller.size() -1; i++){
                                         if(buyingVolumeTotal !=0){
                                             if(sortedListSeller.get(i).totalVolume >= 1000){
-                                                proposeSortedList.add(new Agents(2, 0,2 * 500, sortedListSeller.get(i).name));
+                                                proposeSortedList.add(new Agents(0, 2,2 * 500, sortedListSeller.get(i).name));
                                                 sortedListSeller.remove(i);
                                                 buyingVolumeTotal = 0;
                                             }

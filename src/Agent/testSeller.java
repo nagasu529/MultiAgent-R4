@@ -157,9 +157,6 @@ public class testSeller extends Agent {
 
                             //adding data to dictionary, compairing and storing data.
                             bidderReplyList.add(new Agents(tempVarieVol,tempFiveHundredFreq,tempVolume, tempValue, tempPrice, reply.getSender().getLocalName()));
-                            //FiveHundred condition.
-
-                            //Varie Value condition.
 
                         }
 
@@ -167,10 +164,11 @@ public class testSeller extends Agent {
                             Collections.sort(bidderReplyList, new SortbyValue());
                             Collections.reverse(bidderReplyList);
 
+                            myGui.displayUI("bidder reply size:  " + (bidderReplyList.size()-1) + "\n" + "bidder reply list:" + "\n");
                             for(int i = 0; i <= bidderReplyList.size() -1; i++){
                                 myGui.displayUI(bidderReplyList.get(i).toString() + "\n");
                             }
-                            myAgent.doSuspend();
+                            myGui.displayUI("\n");
 
                             step = 2;
                         }
@@ -184,30 +182,56 @@ public class testSeller extends Agent {
                      * Sendding message to bidders wiht two types (Accept proposal or Refuse) based on
                      * accepted water volumn to sell.
                      */
-
-
-                    /***
-                    while (fiveHundredVolFreq != 0 || varieVol != 0){
-                        double tempInformVarie = bidderReplyList.get(0).varieVolume;
-                        int temmpInformFiveFreq = bidderReplyList.get(0).fivehundredFeq;
-
-                        fiveHundredVolFreq = fiveHundredVolFreq - temmpInformFiveFreq;
-                        varieVol = varieVol - tempInformVarie;
-                        if(fiveHundredVolFreq >= 0 && varieVol >= 0){
-                            informMessageList.add(bidderReplyList.get(0));
-                            bidderReplyList.remove(0);
-                        }else if (fiveHundredVolFreq < 0 || varieVol < 0){
-                            fiveHundredVolFreq = 0;
-                            varieVol = 0;
+                    //Sorted propose message and matching to reply INFORM Message.
+                    for(int i = 0; i <= bidderReplyList.size() -1; i++){
+                        if((fiveHundredVolFreq >= bidderReplyList.get(i).fivehundredFeq) && (varieVol ==0 || varieVol == bidderReplyList.get(i).varieVolume)){
+                            fiveHundredVolFreq = fiveHundredVolFreq - bidderReplyList.get(i).fivehundredFeq;
+                            varieVol = varieVol - bidderReplyList.get(i).varieVolume;
+                            if(fiveHundredVolFreq >=0 && varieVol >=0) {
+                                informMessageList.add(bidderReplyList.get(i));
+                                bidderReplyList.remove(i);
+                            }
                         }
                     }
-                    ***/
-                    myGui.displayUI("All inform agent list contact:" +"\n");
-                    if(fiveHundredVolFreq >0 || varieVol > 0){
-                        myGui.displayUI("Next roundddddddddddddddddddddddddddddddddddddddddddddddddd");
+                    if(informMessageList.size() < 0){
+                        step = 4;
+                        break;
                     }
-                    for (int i = 0; i < informMessageList.size() ; i++){
-                        myGui.displayUI(informMessageList.get(i) + "\n");
+
+                    myGui.displayUI("bidder INFORM size:  " + (informMessageList.size()-1) + "\n" + "bidder inform list: " + "\n");
+                    for(int i = 0; i <= informMessageList.size()-1;i++){
+                        myGui.displayUI(informMessageList.get(i).toString() + "\n");
+                    }
+                    myGui.displayUI("xxxxxxxxxxxxxxxxxxxxxxx" + fiveHundredVolFreq + "        " + varieVol);
+
+                    //Sending PROPOSE message to Seller (only the best option for volume requirement.
+
+                    for (int i = 0; i < bidderAgent.length; i++) {
+                        for (int j = 0; j <= informMessageList.size() - 1; j++) {
+                            if (bidderAgent[i].getLocalName().equals(informMessageList.get(j).name)) {
+                                ACLMessage acceptMsg = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
+                                //acceptMsg.setContent("500" + "-" + informMessageList.get(j).fivehundredFeq + "-" + informMessageList.get(j).varieVolume + "-" + "1" + "-" + informMessageList.get(i).price);
+                                acceptMsg.setConversationId("bidding");
+                                acceptMsg.setReplyWith("reply" + System.currentTimeMillis());
+                                acceptMsg.addReceiver(bidderAgent[i]);
+                                myAgent.send(acceptMsg);
+                                System.out.println(acceptMsg);
+                            }
+                        }
+                    }
+
+                    for (int i = 0; i < bidderAgent.length; i++) {
+                        for (int j = 0; j <= bidderReplyList.size() - 1; j++) {
+                            if (bidderAgent[i].getLocalName().equals(bidderReplyList.get(j).name)) {
+                                ACLMessage rejectMsg = new ACLMessage(ACLMessage.REJECT_PROPOSAL);
+                                rejectMsg.setContent("500" + "-" + bidderReplyList.get(j).fivehundredFeq + "-" + bidderReplyList.get(j).varieVolume + "-" + "1");
+                                rejectMsg.setConversationId("bidding");
+                                rejectMsg.setReplyWith("reply" + System.currentTimeMillis());
+                                rejectMsg.addReceiver(bidderAgent[i]);
+                                myAgent.send(rejectMsg);
+                                System.out.println(rejectMsg);
+                            }
+                        }
                     }
 
                     step = 3;
@@ -216,43 +240,24 @@ public class testSeller extends Agent {
                 case 3:
                     // Receive the purchase order reply
 
-
                     reply = myAgent.receive(mt);
+                    //int informCnt = informMessageList.size();
                     if (reply != null) {
-                        /***
-                        //System.out.println("\n" + "Reply message:" + reply.toString());
-                        //myGui.displayUI("\n" + "Reply message:" + reply.toString());
-                        // Purchase order reply received
-
-                        if (reply.getPerformative() == ACLMessage.INFORM && reply.getSender().getLocalName().equals(sellerInfo.acceptedVarieName)) {
-                            String tempFreq = getAID().getLocalName() + "  Selling water to  " + reply.getSender().getLocalName() + "  " + sellerInfo.acceptedVarieVol + "\n";
-                            log = log + tempFreq;
-                            sellerInfo.sellingVolumn = sellerInfo.sellingVolumn - sellerInfo.acceptedVarieVol;
+                        if (reply.getPerformative() == ACLMessage.INFORM) {
+                            for(int i = 0; i <= informMessageList.size() -1; i++){
+                                if(informMessageList.get(i).name.equals(reply.getSender().getLocalName())){
+                                    String tempFreq = getAID().getLocalName() + "  Selling water to  " + reply.getSender().getLocalName() + "  " + informMessageList.get(i).totalVolume + "\n";
+                                    log = log + tempFreq;
+                                    sellerInfo.sellingVol = sellerInfo.sellingVol - informMessageList.get(i).totalVolume;
+                                    informMessageList.remove(i);
+                                }
+                            }
                         }
-                        if(reply.getPerformative() == ACLMessage.INFORM && reply.getSender().getLocalName().equals(sellerInfo.acceptedFiveHundredName)) {
-                            String tempFreq = getAID().getLocalName() + "  Selling water to  " + reply.getSender().getLocalName() + "  " + sellerInfo.acceptedFiveHundredVol + "\n";
-                            log = log + tempFreq;
-                            sellerInfo.sellingVolumn = sellerInfo.sellingVolumn - sellerInfo.acceptedFiveHundredVol;
-                        }
-
-                        if (reply.getPerformative() == ACLMessage.REFUSE && reply.getSender().getLocalName().equals(sellerInfo.acceptedVarieName)) {
-                            sellerInfo.acceptedVarieName = "";
-                            sellerInfo.acceptedVariePrice = 0.0;
-                        }
-                        if(reply.getPerformative() == ACLMessage.REFUSE && reply.getSender().getLocalName().equals(sellerInfo.acceptedFiveHundredName)) {
-                            sellerInfo.acceptedFiveHundredName = "";
-                            sellerInfo.acceptedFiveHundredPrice = 0.0;
-                        }
-                        myGui.displayUI("xxxxxxxxxxxxxxxxxxxxx" + sellerInfo.sellingVolumn);
-                        if(sellerInfo.sellingVolumn <= 0) {
-                            myGui.displayUI("\n");
+                        if(informMessageList.size()==0){
                             myGui.displayUI(log);
+                            step = 4;
                             myAgent.doSuspend();
                         }
-                        else {
-                            System.out.println("Attempt failed: requested water volumn already sold." + "\n");
-                            //myGui.displayUI("Attempt failed: requested water volumn already sold." + "\n");
-                        }***/
                         step = 4;
                     }
                     else {
