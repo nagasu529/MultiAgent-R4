@@ -5,14 +5,14 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-public class testSellerGUI extends JFrame {
-    private testSeller myAgent;
+public class randValSealVarieSellerGUI extends JFrame {
+    private randValSealVarieSeller myAgent;
 //Creating setter and getter for passing parameters.
 
     //GUI design preferences
     private JTextArea log;
 
-    testSellerGUI(testSeller a) {
+    randValSealVarieSellerGUI(randValSealVarieSeller a) {
         super(a.getLocalName() + " Monitoring");
         myAgent = a;
 

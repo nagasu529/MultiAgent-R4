@@ -16,8 +16,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-public class testSeller extends Agent {
-    testSellerGUI myGui;
+public class randValSealVarieSeller extends Agent {
+    randValSealVarieSellerGUI myGui;
 
     //General papameter information
     DecimalFormat df = new DecimalFormat("#.##");
@@ -28,7 +28,7 @@ public class testSeller extends Agent {
 
     protected void setup(){
         // Create and show the GUI
-        myGui = new testSellerGUI(this);
+        myGui = new randValSealVarieSellerGUI(this);
         myGui.show();
         //sellerInfo.sellingVolumn = sellerInfo.sellingVolumn/2;
 
@@ -108,7 +108,7 @@ public class testSeller extends Agent {
                         bidderAgent = new AID[result.length];
                         for (int i = 0; i < result.length; ++i) {
                             bidderAgent[i] = result[i].getName();
-                            //myGui.displayUI(bidderAgent[i].getName()+ "\n");
+                            myGui.displayUI(bidderAgent[i].getName()+ "\n");
                         }
                     }
                     catch (FIPAException fe) {
@@ -126,6 +126,7 @@ public class testSeller extends Agent {
                     cfp.setConversationId("bidding");
                     cfp.setReplyWith("cfp"+System.currentTimeMillis()); // Unique value
                     myAgent.send(cfp);
+                    //myGui.displayUI(cfp.toString());
                     //System.out.println("cfp message :" + "\n" + cfp);
                     // Prepare the template to get proposals
                     //mt = MessageTemplate.and(MessageTemplate.MatchConversationId("bidding"),MessageTemplate.MatchInReplyTo(cfp.getReplyWith()));
@@ -183,18 +184,20 @@ public class testSeller extends Agent {
                      * accepted water volumn to sell.
                      */
                     //Sorted propose message and matching to reply INFORM Message.
+
                     for(int i = 0; i <= bidderReplyList.size() -1; i++){
-                        if((fiveHundredVolFreq >= bidderReplyList.get(i).fivehundredFeq) && (varieVol ==0 || varieVol == bidderReplyList.get(i).varieVolume)){
+                        if((fiveHundredVolFreq - bidderReplyList.get(i).fivehundredFeq >=0) &&(varieVol - bidderReplyList.get(i).varieVolume >= 0)){
                             fiveHundredVolFreq = fiveHundredVolFreq - bidderReplyList.get(i).fivehundredFeq;
                             varieVol = varieVol - bidderReplyList.get(i).varieVolume;
-                            if(fiveHundredVolFreq >=0 && varieVol >=0) {
-                                informMessageList.add(bidderReplyList.get(i));
-                                bidderReplyList.remove(i);
+                            informMessageList.add(bidderReplyList.get(i));
+                            bidderReplyList.remove(i);
+                            if(fiveHundredVolFreq ==0 && varieVol ==0){
+                                break;
                             }
                         }
                     }
                     if(informMessageList.size() < 0){
-                        step = 4;
+                        step = 0;
                         break;
                     }
 
@@ -202,7 +205,6 @@ public class testSeller extends Agent {
                     for(int i = 0; i <= informMessageList.size()-1;i++){
                         myGui.displayUI(informMessageList.get(i).toString() + "\n");
                     }
-                    myGui.displayUI("xxxxxxxxxxxxxxxxxxxxxxx" + fiveHundredVolFreq + "        " + varieVol);
 
                     //Sending PROPOSE message to Seller (only the best option for volume requirement.
 
@@ -253,10 +255,11 @@ public class testSeller extends Agent {
                                 }
                             }
                         }
-                        if(informMessageList.size()==0){
+                        if(informMessageList.size() == 0){
                             myGui.displayUI(log);
                             step = 4;
                             myAgent.doSuspend();
+
                         }
                         step = 4;
                     }
