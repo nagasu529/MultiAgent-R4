@@ -174,7 +174,7 @@ public class randValSealbidedSeller extends Agent {
                         break;
                     }
 
-                    myGui.displayUI("bidder INFORM size:  " + (informMessageList.size()-1) + "\n" + "bidder inform list: " + "\n");
+                    myGui.displayUI("bidder inform list: " + "\n");
                     for(int i = 0; i <= informMessageList.size()-1;i++){
                         myGui.displayUI(informMessageList.get(i).toString() + "\n");
                     }

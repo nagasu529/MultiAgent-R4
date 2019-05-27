@@ -131,11 +131,14 @@ public class randValSealbidedBidder extends Agent {
                                     break;
                                 }
                             }
-                            if(proposeSortedList == null){
-                                step = 2;
+                            if(proposeSortedList.size()== 0){
+                                System.out.println("Do not have enought water to buy.");
+                                step = 1;
+                            }else {
+                                System.out.println("The best option for sendding offer is  " + proposeSortedList.get(0).toString());
+                                step = 1;
                             }
-                            System.out.println("cccccccccccccccccccccccc" + proposeSortedList.get(0).toString());
-                            step = 1;
+
                         }
 
                     } else {
@@ -146,17 +149,20 @@ public class randValSealbidedBidder extends Agent {
                 case 1:
                     //Sending PROPOSE message to Seller (only the best option for volume requirement.
 
-                    for (int i = 0; i < sellerList.length; i++) {
-                        if (sellerList[i].getLocalName().equals(proposeSortedList.get(0).name)) {
-                            ACLMessage reply = new ACLMessage(ACLMessage.PROPOSE);
-                            reply.setContent(proposeSortedList.get(0).totalVolume + "-" + bidderInfo.buyingPrice);
-                            reply.setConversationId("bidding");
-                            reply.setReplyWith("reply" + System.currentTimeMillis());
-                            reply.addReceiver(sellerList[i]);
-                            myAgent.send(reply);
-                            System.out.println(reply);
+                    if(proposeSortedList.size() !=0){
+                        for (int i = 0; i < sellerList.length; i++) {
+                            if (sellerList[i].getLocalName().equals(proposeSortedList.get(0).name)) {
+                                ACLMessage reply = new ACLMessage(ACLMessage.PROPOSE);
+                                reply.setContent(proposeSortedList.get(0).totalVolume + "-" + bidderInfo.buyingPrice);
+                                reply.setConversationId("bidding");
+                                reply.setReplyWith("reply" + System.currentTimeMillis());
+                                reply.addReceiver(sellerList[i]);
+                                myAgent.send(reply);
+                                System.out.println(reply);
+                            }
                         }
                     }
+
 
                     for (int i = 0; i < sellerList.length; i++) {
                         for (int j = 0; j <= sortedListSeller.size() - 1; j++) {
