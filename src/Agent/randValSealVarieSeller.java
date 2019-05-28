@@ -171,6 +171,10 @@ public class randValSealVarieSeller extends Agent {
                             }
                             myGui.displayUI("\n");
 
+                            if(bidderReplyList.size() == 0){
+                                step = 4;
+                            }
+
                             step = 2;
                         }
                     }else {
@@ -271,9 +275,10 @@ public class randValSealVarieSeller extends Agent {
             }
         }
         public boolean done() {
-            if (step == 2 && bidderReplyList.size() == 0) {
+            if (step == 4 && bidderReplyList.size() == 0) {
                 myGui.displayUI("Do not buyer who provide the matching price.");
-                //myAgent.doSuspend();
+                myAgent.doSuspend();
+                takeDown();
 
                 //myGui.dispose();
                 //myGui.displayUI("Attempt failed: do not have bidder now" + "\n");

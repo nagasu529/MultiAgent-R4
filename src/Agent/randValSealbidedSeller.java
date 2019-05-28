@@ -113,7 +113,7 @@ public class randValSealbidedSeller extends Agent {
                     cfp.setConversationId("bidding");
                     cfp.setReplyWith("cfp"+System.currentTimeMillis()); // Unique value
                     myAgent.send(cfp);
-                    myGui.displayUI(cfp.toString());
+                    //myGui.displayUI(cfp.toString());
                     //System.out.println("cfp message :" + "\n" + cfp);
                     // Prepare the template to get proposals
                     //mt = MessageTemplate.and(MessageTemplate.MatchConversationId("bidding"),MessageTemplate.MatchInReplyTo(cfp.getReplyWith()));
@@ -150,6 +150,10 @@ public class randValSealbidedSeller extends Agent {
                             for(int i = 0; i <= bidderReplyList.size() -1; i++){
                                 myGui.displayUI(bidderReplyList.get(i).toString());
                             }
+                            if(bidderReplyList.size()==0){
+                                step =4;
+                                break;
+                            }
 
                             myGui.displayUI("the best value from bidders is   " + bidderReplyList.get(0).toString());
                             myGui.displayUI("\n");
@@ -167,13 +171,8 @@ public class randValSealbidedSeller extends Agent {
                      * accepted water volumn to sell.
                      */
                     //Sorted propose message and matching to reply INFORM Message.
+
                     informMessageList.add(bidderReplyList.get(0));
-
-                    if(informMessageList.size() < 0){
-                        step = 0;
-                        break;
-                    }
-
                     myGui.displayUI("bidder inform list: " + "\n");
                     for(int i = 0; i <= informMessageList.size()-1;i++){
                         myGui.displayUI(informMessageList.get(i).toString() + "\n");
@@ -244,9 +243,10 @@ public class randValSealbidedSeller extends Agent {
             }
         }
         public boolean done() {
-            if (step == 2 && bidderReplyList.size() == 0) {
+            if (step == 4 && bidderReplyList.size() == 0) {
                 myGui.displayUI("Do not buyer who provide the matching price.");
-                //myAgent.doSuspend();
+                myAgent.doSuspend();
+                takeDown();
 
                 //myGui.dispose();
                 //myGui.displayUI("Attempt failed: do not have bidder now" + "\n");

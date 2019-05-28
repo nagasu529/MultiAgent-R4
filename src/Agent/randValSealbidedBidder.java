@@ -4,7 +4,7 @@ import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.TickerBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
@@ -13,7 +13,9 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class randValSealbidedBidder extends Agent {
     randValue randValue = new randValue();
@@ -50,6 +52,9 @@ public class randValSealbidedBidder extends Agent {
             fe.printStackTrace();
         }
         //Bidding process.
+
+        //Sendding info to mornitor.
+        addBehaviour(new AdverInfoMsg());
 
         //Add the behaviour serving queries from Water provider about current price.
         addBehaviour(new OfferRequestsServer());
@@ -103,7 +108,7 @@ public class randValSealbidedBidder extends Agent {
                     //MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
                     ACLMessage msg = myAgent.receive(mt);
                     if (msg != null) {
-                        if (msg.getPerformative() == ACLMessage.CFP) {
+                        if (msg.getPerformative() == ACLMessage.CFP && msg.getSender().getLocalName().equals("monitor")==false) {
                             System.out.println(msg);
                             replyCnt++;
                             //ACLMessage reply = msg.createReply();
@@ -207,6 +212,35 @@ public class randValSealbidedBidder extends Agent {
             //
             //myGUI.dispose();
             //
+        }
+    }
+
+    private class AdverInfoMsg extends OneShotBehaviour {
+        private AID[] mornitorAgent;
+        public void action(){
+            DFAgentDescription template = new DFAgentDescription();
+            ServiceDescription sd = new ServiceDescription();
+            sd.setType("mornitor");
+            template.addServices(sd);
+            try {
+                DFAgentDescription[] result = DFService.search(myAgent, template);
+                //System.out.println("Found acutioneer agents:");
+                mornitorAgent = new AID[result.length];
+                for (int i = 0; i < result.length; ++i) {
+                    mornitorAgent[i] = result[i].getName();
+                    //System.out.println(mornitorAgent[i].getName());
+                }
+            }
+            catch (FIPAException fe) {
+                fe.printStackTrace();
+            }
+            // Send the cfp to all sellers (Sending water volumn required to all bidding agent)
+            ACLMessage mornitorReply = new ACLMessage(ACLMessage.PROPOSE);
+            for (int i = 0; i < mornitorAgent.length; ++i) {
+                mornitorReply.addReceiver(mornitorAgent[i]);
+            }
+            mornitorReply.setContent(bidderInfo.buyingVol + "-" + bidderInfo.buyingPrice + "-" + 0);
+            myAgent.send(mornitorReply);
         }
     }
 

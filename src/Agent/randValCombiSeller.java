@@ -1,19 +1,18 @@
 package Agent;
 
-import jade.core.Agent;
-import jade.core.behaviours.*;
 import jade.core.AID;
-import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
-import jade.domain.DFService;
-import jade.domain.FIPAException;
-import jade.domain.FIPAAgentManagement.DFAgentDescription;
-import jade.domain.FIPAAgentManagement.ServiceDescription;
-import java.text.DecimalFormat;
-import java.util.*;
+import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.TickerBehaviour;
-import java.util.ArrayList;
+import jade.domain.DFService;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.domain.FIPAException;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+
+import java.text.DecimalFormat;
+import java.util.*;
 
 public class randValCombiSeller extends Agent{
     randValCombiSellerGUI myGUI;
@@ -71,6 +70,7 @@ public class randValCombiSeller extends Agent{
     private class RequestPerformer extends Behaviour {
         //The list of known water selling agent
         private AID[] bidderAgent;
+        private int refuseCnt;
         private int repliesCnt; // The counter of replies from seller agents
         private MessageTemplate mt; // The template to receive replies
         ArrayList<String> bidderList = new ArrayList<String>();  //sorted list follows maximumprice factor.
@@ -150,6 +150,13 @@ public class randValCombiSeller extends Agent{
                             volumnDict.put(reply.getSender().getLocalName(),tempVolume);
                             priceDict.put(reply.getSender().getLocalName(),tempPrice);
                             profitLossDict.put(reply.getSender().getLocalName(), tempProfitLossPct);
+                        }else if(reply.getPerformative() == ACLMessage.REFUSE) {
+                            refuseCnt++;
+                        }
+
+                        if(refuseCnt == bidderAgent.length){
+                            step = 2;
+                            break;
                         }
 
                         if (repliesCnt >= bidderAgent.length) {
@@ -166,7 +173,7 @@ public class randValCombiSeller extends Agent{
                             System.out.println(powersetResult);
 
                             //Loop and result calculation
-                            for(int i=0; i < powersetResult.size();i++){
+                            for(int i=0; i <= powersetResult.size() -1;i++){
                                 String xx = powersetResult.get(i).toString();
                                 Double tempMaxVolumn = 0.0;
                                 Double tempMaxPrice = 0.0;
@@ -226,6 +233,7 @@ public class randValCombiSeller extends Agent{
                      * Sendding message to bidders wiht two types (Accept proposal or Refuse) based on
                      * accepted water volumn to sell.
                      */
+                    myGUI.displayUI(getAID().getLocalName() + "    voldict  " + volumnDict.size() + "price dict  " + priceDict.size());
                     if(decisionRules == 0){
                         myGUI.displayUI("\n" + "Best solution for each case:"+"\n"+"Max price selling:  " + Arrays.toString(maxEuObj) + "\n");
                     }else if(decisionRules == 1) {
@@ -290,7 +298,7 @@ public class randValCombiSeller extends Agent{
             }
         }
         public boolean done() {
-            if (step == 2 && maxEuObj.length == 0) {
+            if (step == 2 && maxEuList.size() == 0) {
                 myGUI.displayUI("Do not buyer who provide the matching price");
                 myAgent.doSuspend();
 

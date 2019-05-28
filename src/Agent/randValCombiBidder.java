@@ -1,15 +1,17 @@
 package Agent;
 
-import jade.core.Agent;
 import jade.core.AID;
+import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,6 +25,7 @@ public class randValCombiBidder extends Agent {
 
     //Farmer information on each agent.
     agentInfo farmerInfo = new agentInfo("", randValue.getRandDoubleRange(500, 1200),randValue.getRandDoubleRange(12,16), randValue.getRandDoubleRange(5,12));
+    String mornitoringMsg = farmerInfo.farmerName + "-" + farmerInfo.buyingVolumn + "-" + farmerInfo.buyingVolumn + "-" + farmerInfo.profitLossPct;
 
     //Global bidding parameter
     ArrayList<Agents> sortedListSeller = new ArrayList<Agents>();
@@ -47,6 +50,8 @@ public class randValCombiBidder extends Agent {
         catch (FIPAException fe) {
             fe.printStackTrace();
         }
+        //Mornitoring infomation sendding.
+        addBehaviour(new AdverInfoMsg());
         //Bidding process.
         //Add the behaviour serving queries from Water provider about current price.
         addBehaviour(new OfferRequestsServer());
@@ -101,11 +106,10 @@ public class randValCombiBidder extends Agent {
                     //MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CFP);
                     ACLMessage msg = myAgent.receive(mt);
                     if (msg != null) {
-                        if (msg.getPerformative() == ACLMessage.CFP) {
-                            System.out.println(msg);
+                        if (msg.getPerformative() == ACLMessage.CFP && msg.getSender().getLocalName().equals("mornitor")==false) {
+                            //System.out.println(msg);
                             replyCnt++;
                             //ACLMessage reply = msg.createReply();
-
                             //Price Per MM. and the number of volumn to sell from Seller.
                             String currentOffer = msg.getContent();
                             String[] arrOfstr = currentOffer.split("-");
@@ -114,7 +118,6 @@ public class randValCombiBidder extends Agent {
                             System.out.println(msg.getSender().getLocalName() + " OfferVol:  " + tempVolumn);
 
                             sortedListSeller.add(new Agents(tempVolumn, msg.getSender().getLocalName()));
-
                         }
                         System.out.println("\n");
 
@@ -136,7 +139,6 @@ public class randValCombiBidder extends Agent {
                                 System.out.println("The best option for sendding offer is  " + proposeSortedList.get(0).toString());
                                 step = 1;
                             }
-
                         }
 
                     } else {
@@ -201,6 +203,35 @@ public class randValCombiBidder extends Agent {
             }else {
                 block();
             }
+        }
+    }
+
+    private class AdverInfoMsg extends OneShotBehaviour {
+        private AID[] mornitorAgent;
+        public void action(){
+            DFAgentDescription template = new DFAgentDescription();
+            ServiceDescription sd = new ServiceDescription();
+            sd.setType("mornitor");
+            template.addServices(sd);
+            try {
+                DFAgentDescription[] result = DFService.search(myAgent, template);
+                //System.out.println("Found acutioneer agents:");
+                mornitorAgent = new AID[result.length];
+                for (int i = 0; i < result.length; ++i) {
+                    mornitorAgent[i] = result[i].getName();
+                    //System.out.println(mornitorAgent[i].getName());
+                }
+            }
+            catch (FIPAException fe) {
+                fe.printStackTrace();
+            }
+            // Send the cfp to all sellers (Sending water volumn required to all bidding agent)
+            ACLMessage mornitorReply = new ACLMessage(ACLMessage.PROPOSE);
+            for (int i = 0; i < mornitorAgent.length; ++i) {
+                mornitorReply.addReceiver(mornitorAgent[i]);
+            }
+            mornitorReply.setContent(farmerInfo.buyingVolumn + "-" + farmerInfo.buyingPricePerMM + "-" + farmerInfo.profitLossPct);
+            myAgent.send(mornitorReply);
         }
     }
 
