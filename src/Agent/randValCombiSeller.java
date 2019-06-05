@@ -29,6 +29,7 @@ public class randValCombiSeller extends Agent{
     //Seting up and starting agent.
     protected void setup(){
         // Create and show the GUI
+
         myGUI = new randValCombiSellerGUI(this);
         myGUI.show();
         System.out.println(getAID().getLocalName() + " is ready");
@@ -74,6 +75,7 @@ public class randValCombiSeller extends Agent{
         private int repliesCnt; // The counter of replies from seller agents
         private MessageTemplate mt; // The template to receive replies
         ArrayList<String> bidderList = new ArrayList<String>();  //sorted list follows maximumprice factor.
+        ArrayList<Agents> bidderInfo = new ArrayList<>();
         //ArrayList<combinatorialList> buyerList = new ArrayList<combinatorialList>();    //result list for selling process reference.
 
         //Creating dictionary for buyer volume and pricing
@@ -144,6 +146,9 @@ public class randValCombiSeller extends Agent{
                             double tempVolume = Double.parseDouble(arrOfStr[0]);
                             double tempPrice = Double.parseDouble(arrOfStr[1]);
                             double tempProfitLossPct = Double.parseDouble(arrOfStr[2]);
+                            double tempValue = tempPrice * tempVolume;
+
+                            bidderInfo.add(new Agents(tempVolume,tempPrice, tempValue,tempName));
                             //myGUI.displayUI(reply.toString());
 
                             //adding data to dictionary
@@ -170,7 +175,7 @@ public class randValCombiSeller extends Agent{
 
                             int index = tempBidderList.length - 1;
                             ArrayList<ArrayList<String> > powersetResult = getSubset(tempBidderList, index);
-                            System.out.println(powersetResult);
+                            //System.out.println(powersetResult);
 
                             //Loop and result calculation
                             for(int i=0; i <= powersetResult.size() -1;i++){
@@ -256,6 +261,7 @@ public class randValCombiSeller extends Agent{
                                 acceptedRequest.setReplyWith("acceptedRequest" + System.currentTimeMillis());
                                 //myGui.displayUI(acceptedRequest.toString());
                                 myAgent.send(acceptedRequest);
+                                myGUI.displayUI(acceptedRequest.toString());
                                 mt = MessageTemplate.and(MessageTemplate.MatchConversationId("bidding"),MessageTemplate.MatchInReplyTo
                                         (acceptedRequest.getReplyWith()));
                             }else {
@@ -277,13 +283,21 @@ public class randValCombiSeller extends Agent{
                     reply = myAgent.receive(mt);
                     //int informCnt = informMessageList.size();
                     String log = "";
+                    String tempInfo = "";
                     if (reply != null) {
                         if (reply.getPerformative() == ACLMessage.INFORM) {
+                            myGUI.displayUI(reply.toString());
                             for(int i = 0; i <= maxEuList.size() -1; i++){
                                 if(maxEuList.get(i).equals(reply.getSender().getLocalName())){
-                                    String tempFreq = getAID().getLocalName() + "  Selling water to  " + reply.getSender().getLocalName() + "\n";
+                                    String tempFreq = getAID().getLocalName() + "  Selling water to  " + reply.getSender().getLocalName() + "\n" + "Price:  " + priceDict.get(reply.getSender().getLocalName()) + "Volume: " + volumnDict.get(reply.getSender().getLocalName());
+                                    for(int j = 0; i <= bidderInfo.size() -1; i++){
+                                        if(reply.getSender().getLocalName().equals(bidderInfo.get(j).name)){
+                                            myGUI.displayUI(bidderInfo.get(j).toString() + "\n");
+                                        }
+                                    }
                                     log = log + tempFreq;
                                     myGUI.displayUI(log);
+                                    myGUI.displayUI(tempInfo);
                                     myAgent.doSuspend();
                                 }
                             }
@@ -413,5 +427,26 @@ public class randValCombiSeller extends Agent{
             str[j] = arr.get(j);
         }
         return str;
+    }
+
+    //adding new class for sorted seller agent data.
+    class Agents{
+        //double varieVolume;
+        //int fivehundredFeq;
+        double totalVolume;
+        double price;
+        double totalValue;
+        String name;
+        //Constructor
+        public Agents(double totalVolume, double price, double totalValue, String name){
+            this.totalVolume = totalVolume;
+            this.price = price;
+            this.totalValue = totalValue;
+            this.name = name;
+        }
+        public String toString(){
+            //return this.name + " " + this.varieVolume + " " + this.fivehundredFeq + "  Total Volume: " + this.totalVolume + "  Total Value: " + this.totalValue + " Price: " + this.price;
+            return this.name + "   " + "Total Volume: " + this.totalVolume + " Price: " + this.price + "  Total Value:  " + this.totalValue;
+        }
     }
 }
