@@ -3,6 +3,7 @@ package Agent;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -24,7 +25,10 @@ public class randValCombiSeller extends Agent{
     randValue randValue = new randValue();
     agentInfo farmerInfo = new agentInfo("", randValue.getRandDoubleRange(10,12), randValue.getRandDoubleRange(1300,1500));
     int countTick;
-    int decisionRules = 1;
+    int decisionRules = 0;
+
+    int informCnt = 0;
+    ArrayList<Agents> replyInfoList = new ArrayList<Agents>();
 
     //Seting up and starting agent.
     protected void setup(){
@@ -61,11 +65,35 @@ public class randValCombiSeller extends Agent{
                  ** Selling water process
                  */
                 addBehaviour(new RequestPerformer());
+                addBehaviour(new PurchaseOrdersServer());
                 // Add the behaviour serving purchase orders from buyer agents
                 //addBehaviour(new PurchaseOrdersServer());
             }
         } );
     }
+
+    private class PurchaseOrdersServer extends CyclicBehaviour {
+        public void action() {
+            MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+            ACLMessage msg = myAgent.receive(mt);
+            if (msg != null) {
+                myGUI.displayUI("\n" + getAID().getLocalName() + "accpted to buy water from" + msg.getSender().getLocalName());
+                for(int i= 0; i <= replyInfoList.size() - 1;i++){
+                    if(replyInfoList.get(i).name.equals(msg.getSender().getLocalName())){
+                        myGUI.displayUI(replyInfoList.get(i).toString());
+                    }
+                }
+                informCnt--;
+                if (informCnt == 0){
+                    myAgent.doSuspend();
+                    System.out.println(getAID().getName() + " terminating.");
+                }
+            }else {
+                block();
+            }
+        }
+    }
+
 
     private class RequestPerformer extends Behaviour {
         //The list of known water selling agent
@@ -103,7 +131,7 @@ public class randValCombiSeller extends Agent{
                         bidderAgent = new AID[result.length];
                         for (int i = 0; i < result.length; ++i) {
                             bidderAgent[i] = result[i].getName();
-                            System.out.println(bidderAgent[i].getName());
+                            //System.out.println(bidderAgent[i].getName());
                             //System.out.println("tick time:" + countTick);
                         }
                     }
@@ -144,12 +172,15 @@ public class randValCombiSeller extends Agent{
                             double tempVolume = Double.parseDouble(arrOfStr[0]);
                             double tempPrice = Double.parseDouble(arrOfStr[1]);
                             double tempProfitLossPct = Double.parseDouble(arrOfStr[2]);
+                            double tempValue = tempVolume * tempPrice;
+                            replyInfoList.add(new Agents(tempVolume, tempPrice, tempValue, tempProfitLossPct, tempName));
                             //myGUI.displayUI(reply.toString());
 
                             //adding data to dictionary
                             volumnDict.put(reply.getSender().getLocalName(),tempVolume);
                             priceDict.put(reply.getSender().getLocalName(),tempPrice);
                             profitLossDict.put(reply.getSender().getLocalName(), tempProfitLossPct);
+
                         }else if(reply.getPerformative() == ACLMessage.REFUSE) {
                             refuseCnt++;
                         }
@@ -161,6 +192,12 @@ public class randValCombiSeller extends Agent{
 
                         if (repliesCnt >= bidderAgent.length) {
 
+                            //Show reply list (all bidders for this round).
+                            myGUI.displayUI("Bidder reply for this stage:" + "\n");
+                            for (int i = 0; i <= replyInfoList.size() - 1;i++){
+                                myGUI.displayUI(replyInfoList.get(i).toString() + "\n");
+                            }
+
                             // We received all replies
                             for(Enumeration e = volumnDict.keys(); e.hasMoreElements();){
                                 String temp = e.nextElement().toString();
@@ -170,7 +207,7 @@ public class randValCombiSeller extends Agent{
 
                             int index = tempBidderList.length - 1;
                             ArrayList<ArrayList<String> > powersetResult = getSubset(tempBidderList, index);
-                            System.out.println(powersetResult);
+                            //System.out.println(powersetResult);
 
                             //Loop and result calculation
                             for(int i=0; i <= powersetResult.size() -1;i++){
@@ -186,21 +223,21 @@ public class randValCombiSeller extends Agent{
                                     tempMaxPrice = tempMaxPrice + tempPrice;
                                 }
                                 if(decisionRules == 0){
-                                    tempMaxEuValue = (0 * tempMaxVolumn) + (0.5 * tempMaxPrice) + (0 * tempMaxProfitLoss);
+                                    tempMaxEuValue = (0 * tempMaxVolumn) + (1 * tempMaxPrice) + (0 * tempMaxProfitLoss);
                                     if(tempMaxEuValue > maxEuValue && tempMaxVolumn <= farmerInfo.sellingVolume){
                                         maxEuValue = tempMaxEuValue;
                                         maxEuObj = new String[]{xx, tempMaxVolumn.toString(),tempMaxPrice.toString(), tempMaxProfitLoss.toString()};
                                         maxEuList = powersetResult.get(i);
                                     }
                                 }else if(decisionRules == 1){
-                                    tempMaxEuValue = (0.5 * tempMaxVolumn) + (0 * tempMaxPrice) + (0 * tempMaxProfitLoss);
+                                    tempMaxEuValue = (1 * tempMaxVolumn) + (0 * tempMaxPrice) + (0 * tempMaxProfitLoss);
                                     if(tempMaxEuValue > maxEuValue && tempMaxVolumn <= farmerInfo.sellingVolume){
                                         maxEuValue = tempMaxEuValue;
                                         maxEuObj = new String[]{xx, tempMaxVolumn.toString(),tempMaxPrice.toString(),tempMaxProfitLoss.toString()};
                                         maxEuList = powersetResult.get(i);
                                     }
                                 }else if(decisionRules ==2){
-                                    tempMaxEuValue = (0 * tempMaxVolumn) + (0 * tempMaxPrice) + (0.5 * tempMaxProfitLoss);
+                                    tempMaxEuValue = (0 * tempMaxVolumn) + (0 * tempMaxPrice) + (1 * tempMaxProfitLoss);
                                     if(tempMaxEuValue > maxEuValue && tempMaxVolumn <= farmerInfo.sellingVolume){
                                         maxEuValue = tempMaxEuValue;
                                         maxEuObj = new String[]{xx, tempMaxVolumn.toString(),tempMaxPrice.toString(), tempMaxProfitLoss.toString()};
@@ -216,9 +253,9 @@ public class randValCombiSeller extends Agent{
                                     }
                                 }
 
-                                System.out.println("\n" + "result set is : " + powersetResult.get(i).toString()+"\n"
-                                        +  "Volumn to sell is  " + tempMaxVolumn + "\n" + "Income is  " + tempMaxPrice + "\n" + "Total profit loss: " + tempMaxProfitLoss + "\n" );
-                                System.out.println(decisionRules);
+                                //System.out.println("\n" + "result set is : " + powersetResult.get(i).toString()+"\n"
+                                        //+  "Volumn to sell is  " + tempMaxVolumn + "\n" + "Income is  " + tempMaxPrice + "\n" + "Total profit loss: " + tempMaxProfitLoss + "\n" );
+                                //System.out.println(decisionRules);
                             }
 
                             step = 2;
@@ -233,7 +270,7 @@ public class randValCombiSeller extends Agent{
                      * Sendding message to bidders wiht two types (Accept proposal or Refuse) based on
                      * accepted water volumn to sell.
                      */
-                    myGUI.displayUI(getAID().getLocalName() + "    voldict  " + volumnDict.size() + "price dict  " + priceDict.size());
+                    myGUI.displayUI(getAID().getLocalName() + "    voldict  " + volumnDict.size() + "   price dict  " + priceDict.size());
                     if(decisionRules == 0){
                         myGUI.displayUI("\n" + "Best solution for each case:"+"\n"+"Max price selling:  " + Arrays.toString(maxEuObj) + "\n");
                     }else if(decisionRules == 1) {
@@ -256,6 +293,7 @@ public class randValCombiSeller extends Agent{
                                 acceptedRequest.setReplyWith("acceptedRequest" + System.currentTimeMillis());
                                 //myGui.displayUI(acceptedRequest.toString());
                                 myAgent.send(acceptedRequest);
+                                myGUI.displayUI(acceptedRequest.toString() + "\n");
                                 mt = MessageTemplate.and(MessageTemplate.MatchConversationId("bidding"),MessageTemplate.MatchInReplyTo
                                         (acceptedRequest.getReplyWith()));
                             }else {
@@ -267,35 +305,44 @@ public class randValCombiSeller extends Agent{
                             }
                         }
                     }
-
+                    informCnt = maxEuList.size();
                     step = 3;
                     break;
-
+/***
                 case 3:
                     // Receive the purchase order reply
-
+                    informCnt = maxEuList.size();
                     reply = myAgent.receive(mt);
-                    //int informCnt = informMessageList.size();
-                    String log = "";
+                    //myGUI.displayUI(reply.toString());
                     if (reply != null) {
+                        //myGUI.displayUI(reply.toString());
                         if (reply.getPerformative() == ACLMessage.INFORM) {
-                            for(int i = 0; i <= maxEuList.size() -1; i++){
-                                if(maxEuList.get(i).equals(reply.getSender().getLocalName())){
-                                    String tempFreq = getAID().getLocalName() + "  Selling water to  " + reply.getSender().getLocalName() + "\n";
-                                    log = log + tempFreq;
-                                    myGUI.displayUI(log);
-                                    myAgent.doSuspend();
+                            myGUI.displayUI("xxxxxxxxxx" + reply.getSender().getLocalName());
+                            while (informCnt >0){
+                                for(String e :maxEuList){
+                                    if(reply.getSender().getLocalName().equals(e)){
+                                        //myGUI.displayUI(getAID().getLocalName() + "  Selling water to  " + reply.getSender().getLocalName() + "\n");
+                                        String tempFreq = getAID().getLocalName() + "  Selling water to  " + reply.getSender().getLocalName() + "\n";
+                                        log = log + tempFreq;
+                                        informCnt = informCnt -1;
+                                    }
                                 }
+                                informCnt--;
                             }
-
+                            myGUI.displayUI(log);
+                            myAgent.doSuspend();
+                            break;
                         }
-                        step = 4;
+
+                            step = 4;
                     }
                     else {
                         block();
                     }
                     break;
+                  ***/
             }
+
         }
         public boolean done() {
             if (step == 2 && maxEuList.size() == 0) {
@@ -413,5 +460,25 @@ public class randValCombiSeller extends Agent{
             str[j] = arr.get(j);
         }
         return str;
+    }
+
+    //adding new class for sorted seller agent data.
+    class Agents{
+        double totalVolume;
+        double price;
+        double totalValue;
+        double profitLostPct;
+        String name;
+        //Constructor
+        public Agents(double totalVolume, double price, double totalValue, double profitLostPct, String name){
+            this.totalVolume = totalVolume;
+            this.price = price;
+            this.totalValue = totalValue;
+            this.profitLostPct = profitLostPct;
+            this.name = name;
+        }
+        public String toString(){
+            return this.name + "   " + "Total Volume: " + this.totalVolume + " Price: " + this.price + "Profit lost (%): " + this.profitLostPct + "  Total Value:  " + this.totalValue;
+        }
     }
 }

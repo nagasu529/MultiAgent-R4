@@ -25,6 +25,7 @@ public class MornitorNewAgent extends Agent {
     private double maxProfitLoss;
     private double maxPctProfitReduction;
     ArrayList<bidderCollection> bidderMornitor = new ArrayList<bidderCollection>();
+    int redundantCnt = 0;
 
     protected void setup(){
         //Register Service.
@@ -169,6 +170,9 @@ public class MornitorNewAgent extends Agent {
                     myGui.displayUI("\n" + "Max bidder: " + maxBiderAgents + "     " + "Current biider no.: " +  currentNumBidderAgent + "\n");
                     myGui.displayUI("Total water request from the groups of buyers:  " + df.format(currentTotalVolume) + "  " + df.format(((currentTotalVolume*100)/(maxBuyingVol))) + "%" + "\n");
                     myGui.displayUI("Total profit loss from group of buyers:  " + df.format((100*currentProfitLostPct)/(maxProfitLoss)) + "\n");
+                    if(maxBiderAgents != currentNumBidderAgent){
+                        redundantCnt++;
+                    }
                     step = 3;
                     break;
                 case 3:
@@ -176,6 +180,9 @@ public class MornitorNewAgent extends Agent {
                         step = 0;
                     } else {
                         step = 4;
+                    }
+                    if(redundantCnt == 3){
+                        myAgent.doSuspend();
                     }
             }
         }

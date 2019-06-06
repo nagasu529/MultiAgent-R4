@@ -24,7 +24,7 @@ public class randValCombiBidder extends Agent {
     DecimalFormat df = new DecimalFormat("#.##");
 
     //Farmer information on each agent.
-    agentInfo farmerInfo = new agentInfo("", randValue.getRandDoubleRange(500, 1200),randValue.getRandDoubleRange(12,16), randValue.getRandDoubleRange(5,12));
+    agentInfo farmerInfo = new agentInfo("", randValue.getRandDoubleRange(300, 2000),randValue.getRandDoubleRange(10,16), randValue.getRandDoubleRange(5,12));
     String mornitoringMsg = farmerInfo.farmerName + "-" + farmerInfo.buyingVolumn + "-" + farmerInfo.buyingVolumn + "-" + farmerInfo.profitLossPct;
 
     //Global bidding parameter
@@ -125,6 +125,10 @@ public class randValCombiBidder extends Agent {
                             Collections.sort(sortedListSeller, new SortbyTotalVol());
                             System.out.println("start +++++++++++++++++++++++++++++++++++++++++++" + "\n");
 
+                            for (int i = 0; i <= sortedListSeller.size() -1; i++){
+                                System.out.println(sortedListSeller.get(i).toString());
+                            }
+
                             for(int i = 0; i <= sortedListSeller.size() -1; i++){
                                 if(sortedListSeller.get(i).totalVolume > farmerInfo.buyingVolumn){
                                     proposeSortedList.add(sortedListSeller.get(i));
@@ -133,7 +137,8 @@ public class randValCombiBidder extends Agent {
                                 }
                             }
                             if(proposeSortedList.size()== 0){
-                                System.out.println("Do not have enought water to buy.");
+                                System.out.println("Do not have matching water to buy from all sellers.");
+                                proposeSortedList.add(sortedListSeller.get(sortedListSeller.size() - 1));
                                 step = 1;
                             }else {
                                 System.out.println("The best option for sendding offer is  " + proposeSortedList.get(0).toString());
@@ -153,7 +158,8 @@ public class randValCombiBidder extends Agent {
                         for (int i = 0; i < sellerList.length; i++) {
                             if (sellerList[i].getLocalName().equals(proposeSortedList.get(0).name)) {
                                 ACLMessage reply = new ACLMessage(ACLMessage.PROPOSE);
-                                reply.setContent(proposeSortedList.get(0).totalVolume + "-" + farmerInfo.buyingPricePerMM + "-" + farmerInfo.profitLossPct);
+                                //reply.setContent(proposeSortedList.get(0).totalVolume + "-" + farmerInfo.buyingPricePerMM + "-" + farmerInfo.profitLossPct);
+                                reply.setContent(farmerInfo.buyingVolumn + "-" + farmerInfo.buyingPricePerMM + "-" + farmerInfo.profitLossPct);
                                 reply.setConversationId("bidding");
                                 reply.setReplyWith("reply" + System.currentTimeMillis());
                                 reply.addReceiver(sellerList[i]);
@@ -278,7 +284,7 @@ public class randValCombiBidder extends Agent {
 
         public String toString() {
             //return this.name + " " + this.varieVolume + " " + this.fivehundredFeq + "  total Volume: " + (this.varieVolume + (this.fivehundredFeq * 500));
-            return this.name + " " + "  total Volume: " + this.totalVolume;
+            return this.name + " " + "  total Volume: " + this.totalVolume + " bidder name :" + farmerInfo.farmerName + "minimum vol req: " +farmerInfo.buyingVolumn;
         }
     }
     class SortbyTotalVol implements Comparator<Agents> {
