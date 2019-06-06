@@ -257,6 +257,10 @@ public class randValCombiSeller extends Agent{
                                         //+  "Volumn to sell is  " + tempMaxVolumn + "\n" + "Income is  " + tempMaxPrice + "\n" + "Total profit loss: " + tempMaxProfitLoss + "\n" );
                                 //System.out.println(decisionRules);
                             }
+                            if(maxEuList.size()==0){
+                                Collections.sort(replyInfoList, new SortbyTotalVol());
+                                maxEuList.add(replyInfoList.get(0).name);
+                            }
 
                             step = 2;
                         }
@@ -479,6 +483,12 @@ public class randValCombiSeller extends Agent{
         }
         public String toString(){
             return this.name + "   " + "Total Volume: " + this.totalVolume + " Price: " + this.price + "Profit lost (%): " + this.profitLostPct + "  Total Value:  " + this.totalValue;
+        }
+    }
+    class SortbyTotalVol implements Comparator<Agents> {
+        //Used for sorting in ascending order of the volumn.
+        public int compare(Agents a, Agents b) {
+            return Double.compare(a.totalVolume, b.totalVolume);
         }
     }
 }
