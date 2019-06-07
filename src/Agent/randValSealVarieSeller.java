@@ -3,6 +3,7 @@ package Agent;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -25,6 +26,9 @@ public class randValSealVarieSeller extends Agent {
     agentInfo sellerInfo = new agentInfo("", "seller", randValue.getRandDoubleRange(10,12), randValue.getRandDoubleRange(1300,1500));
     String log = "";
     int FreqCnt = 2;
+
+    ArrayList<Agents> informMessageList = new ArrayList<>();
+    int informCnt = 0;
 
     protected void setup(){
         // Create and show the GUI
@@ -63,10 +67,33 @@ public class randValSealVarieSeller extends Agent {
                  ** Selling water process
                  */
                 addBehaviour(new RequestPerformer());
+                addBehaviour(new PurchaseOrdersServer());
                 // Add the behaviour serving purchase orders from buyer agents
                 //addBehaviour(new PurchaseOrdersServer());
             }
         } );
+    }
+
+    private class PurchaseOrdersServer extends CyclicBehaviour {
+        public void action() {
+            MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+            ACLMessage msg = myAgent.receive(mt);
+            if (msg != null) {
+                myGui.displayUI("\n" + getAID().getLocalName() + "accpted to buy water from" + msg.getSender().getLocalName());
+                for(int i= 0; i <= informMessageList.size() - 1;i++){
+                    if(informMessageList.get(i).name.equals(msg.getSender().getLocalName())){
+                        myGui.displayUI(informMessageList.get(i).toString());
+                    }
+                }
+                informCnt--;
+                if (informCnt == 0){
+                    myAgent.doSuspend();
+                    System.out.println(getAID().getName() + " terminating.");
+                }
+            }else {
+                block();
+            }
+        }
     }
 
     private class RequestPerformer extends Behaviour {
@@ -87,7 +114,7 @@ public class randValSealVarieSeller extends Agent {
 
         //List of reply instance.
         ArrayList<Agents> bidderReplyList = new ArrayList<>();
-        ArrayList<Agents> informMessageList = new ArrayList<>();
+
 
         private int step = 0;
 

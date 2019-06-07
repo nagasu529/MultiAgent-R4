@@ -23,6 +23,9 @@ public class randValSealbidedSeller extends Agent {
     String log = "";
     int FreqCnt = 2;
 
+    ArrayList<Agents> informMessageList = new ArrayList<>();
+    int informCnt = 0;
+
     protected void setup(){
         // Create and show the GUI
         myGui = new randValSealbidedSellerGUI(this);
@@ -60,10 +63,33 @@ public class randValSealbidedSeller extends Agent {
                  ** Selling water process
                  */
                 addBehaviour(new RequestPerformer());
+                addBehaviour(new PurchaseOrdersServer());
                 // Add the behaviour serving purchase orders from buyer agents
                 //addBehaviour(new PurchaseOrdersServer());
             }
         } );
+    }
+
+    private class PurchaseOrdersServer extends CyclicBehaviour {
+        public void action() {
+            MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+            ACLMessage msg = myAgent.receive(mt);
+            if (msg != null) {
+                myGui.displayUI("\n" + getAID().getLocalName() + "accpted to buy water from" + msg.getSender().getLocalName());
+                for(int i= 0; i <= informMessageList.size() - 1;i++){
+                    if(informMessageList.get(i).name.equals(msg.getSender().getLocalName())){
+                        myGui.displayUI(informMessageList.get(i).toString());
+                    }
+                }
+                informCnt--;
+                if (informCnt == 0){
+                    myAgent.doSuspend();
+                    System.out.println(getAID().getName() + " terminating.");
+                }
+            }else {
+                block();
+            }
+        }
     }
 
     private class RequestPerformer extends Behaviour {
@@ -74,7 +100,7 @@ public class randValSealbidedSeller extends Agent {
         int countTick;
 
         ArrayList<Agents> bidderReplyList = new ArrayList<>();
-        ArrayList<Agents> informMessageList = new ArrayList<>();
+
 
         private int step = 0;
 
@@ -177,6 +203,7 @@ public class randValSealbidedSeller extends Agent {
                     for(int i = 0; i <= informMessageList.size()-1;i++){
                         myGui.displayUI(informMessageList.get(i).toString() + "\n");
                     }
+                    informCnt = informMessageList.size();
 
                     //Sending PROPOSE message to Seller (only the best option for volume requirement.
 

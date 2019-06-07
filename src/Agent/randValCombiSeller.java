@@ -173,13 +173,15 @@ public class randValCombiSeller extends Agent{
                             double tempPrice = Double.parseDouble(arrOfStr[1]);
                             double tempProfitLossPct = Double.parseDouble(arrOfStr[2]);
                             double tempValue = tempVolume * tempPrice;
-                            replyInfoList.add(new Agents(tempVolume, tempPrice, tempValue, tempProfitLossPct, tempName));
-                            //myGUI.displayUI(reply.toString());
+                            if(tempPrice > farmerInfo.sellingPrice){
+                                replyInfoList.add(new Agents(tempVolume, tempPrice, tempValue, tempProfitLossPct, tempName));
+                                //myGUI.displayUI(reply.toString());
 
-                            //adding data to dictionary
-                            volumnDict.put(reply.getSender().getLocalName(),tempVolume);
-                            priceDict.put(reply.getSender().getLocalName(),tempPrice);
-                            profitLossDict.put(reply.getSender().getLocalName(), tempProfitLossPct);
+                                //adding data to dictionary
+                                volumnDict.put(reply.getSender().getLocalName(),tempVolume);
+                                priceDict.put(reply.getSender().getLocalName(),tempPrice);
+                                profitLossDict.put(reply.getSender().getLocalName(), tempProfitLossPct);
+                            }
 
                         }else if(reply.getPerformative() == ACLMessage.REFUSE) {
                             refuseCnt++;
